@@ -356,26 +356,79 @@
                     display: none;
                 }
             }
+
+            /* Adaptive toolbar & overflow */
+            .toolbar {
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                flex-wrap: nowrap;
+                overflow: hidden;
+                position: relative;
+            }
+            .actions {
+                display: flex;
+                gap: 0.25rem;
+                flex: 1 1 auto;
+                min-width: 0;
+            }
+            .overflow {
+                position: relative;
+                flex: none;
+            }
+            #more-toggle {
+                background: none;
+                border: 1px solid #ccc;
+                padding: 4px 8px;
+                cursor: pointer;
+                border-radius: 4px;
+            }
+            .overflow-menu {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: var(--menu-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 6px;
+                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
+                display: flex;
+                flex-direction: column;
+                padding: 4px;
+                z-index: 10;
+                min-width: 120px;
+            }
+            .hidden {
+                display: none;
+            }
+            /* collapse status items on small screens */
+            @media (max-width: 800px) {
+                #word-count,
+                #line-pos,
+                #char-pos {
+                    display: none;
+                }
+            }
+            @media (max-width: 600px) {
+                #file-status {
+                    display: none;
+                }
+            }
         </style>
     </head>
     <body>
         <div class="tui-container">
             <!-- Menu Bar -->
-            <div class="menubar">
+            <div id="topbar" class="menubar toolbar">
                 <div class="title">editr</div>
-                <div class="menu-items">
-                    <div class="menu-item" id="open-btn">
-                        Open<span class="shortcut">^O</span>
-                    </div>
-                    <div class="menu-item" id="save-btn">
-                        Save<span class="shortcut">^S</span>
-                    </div>
-                    <div class="menu-item" id="find-btn">
-                        Find<span class="shortcut">^F</span>
-                    </div>
-                    <div class="menu-item" id="about-btn">
-                        About<span class="shortcut">F1</span>
-                    </div>
+                <div id="primary-actions" class="menu-items actions">
+                    <div class="menu-item" id="open-btn">Open</div>
+                    <div class="menu-item" id="save-btn">Save</div>
+                    <div class="menu-item" id="find-btn">Find</div>
+                    <div class="menu-item" id="about-btn">About</div>
+                </div>
+                <div id="overflow-container" class="overflow">
+                    <button id="more-toggle">More ▾</button>
+                    <div id="overflow-menu" class="overflow-menu hidden"></div>
                 </div>
             </div>
 
@@ -424,11 +477,10 @@
                 <button class="close-btn" title="Close">×</button>
                 <h2>About</h2>
                 <p>
-                    editr is a terminal-style text editor built with HTML, CSS,
-                    and JavaScript by Barney (www.barney.me).<br />
-                    <b>Features:</b> Undo/Redo, Find & Replace, Keyboard
-                    Shortcuts, Direct File System Access, and terminal-like
-                    interface.
+                    editr is a traditional text editor webapp built with HTML,
+                    CSS, and JavaScript by Barney (www.barney.me).<br />
+                    <b>Features:</b> Private, Open/Save local files, Undo/Redo,
+                    Find & Replace, Keyboard Shortcuts, and Offline Mode.
                 </p>
                 <p style="color: var(--dim-color)">Press ESC to close</p>
             </div>
@@ -1029,6 +1081,62 @@
                         });
                 });
             }
+
+            // ======== Adaptive toolbar overflow logic ========
+            function adaptToolbar() {
+                const topbar = document.getElementById("topbar");
+                const actions = document.getElementById("primary-actions");
+                const overflowMenu = document.getElementById("overflow-menu");
+                const overflowContainer =
+                    document.getElementById("overflow-container");
+                if (!topbar || !actions) return;
+                // reset: move overflowed back
+                const moved = [...overflowMenu.querySelectorAll(".menu-item")];
+                moved.forEach((btn) => actions.appendChild(btn));
+                // clear menu (we moved elements already removed by appendChild)
+                // measure available space
+                const toolbarWidth = topbar.clientWidth;
+                const titleWidth =
+                    topbar.querySelector(".title")?.offsetWidth || 0;
+                const overflowWidth = overflowContainer.offsetWidth;
+                const paddingFudge = 40;
+                let used = titleWidth + paddingFudge;
+                const buttons = [...actions.querySelectorAll(".menu-item")];
+                buttons.forEach((btn) => {
+                    btn.style.display = "";
+                    const btnWidth = btn.offsetWidth;
+                    if (used + btnWidth + overflowWidth > toolbarWidth) {
+                        overflowMenu.appendChild(btn);
+                    } else {
+                        used += btnWidth;
+                    }
+                });
+                if (overflowMenu.children.length === 0) {
+                    overflowContainer.style.display = "none";
+                } else {
+                    overflowContainer.style.display = "";
+                }
+            }
+            function debounce(fn, ms) {
+                let t;
+                return (...args) => {
+                    clearTimeout(t);
+                    t = setTimeout(() => fn(...args), ms);
+                };
+            }
+            document.addEventListener("DOMContentLoaded", () => {
+                adaptToolbar();
+                window.addEventListener("resize", debounce(adaptToolbar, 100));
+                const moreToggle = document.getElementById("more-toggle");
+                const overflowMenu = document.getElementById("overflow-menu");
+                moreToggle?.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    overflowMenu.classList.toggle("hidden");
+                });
+                document.addEventListener("click", () => {
+                    overflowMenu.classList.add("hidden");
+                });
+            });
         </script>
     </body>
 </html>
