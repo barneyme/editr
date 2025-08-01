@@ -278,20 +278,20 @@
             }
 
             /* Shortcuts info */
-            #shortcuts-popup table {
+            #about-popup table {
                 width: 100%;
                 border-collapse: collapse;
                 margin: 0.5em 0;
             }
 
-            #shortcuts-popup table td,
-            #shortcuts-popup table th {
+            #about-popup table td,
+            #about-popup table th {
                 padding: 0.4em;
                 text-align: left;
                 border-bottom: 1px solid var(--border-color);
             }
 
-            #shortcuts-popup .key {
+            #about-popup .key {
                 background: var(--button-bg);
                 padding: 0.1em 0.3em;
                 border-radius: 0;
@@ -373,9 +373,6 @@
                     <div class="menu-item" id="find-btn">
                         Find<span class="shortcut">^F</span>
                     </div>
-                    <div class="menu-item" id="shortcuts-btn">
-                        Help<span class="shortcut">F2</span>
-                    </div>
                     <div class="menu-item" id="about-btn">
                         About<span class="shortcut">F1</span>
                     </div>
@@ -454,53 +451,6 @@
                 ></div>
             </div>
 
-            <div class="popup" id="shortcuts-popup">
-                <button class="close-btn" title="Close">×</button>
-                <h2>Keyboard Shortcuts</h2>
-                <table>
-                    <tr>
-                        <th>Action</th>
-                        <th>Key</th>
-                    </tr>
-                    <tr>
-                        <td>About</td>
-                        <td><span class="key">F1</span></td>
-                    </tr>
-                    <tr>
-                        <td>Help</td>
-                        <td><span class="key">F2</span></td>
-                    </tr>
-                    <tr>
-                        <td>Find</td>
-                        <td><span class="key">Ctrl+F</span></td>
-                    </tr>
-                    <tr>
-                        <td>Find Next</td>
-                        <td><span class="key">F3</span></td>
-                    </tr>
-                    <tr>
-                        <td>Save</td>
-                        <td><span class="key">Ctrl+S</span></td>
-                    </tr>
-                    <tr>
-                        <td>Open</td>
-                        <td><span class="key">Ctrl+O</span></td>
-                    </tr>
-                    <tr>
-                        <td>Undo</td>
-                        <td><span class="key">Ctrl+Z</span></td>
-                    </tr>
-                    <tr>
-                        <td>Redo</td>
-                        <td><span class="key">Ctrl+Y</span></td>
-                    </tr>
-                    <tr>
-                        <td>Close</td>
-                        <td><span class="key">Esc</span></td>
-                    </tr>
-                </table>
-            </div>
-
             <input
                 type="file"
                 id="file-input"
@@ -524,11 +474,9 @@
             const findBtn = $("find-btn");
             const saveBtn = $("save-btn");
             const openBtn = $("open-btn");
-            const shortcutsBtn = $("shortcuts-btn");
             const popupOverlay = $("popup-overlay");
             const aboutPopup = $("about-popup");
             const findPopup = $("find-popup");
-            const shortcutsPopup = $("shortcuts-popup");
             const findText = $("find-text");
             const replaceText = $("replace-text");
             const findNextBtn = $("find-next-btn");
@@ -625,10 +573,61 @@
             })();
 
             function autosave() {
-                // Only use localStorage for new files or fallback
-                if (!currentFileHandle) {
-                    localStorage.setItem("editor_" + tabId, textbox.value);
+                try {
+                    const saveData = {
+                        content: textbox.value,
+                        filename: filenameBox.value,
+                        timestamp: Date.now(),
+                        hasFileHandle: !!currentFileHandle,
+                    };
+                    localStorage.setItem(
+                        "editor_" + tabId,
+                        JSON.stringify(saveData),
+                    );
+                    localStorage.setItem("editor_last_tab", tabId);
+                } catch (error) {
+                    console.warn("Could not save to localStorage:", error);
                 }
+            }
+
+            function loadAutosaved() {
+                try {
+                    // Try to load from current tab first
+                    let savedData = localStorage.getItem("editor_" + tabId);
+
+                    // If no data for current tab, try the last used tab
+                    if (!savedData) {
+                        const lastTab = localStorage.getItem("editor_last_tab");
+                        if (lastTab) {
+                            savedData = localStorage.getItem(
+                                "editor_" + lastTab,
+                            );
+                        }
+                    }
+
+                    if (savedData) {
+                        const data = JSON.parse(savedData);
+                        textbox.value = data.content || "";
+                        filenameBox.value = data.filename || "file.txt";
+                        filenameDisplay.textContent =
+                            data.filename || "file.txt";
+                        originalContent = data.content || "";
+
+                        // Update timestamp to show when content was last saved
+                        if (data.timestamp) {
+                            const lastSaved = new Date(data.timestamp);
+                            console.log(
+                                "Restored content from:",
+                                lastSaved.toLocaleString(),
+                            );
+                        }
+
+                        return true;
+                    }
+                } catch (error) {
+                    console.warn("Could not load from localStorage:", error);
+                }
+                return false;
             }
 
             // ========== LINE NUMBERS ==========
@@ -686,7 +685,6 @@
                 popupOverlay.style.display = "none";
                 aboutPopup.style.display = "none";
                 findPopup.style.display = "none";
-                shortcutsPopup.style.display = "none";
                 findText.value = "";
                 replaceText.value = "";
                 findCount.textContent = "";
@@ -702,7 +700,6 @@
 
             aboutBtn.onclick = () => showPopup(aboutPopup);
             findBtn.onclick = () => showPopup(findPopup);
-            shortcutsBtn.onclick = () => showPopup(shortcutsPopup);
 
             // ========== FIND & REPLACE ==========
             let lastFindIndex = 0;
@@ -904,6 +901,16 @@
                 autosave();
             });
 
+            // Also autosave on filename changes
+            filenameBox.addEventListener("input", () => {
+                filenameDisplay.textContent =
+                    filenameBox.value || "untitled.txt";
+                autosave();
+            });
+
+            // Autosave periodically (every 30 seconds)
+            setInterval(autosave, 30000);
+
             textbox.addEventListener("keyup", updateStats);
             textbox.addEventListener("click", updateStats);
             textbox.addEventListener("keydown", updateStats);
@@ -911,12 +918,6 @@
 
             textbox.addEventListener("scroll", () => {
                 lineNumbers.scrollTop = textbox.scrollTop;
-            });
-
-            // Keep filename in sync
-            filenameBox.addEventListener("input", () => {
-                filenameDisplay.textContent =
-                    filenameBox.value || "untitled.txt";
             });
 
             // Keyboard shortcuts
@@ -950,10 +951,6 @@
                     e.preventDefault();
                     showPopup(aboutPopup);
                 }
-                if (e.key === "F2") {
-                    e.preventDefault();
-                    showPopup(shortcutsPopup);
-                }
                 if (e.key === "F3") {
                     e.preventDefault();
                     doFind(true);
@@ -974,14 +971,20 @@
             });
 
             // ========== INITIALIZATION ==========
-            // Load autosaved content only if no file is opened
-            const saved = localStorage.getItem("editor_" + tabId);
-            if (saved && !currentFileHandle) {
-                textbox.value = saved;
-                originalContent = saved;
-                history = [saved];
-                historyPtr = 0;
+            // Load autosaved content
+            const hasLoadedContent = loadAutosaved();
+
+            // If no saved content, initialize with empty state
+            if (!hasLoadedContent) {
+                textbox.value = "";
+                filenameBox.value = "file.txt";
+                filenameDisplay.textContent = "file.txt";
+                originalContent = "";
             }
+
+            // Initialize history with current content
+            history = [textbox.value];
+            historyPtr = 0;
 
             updateStats();
             updateLineNumbers();
