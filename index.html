@@ -4,11 +4,17 @@
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <meta name="theme-color" content="#2980b9" />
-        <meta name="description" content="editr - text editor">
+        <meta name="description" content="editr - browser text editor">
         <meta name="apple-mobile-web-app-capable" content="yes">
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
         <meta name="apple-mobile-web-app-title" content="editr">
         <title>editr</title>
+        <link rel="manifest" href="manifest.json" />
+        <link rel="stylesheet" href="style.css">
+		<link rel="icon" type="image/png" sizes="192x192" href="./editr192.png">
+		<link rel="icon" type="image/png" sizes="512x512" href="./editr512.png">
+		<link rel="shortcut icon" href="./editr192.png">
+		<link rel="apple-touch-icon" href="./editr192.png">
 		<style>
 		html,
 body {
@@ -1218,6 +1224,7 @@ body.dark-mode #blackjack-input {
                         <span id="word-count">0</span>
                     </span>
                 </span>
+                <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
                 <button id="editr-btn" title="editr help & settings (CTRL + /)">
                     <span class="editr-text-full"><strong>e</strong>ditr</span>
                     <span class="editr-text-short"><strong>e</strong></span>
@@ -1301,7 +1308,7 @@ body.dark-mode #blackjack-input {
                         editr can be used offline after the first use. Reopen editr.cc in your browser to continue working on your
                         file.<br />
                         Files can be opened from your device using the "Open" button or by dragging and dropping in to editr. To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
-                        editr can edit and save local files directly.<br />
+                        editr PWA can edit and save local files directly once installed.<br />
                     </p>
                         <b>CTRL + N</b> (<span class="shortcut-symbol" id="help-new-btn">&#128196;</span> New) to create a blank file in a new tab.<br />
                         <b>CTRL + O</b> (<span class="shortcut-symbol" id="help-open-btn">&#128194;</span> Open) to open a file from your computer.<br />
@@ -1337,6 +1344,9 @@ body.dark-mode #blackjack-input {
                     <p>
                         editr was created by <a href="https://barney.me">Barney</a>. If you want to support editr.cc buy me a
                         <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.<br />
+                        Read just some of the ways you can use
+                        <a href="https://editr.cc/plaintext.txt">plaintext</a>.<br />
+                    </p>
                 </div>
                 <div class="b-modal-column-right">
                     <div id="settings-actions">
@@ -1686,7 +1696,7 @@ body.dark-mode #blackjack-input {
             if (content.trim() === "") {
               elements.textbox1.value = "";
               elements.textbox1.placeholder =
-                "Welcome to editr. Start typing to begin or click the 'b' button for help and settings.";
+                "Welcome to editr. Start typing to begin or press 'editr' or 'e' for help and settings.";
               updateAllUI();
               storeLocally(elements.textbox1);
               alert(
