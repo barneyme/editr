@@ -400,9 +400,6 @@
                     <div class="menu-item" id="save-btn" title="Save (Ctrl+S)">
                         Save
                     </div>
-                    <div class="menu-item" id="find-btn" title="Find (Ctrl+F)">
-                        Find
-                    </div>
                     <div class="menu-item" id="about-btn" title="About (F1)">
                         About
                     </div>
@@ -444,18 +441,21 @@
                 <button class="close-btn" title="Close">×</button>
                 <h2>About</h2>
                 <p>
-                    editr is a traditional text editor webapp with offline
+                    editr is a bare bones text editor webapp with offline
                     support.<br />
                     <br />
                     <b>Shortcuts:</b><br />
-                    CTRL + N = New editr in new tab. CTRL + O = Open .txt file
-                    from device.<br />
-                    CTRL + S = Save .txt file to device.<br />
+                    CTRL + N = New editr tab.<br />
+                    CTRL + O = Open file from device.<br />
+                    CTRL + S = Save file to device.<br />
                     CTRL + F = Find and replace.<br />
                     CTRL + Z = Undo.<br />
                     CTRL + Y = Redo.<br />
                     CTRL + 1 - 9 = Change file buffers.<br />
-                    F1 = About editr.
+                    F1 = About editr.<br />
+                    <br />
+                    For a full featured text editor go to
+                    <a href="https://bedit.org">bEdit.org</a>
                 </p>
                 <p style="color: var(--dim-color)">Press ESC to close</p>
             </div>
@@ -497,7 +497,6 @@
             const wordCount = $("word-count");
             const lineNumbers = $("line-numbers");
             const aboutBtn = $("about-btn");
-            const findBtn = $("find-btn");
             const saveBtn = $("save-btn");
             const openBtn = $("open-btn");
             const newBtn = $("new-btn");
@@ -786,7 +785,6 @@
                 .forEach((btn) => (btn.onclick = hidePopups));
 
             aboutBtn.onclick = () => showPopup(aboutPopup);
-            findBtn.onclick = () => showPopup(findPopup);
             newBtn.onclick = newFile;
 
             // ========== FIND & REPLACE ==========
