@@ -104,24 +104,17 @@
                 padding: 0.3em 1em;
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
                 border-top: 1px solid var(--border-color);
             }
 
-            .command-bar .commands {
-                display: flex;
-                gap: 1em;
-            }
-
-            .command-bar .command {
-                color: var(--highlight-text);
-            }
-
-            .command-bar .key {
-                color: var(--text-color);
+            #buffer-indicator {
                 background: var(--button-bg);
-                padding: 0 0.3em;
+                color: var(--text-color);
+                padding: 0.2em 0.5em;
                 border-radius: 3px;
-                margin-right: 0.2em;
+                font-size: 0.9em;
+                border: 1px solid var(--border-color);
             }
 
             /* Editor area */
@@ -182,20 +175,6 @@
                 padding: 0.2em 0.5em;
                 font-family: inherit;
                 font-size: 0.9em;
-            }
-
-            /* File status indicator */
-            .file-status {
-                background: var(--success-color);
-                color: white;
-                padding: 0 0.5em;
-                border-radius: 3px;
-                font-size: 0.8em;
-            }
-
-            .file-status.unsaved {
-                background: var(--warning-color);
-                color: #000;
             }
 
             /* Popup Overlay */
@@ -322,10 +301,6 @@
 
             /* Responsive adjustments */
             @media (max-width: 768px) {
-                .command-bar .command-text {
-                    display: none;
-                }
-
                 .menubar {
                     flex-wrap: wrap;
                 }
@@ -408,11 +383,6 @@
                     display: none;
                 }
             }
-            @media (max-width: 600px) {
-                #file-status {
-                    display: none;
-                }
-            }
         </style>
     </head>
     <body>
@@ -421,10 +391,21 @@
             <div id="topbar" class="menubar toolbar">
                 <div class="title">editr</div>
                 <div id="primary-actions" class="menu-items actions">
-                    <div class="menu-item" id="open-btn">Open</div>
-                    <div class="menu-item" id="save-btn">Save</div>
-                    <div class="menu-item" id="find-btn">Find</div>
-                    <div class="menu-item" id="about-btn">About</div>
+                    <div class="menu-item" id="new-btn" title="New (Ctrl+N)">
+                        New
+                    </div>
+                    <div class="menu-item" id="open-btn" title="Open (Ctrl+O)">
+                        Open
+                    </div>
+                    <div class="menu-item" id="save-btn" title="Save (Ctrl+S)">
+                        Save
+                    </div>
+                    <div class="menu-item" id="find-btn" title="Find (Ctrl+F)">
+                        Find
+                    </div>
+                    <div class="menu-item" id="about-btn" title="About (F1)">
+                        About
+                    </div>
                 </div>
                 <div id="overflow-container" class="overflow">
                     <button id="more-toggle">More ▾</button>
@@ -438,7 +419,6 @@
                 <span>Line: <span id="line-pos">1</span></span>
                 <span>Col: <span id="char-pos">1</span></span>
                 <span>Words: <span id="word-count">0</span></span>
-                <span id="file-status" class="file-status">New</span>
             </div>
 
             <!-- Editor Area -->
@@ -453,21 +433,8 @@
 
             <!-- Command Bar -->
             <div class="command-bar">
-                <div class="commands">
-                    <div>
-                        <span class="key">^Z</span>
-                        <span class="command-text">Undo</span>
-                    </div>
-                    <div>
-                        <span class="key">^Y</span>
-                        <span class="command-text">Redo</span>
-                    </div>
-                    <div>
-                        <span class="key">^S</span>
-                        <span class="command-text">Save</span>
-                    </div>
-                </div>
                 <input type="text" id="filename" placeholder="file.txt" />
+                <span id="buffer-indicator">1</span>
             </div>
         </div>
 
@@ -477,10 +444,16 @@
                 <button class="close-btn" title="Close">×</button>
                 <h2>About</h2>
                 <p>
-                    editr is a traditional text editor webapp built with HTML,
-                    CSS, and JavaScript by Barney (www.barney.me).<br />
-                    <b>Features:</b> Private, Open/Save local files, Undo/Redo,
-                    Find & Replace, Keyboard Shortcuts, and Offline Mode.
+                    editr is a traditional text editor webapp.<br />
+                    <b>Shortcuts:</b><br />
+                    CTRL + N = New editr in new tab. CTRL + O = Open .txt file
+                    from device.<br />
+                    CTRL + S = Save .txt file to device.<br />
+                    CTRL + F = Find and replace.<br />
+                    CTRL + Z = Undo.<br />
+                    CTRL + Y = Redo.<br />
+                    CTRL + 1 - 9 = Change file buffers.<br />
+                    F1 = About editr.
                 </p>
                 <p style="color: var(--dim-color)">Press ESC to close</p>
             </div>
@@ -521,11 +494,11 @@
             const charPos = $("char-pos");
             const wordCount = $("word-count");
             const lineNumbers = $("line-numbers");
-            const fileStatus = $("file-status");
             const aboutBtn = $("about-btn");
             const findBtn = $("find-btn");
             const saveBtn = $("save-btn");
             const openBtn = $("open-btn");
+            const newBtn = $("new-btn");
             const popupOverlay = $("popup-overlay");
             const aboutPopup = $("about-popup");
             const findPopup = $("find-popup");
@@ -537,7 +510,67 @@
             const findCount = $("find-count");
             const fileInput = $("file-input");
 
-            // ========== FILE SYSTEM ACCESS API ==========
+            const bufferIndicator = $("buffer-indicator");
+
+            // ========== BUFFER SYSTEM ==========
+            let currentBuffer = 1;
+            const MAX_BUFFERS = 9;
+            const buffers = {};
+
+            // Initialize all buffers
+            for (let i = 1; i <= MAX_BUFFERS; i++) {
+                buffers[i] = {
+                    content: "",
+                    filename: "file.txt",
+                    originalContent: "",
+                    hasUnsavedChanges: false,
+                    fileHandle: null,
+                    history: [""],
+                    historyPtr: 0,
+                };
+            }
+
+            function saveCurrentBufferState() {
+                const buffer = buffers[currentBuffer];
+                buffer.content = textbox.value;
+                buffer.filename = filenameBox.value;
+                buffer.originalContent = originalContent;
+                buffer.hasUnsavedChanges = hasUnsavedChanges;
+                buffer.fileHandle = currentFileHandle;
+                buffer.history = [...history];
+                buffer.historyPtr = historyPtr;
+            }
+
+            function loadBufferState(bufferNum) {
+                const buffer = buffers[bufferNum];
+                textbox.value = buffer.content;
+                filenameBox.value = buffer.filename;
+                filenameDisplay.textContent = buffer.filename;
+                originalContent = buffer.originalContent;
+                hasUnsavedChanges = buffer.hasUnsavedChanges;
+                currentFileHandle = buffer.fileHandle;
+                history = [...buffer.history];
+                historyPtr = buffer.historyPtr;
+
+                updateStats();
+                updateLineNumbers();
+                bufferIndicator.textContent = bufferNum;
+            }
+
+            function switchToBuffer(bufferNum) {
+                if (bufferNum < 1 || bufferNum > MAX_BUFFERS) return;
+                if (bufferNum === currentBuffer) return;
+
+                // Save current buffer state
+                saveCurrentBufferState();
+
+                // Switch to new buffer
+                currentBuffer = bufferNum;
+                loadBufferState(bufferNum);
+
+                // Autosave the new buffer state
+                autosave();
+            }
             let currentFileHandle = null;
             let hasUnsavedChanges = false;
             let originalContent = "";
@@ -545,28 +578,12 @@
             // Check if File System Access API is supported
             const supportsFileSystemAccess = "showOpenFilePicker" in window;
 
-            function updateFileStatus() {
-                if (currentFileHandle) {
-                    if (hasUnsavedChanges) {
-                        fileStatus.textContent = "Modified";
-                        fileStatus.className = "file-status unsaved";
-                    } else {
-                        fileStatus.textContent = "Saved";
-                        fileStatus.className = "file-status";
-                    }
-                } else {
-                    fileStatus.textContent = "New";
-                    fileStatus.className = "file-status";
-                }
-            }
-
             function markAsModified() {
                 if (textbox.value !== originalContent) {
                     hasUnsavedChanges = true;
                 } else {
                     hasUnsavedChanges = false;
                 }
-                updateFileStatus();
             }
 
             // ========== UNDO/REDO HISTORY ==========
@@ -613,6 +630,11 @@
                 }
             }
 
+            // ========== NEW FILE FUNCTION ==========
+            function newFile() {
+                window.open("https://editr.cc", "_blank");
+            }
+
             // ========== AUTOSAVE ==========
             const tabId = (() => {
                 if (!window.name)
@@ -626,11 +648,13 @@
 
             function autosave() {
                 try {
+                    // Save current buffer state before autosaving
+                    saveCurrentBufferState();
+
                     const saveData = {
-                        content: textbox.value,
-                        filename: filenameBox.value,
+                        currentBuffer: currentBuffer,
+                        buffers: buffers,
                         timestamp: Date.now(),
-                        hasFileHandle: !!currentFileHandle,
                     };
                     localStorage.setItem(
                         "editor_" + tabId,
@@ -659,11 +683,20 @@
 
                     if (savedData) {
                         const data = JSON.parse(savedData);
-                        textbox.value = data.content || "";
-                        filenameBox.value = data.filename || "file.txt";
-                        filenameDisplay.textContent =
-                            data.filename || "file.txt";
-                        originalContent = data.content || "";
+
+                        // Load buffers if they exist
+                        if (data.buffers) {
+                            Object.assign(buffers, data.buffers);
+                            currentBuffer = data.currentBuffer || 1;
+                        } else {
+                            // Legacy format - convert to buffer system
+                            buffers[1].content = data.content || "";
+                            buffers[1].filename = data.filename || "file.txt";
+                            buffers[1].originalContent = data.content || "";
+                            currentBuffer = 1;
+                        }
+
+                        loadBufferState(currentBuffer);
 
                         // Update timestamp to show when content was last saved
                         if (data.timestamp) {
@@ -752,6 +785,7 @@
 
             aboutBtn.onclick = () => showPopup(aboutPopup);
             findBtn.onclick = () => showPopup(findPopup);
+            newBtn.onclick = newFile;
 
             // ========== FIND & REPLACE ==========
             let lastFindIndex = 0;
@@ -845,7 +879,6 @@
 
                         hasUnsavedChanges = false;
                         originalContent = content;
-                        updateFileStatus();
 
                         console.log("File saved successfully");
                         return;
@@ -902,7 +935,6 @@
                         pushHistory(textbox.value);
                         updateStats();
                         updateLineNumbers();
-                        updateFileStatus();
 
                         console.log("File opened successfully");
                         return;
@@ -932,10 +964,16 @@
                         currentFileHandle = null; // Traditional file loading doesn't provide handle
                         hasUnsavedChanges = false;
 
+                        // Update current buffer
+                        buffers[currentBuffer].content = ev.target.result;
+                        buffers[currentBuffer].originalContent =
+                            ev.target.result;
+                        buffers[currentBuffer].hasUnsavedChanges = false;
+                        buffers[currentBuffer].fileHandle = null;
+
                         pushHistory(textbox.value);
                         updateStats();
                         updateLineNumbers();
-                        updateFileStatus();
                     };
                     reader.readAsText(file);
                     filenameBox.value = file.name;
@@ -950,6 +988,9 @@
                 updateStats();
                 updateLineNumbers();
                 markAsModified();
+                // Update current buffer
+                buffers[currentBuffer].content = textbox.value;
+                buffers[currentBuffer].hasUnsavedChanges = hasUnsavedChanges;
                 autosave();
             });
 
@@ -957,6 +998,8 @@
             filenameBox.addEventListener("input", () => {
                 filenameDisplay.textContent =
                     filenameBox.value || "untitled.txt";
+                // Update current buffer filename
+                buffers[currentBuffer].filename = filenameBox.value;
                 autosave();
             });
 
@@ -974,6 +1017,14 @@
 
             // Keyboard shortcuts
             document.addEventListener("keydown", (e) => {
+                // Buffer switching shortcuts (Ctrl + 1-9)
+                if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "9") {
+                    e.preventDefault();
+                    const bufferNum = parseInt(e.key);
+                    switchToBuffer(bufferNum);
+                    return;
+                }
+
                 // Standard shortcuts
                 if (e.ctrlKey || e.metaKey) {
                     if (e.key === "z") {
@@ -995,6 +1046,10 @@
                     if (e.key === "o") {
                         e.preventDefault();
                         openFile();
+                    }
+                    if (e.key === "n") {
+                        e.preventDefault();
+                        newFile();
                     }
                 }
 
@@ -1032,6 +1087,8 @@
                 filenameBox.value = "file.txt";
                 filenameDisplay.textContent = "file.txt";
                 originalContent = "";
+                currentBuffer = 1;
+                bufferIndicator.textContent = "1";
             }
 
             // Initialize history with current content
@@ -1040,7 +1097,6 @@
 
             updateStats();
             updateLineNumbers();
-            updateFileStatus();
             pushHistory(textbox.value);
 
             // Helper: focus filename on load
@@ -1052,7 +1108,6 @@
             document.addEventListener("DOMContentLoaded", () => {
                 updateStats();
                 updateLineNumbers();
-                updateFileStatus();
                 textbox.focus();
             });
 
