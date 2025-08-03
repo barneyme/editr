@@ -1631,24 +1631,45 @@ document.addEventListener("DOMContentLoaded", function () {
           ? elements.filenameBox1
           : elements.filenameBox2;
 
-      targetTextbox.value = selectedFile.content;
-      targetFilenameBox.value = selectedFile.filename;
-      fileHandles[targetTextbox.id] = null;
-
-      storeLocally(targetTextbox);
+      // If opening to textbox1, handle buffer system
       if (targetTextbox === elements.textbox1) {
-        addToHistory(selectedFile.content, 0);
+        // Save current buffer state before switching
+        saveCurrentBufferState();
 
-        // Update current buffer
+        // Load the file content
+        targetTextbox.value = selectedFile.content;
+        targetFilenameBox.value = selectedFile.filename;
+        fileHandles[targetTextbox.id] = null;
+
+        // Update current buffer with the loaded file
         const buffer = fileBuffers[currentBufferId];
         buffer.content = selectedFile.content;
         buffer.filename = selectedFile.filename;
         buffer.fileHandle = null;
+        buffer.history = [];
+        buffer.historyIndex = -1;
+        buffer.historyCursorPositions = [];
+
+        // Reset history for the new file
+        history = [];
+        currentHistoryIndex = -1;
+        historyCursorPositions = [];
+        addToHistory(selectedFile.content, 0);
+
+        // Update buffer history
         buffer.history = [...history];
         buffer.historyIndex = currentHistoryIndex;
         buffer.historyCursorPositions = [...historyCursorPositions];
+
         updateBufferIndicator();
+      } else {
+        // For textbox2, just load normally (no buffer system)
+        targetTextbox.value = selectedFile.content;
+        targetFilenameBox.value = selectedFile.filename;
+        fileHandles[targetTextbox.id] = null;
       }
+
+      storeLocally(targetTextbox);
       updateAllUI();
       if (!isCsvMode) targetTextbox.focus();
 
