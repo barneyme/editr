@@ -269,37 +269,17 @@ document.addEventListener("DOMContentLoaded", function () {
     const buffer = fileBuffers[currentBufferId];
     let displayName = buffer.filename;
 
-    // Add buffer indicator to title
-    document.title = `editr - Buffer ${currentBufferId}: ${displayName}`;
+    // Add buffer indicator to title with bracket format
+    document.title = `editr [${currentBufferId}]: ${displayName}`;
 
     // Update filename placeholder to show buffer
     elements.filenameBox1.placeholder = `editr${currentBufferId}.txt`;
-
-    // Update buffer number in indicator
-    const bufferNumber = document.getElementById("buffer-number");
-    if (bufferNumber) {
-      bufferNumber.textContent = currentBufferId;
-    }
   }
 
-  // Create buffer indicator UI element
+  // Create buffer indicator UI element (now just returns null since we don't show it visually)
   function createBufferIndicator() {
-    const bufferIndicator = document.createElement("button");
-    bufferIndicator.id = "buffer-indicator";
-    bufferIndicator.innerHTML = `<span id="buffer-number">${currentBufferId}</span>`;
-    bufferIndicator.className = "nav-button";
-    bufferIndicator.title = `Current buffer: ${currentBufferId} (Ctrl+1-9 to switch)`;
-    bufferIndicator.style.cssText = `
-      margin-right: 0.5em;
-      cursor: default;
-      pointer-events: none;
-    `;
-
-    // Insert as first child in nav area to position it left of stats
-    if (elements.nav) {
-      elements.nav.insertBefore(bufferIndicator, elements.nav.firstChild);
-    }
-    return bufferIndicator;
+    // No longer creating a visual indicator
+    return null;
   }
 
   // Handle buffer switching keyboard shortcuts

@@ -132,8 +132,8 @@ nav {
     width: 100%;
     min-height: 3rem;
     padding: 0.5em;
-    background-color: #2980b9;
-    border-bottom: 1px solid #2471a3;
+    background-color: #000000; /* Changed from #2980b9 to black */
+    border-bottom: 1px solid #333; /* Changed from #2471a3 to dark gray */
     color: white;
     display: flex;
     justify-content: flex-start;
@@ -491,6 +491,27 @@ body.snow-mode .popup-section-divider {
 .button-text {
     display: inline;
 }
+
+/* Buffer indicator styles */
+#buffer-indicator {
+    background-color: #2980b9;
+    border: 1px solid #5dade2;
+    color: white;
+    padding: 0.5em 0.75em;
+    border-radius: 4px;
+    font-size: 14px;
+    margin-right: 0.5em;
+    cursor: default;
+    pointer-events: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+}
+
+#buffer-number {
+    font-weight: bold;
+}
+
 #install-app,
 #theme-toggle {
     background-color: #2980b9;
@@ -548,7 +569,7 @@ body.dark-mode .highlight {
     background-color: rgba(255, 255, 255, 0.25);
 }
 body.dark-mode nav {
-    background-color: #1e1e1e;
+    background-color: #000000; /* Keep black for dark mode too */
     border-bottom: 1px solid #333;
 }
 body.dark-mode button {
@@ -615,6 +636,14 @@ body.dark-mode #stats {
     background-color: #404040;
     color: white;
 }
+
+/* Dark mode buffer indicator */
+body.dark-mode #buffer-indicator {
+    background-color: #404040;
+    border-color: #666;
+    color: white;
+}
+
 body.dark-mode .popup {
     background: #2d2d2d;
     border-color: #555;
@@ -806,6 +835,14 @@ body.snow-mode #word-count {
     background-color: #87ceeb;
     color: #2c3e50;
 }
+
+/* Snow mode buffer indicator */
+body.snow-mode #buffer-indicator {
+    background-color: #87ceeb;
+    border-color: #add8e6;
+    color: #2c3e50;
+}
+
 body.snow-mode .popup {
     background: #f0ffff;
     border-color: #add8e6;
@@ -1027,6 +1064,8 @@ body.dark-mode #blackjack-input {
 @media (max-width: 768px) {
     nav {
         justify-content: center;
+        min-height: 4rem; /* Increased from 3rem to prevent overlap */
+        padding: 0.75em 0.5em; /* Increased padding */
     }
     #controls {
         margin: 0;
@@ -1055,6 +1094,13 @@ body.dark-mode #blackjack-input {
         justify-content: center;
         align-items: center;
     }
+
+    /* Fix for mobile editor container overlap */
+    #editor-container {
+        top: 4rem; /* Increased from 3rem to match nav height */
+        padding-top: 1em; /* Additional padding to prevent text overlap */
+    }
+
     #editor-container.split-view-active {
         flex-direction: column;
     }
@@ -1082,10 +1128,19 @@ body.dark-mode #blackjack-input {
         padding-right: 0;
         margin-bottom: 20px;
     }
+
+    /* Mobile responsiveness for buffer indicator */
+    #buffer-indicator {
+        font-size: 12px;
+        padding: 0.4em 0.6em;
+        margin-right: 0.3em;
+    }
 }
+
 @media (max-width: 500px) {
     nav {
-        padding: 0.5em 0.25em;
+        padding: 0.75em 0.25em; /* Increased padding */
+        min-height: 4.5rem; /* Further increased for very small screens */
     }
     #controls {
         justify-content: center;
@@ -1094,7 +1149,19 @@ body.dark-mode #blackjack-input {
         flex-grow: 1;
         max-width: none;
     }
+
+    /* Further adjustment for very small screens */
+    #editor-container {
+        top: 4.5rem; /* Match nav height */
+        padding-top: 1.5em; /* More padding for very small screens */
+    }
+
+    #buffer-indicator {
+        font-size: 11px;
+        padding: 0.3em 0.5em;
+    }
 }
+
 @media (max-width: 350px) {
     button,
     #filename-container input {
@@ -1111,7 +1178,23 @@ body.dark-mode #blackjack-input {
     #controls {
         gap: 0.3em;
     }
+
+    nav {
+        min-height: 5rem; /* Maximum height for tiny screens */
+        padding: 1em 0.25em;
+    }
+
+    #editor-container {
+        top: 5rem; /* Match nav height */
+        padding-top: 2em; /* Maximum padding for tiny screens */
+    }
+
+    #buffer-indicator {
+        font-size: 10px;
+        padding: 0.25em 0.4em;
+    }
 }
+
 @media print {
     nav {
         display: none;
@@ -1139,71 +1222,5 @@ body.dark-mode #blackjack-input {
     .highlight-layer,
     .active-line {
         display: none;
-    }
-    /* Buffer indicator styles */
-    #buffer-indicator {
-        background-color: #2980b9;
-        color: white;
-        padding: 0.25em 0.5em;
-        border-radius: 4px;
-        font-size: 12px;
-        margin-left: 0.5em;
-        display: flex;
-        align-items: center;
-        gap: 0.3em;
-    }
-
-    .buffer-label {
-        opacity: 0.8;
-        font-size: 0.9em;
-    }
-
-    #buffer-number {
-        font-weight: bold;
-        background-color: rgba(255, 255, 255, 0.2);
-        padding: 0.1em 0.4em;
-        border-radius: 2px;
-        min-width: 1.2em;
-        text-align: center;
-    }
-
-    /* Dark mode buffer indicator */
-    body.dark-mode #buffer-indicator {
-        background-color: #404040;
-        color: white;
-    }
-
-    body.dark-mode #buffer-number {
-        background-color: rgba(255, 255, 255, 0.1);
-    }
-
-    /* Snow mode buffer indicator */
-    body.snow-mode #buffer-indicator {
-        background-color: #87ceeb;
-        color: #2c3e50;
-    }
-
-    body.snow-mode #buffer-number {
-        background-color: rgba(44, 62, 80, 0.1);
-    }
-
-    /* Mobile responsiveness for buffer indicator */
-    @media (max-width: 768px) {
-        #buffer-indicator {
-            font-size: 11px;
-            padding: 0.2em 0.4em;
-            margin-left: 0.3em;
-        }
-
-        .buffer-label {
-            display: none; /* Hide "Buffer:" text on mobile */
-        }
-    }
-
-    @media (max-width: 350px) {
-        #buffer-indicator {
-            font-size: 10px;
-            padding: 0.15em 0.3em;
-        }
     }
 }
