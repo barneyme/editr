@@ -1,1202 +1,292 @@
 <!doctype html>
 <html lang="en">
     <head>
-        <meta charset="UTF-8" />
-        <title>editr</title>
-        <link
-            rel="icon"
-            type="image/svg+xml"
-            href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"><rect width="100%" height="100%" rx="12" fill="black"/><text x="50%" y="58%" text-anchor="middle" dominant-baseline="middle" font-family="SF Mono, Monaco, Inconsolata, Menlo, Consolas, monospace" font-size="42" fill="white">e</text></svg>'
-        />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <style>
-            :root {
-                --bg-color: #121416;
-                --text-color: #d4d4d4;
-                --dim-color: #888888;
-                --highlight-bg: #2a3f4d;
-                --highlight-text: #61afef;
-                --border-color: #3a3f4d;
-                --menu-bg: #1e1e1e;
-                --menu-active: #2a539a;
-                --statusbar-bg: #2a2e36;
-                --popup-bg: #1e2227;
-                --button-bg: #355880;
-                --button-hover: #4e78ab;
-                --success-color: #28a745;
-                --warning-color: #ffc107;
-            }
+            <meta charset="utf-8" />
+            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+            <meta name="theme-color" content="#2980b9" />
+            <meta name="description" content="editr - browser text editor">
+            <meta name="apple-mobile-web-app-capable" content="yes">
+            <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+            <meta name="apple-mobile-web-app-title" content="editr">
+            <title>editr</title>
+            <link rel="manifest" href="manifest.json" />
+            <link rel="stylesheet" href="style.css">
 
-            body {
-                font-family:
-                    "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
-                    "Source Code Pro", "Menlo", "Consolas", "DejaVu Sans Mono",
-                    "Liberation Mono", "Courier New", monospace;
-                background: var(--bg-color);
-                margin: 0;
-                padding: 0;
-                color: var(--text-color);
-                font-size: 16px;
-                height: 100vh;
-                overflow: hidden;
-            }
+            <!-- Inline favicon using data URI - SVG with black background and white 'e' -->
+            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Ctext x='16' y='22' font-family='Arial, sans-serif' font-size='20' font-weight='normal' text-anchor='middle' fill='%23ffffff'%3Ee%3C/text%3E%3C/svg%3E">
 
-            .tui-container {
-                display: flex;
-                flex-direction: column;
-                height: 100vh;
-                box-sizing: border-box;
-            }
+            <!-- Alternative PNG favicon for browsers that don't support SVG -->
+            <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFYSURBVFiFtZe9SwJhGMafV1MUEIRE0BAE0dAQDQ0N0dAQDQ0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BAND
 
-            /* Menu bar */
-            .menubar {
-                background: var(--menu-bg);
-                color: var(--text-color);
-                border-bottom: 1px solid var(--border-color);
-                display: flex;
-                padding: 0;
-                user-select: none;
-            }
-
-            .menubar .title {
-                background: var(--button-bg);
-                padding: 0.3em 1em;
-                font-weight: bold;
-            }
-
-            .menubar .menu-items {
-                display: flex;
-            }
-
-            .menubar .menu-item {
-                padding: 0.3em 1em;
-                cursor: pointer;
-                border-right: 1px solid var(--border-color);
-            }
-
-            .menubar .menu-item:hover {
-                background: var(--menu-active);
-            }
-
-            .menubar .menu-item .shortcut {
-                color: var(--dim-color);
-                margin-left: 0.5em;
-            }
-
-            /* Status bars */
-            .statusbar {
-                background: var(--statusbar-bg);
-                color: var(--text-color);
-                display: flex;
-                padding: 0.3em 0;
-                border-top: 1px solid var(--border-color);
-                border-bottom: 1px solid var(--border-color);
-                font-size: 0.9em;
-            }
-
-            .statusbar span {
-                padding: 0 1em;
-                border-right: 1px solid var(--border-color);
-            }
-
-            .statusbar span:last-child {
-                border-right: none;
-            }
-
-            .command-bar {
-                background: var(--statusbar-bg);
-                color: var(--text-color);
-                padding: 0.3em 1em;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-top: 1px solid var(--border-color);
-            }
-
-            #buffer-indicator {
-                background: var(--button-bg);
-                color: var(--text-color);
-                padding: 0.2em 0.5em;
-                border-radius: 3px;
-                font-size: 0.9em;
-                border: 1px solid var(--border-color);
-            }
-
-            /* Editor area */
-            .editor-wrapper {
-                flex: 1;
-                position: relative;
-                overflow: hidden;
-                border: 1px solid var(--border-color);
-                background: var(--bg-color);
-                display: flex;
-                flex-direction: column;
-            }
-
-            .line-numbers {
-                position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 3em;
-                background: var(--menu-bg);
-                color: var(--dim-color);
-                border-right: 1px solid var(--border-color);
-                overflow: hidden;
-                padding: 0.5em 0.5em 0.5em 0;
-                text-align: right;
-                user-select: none;
-            }
-
-            #textbox {
-                flex: 1;
-                width: 100%;
-                height: 100%;
-                resize: none;
-                border: none;
-                background: var(--bg-color);
-                color: var(--text-color);
-                padding: 0.5em 0.5em 0.5em 3.5em;
-                font-family:
-                    "SF Mono", "Monaco", "Inconsolata", "Roboto Mono",
-                    "Source Code Pro", "Menlo", "Consolas", "DejaVu Sans Mono",
-                    "Liberation Mono", "Courier New", monospace;
-                font-size: 1em;
-                line-height: 1.4;
-                box-sizing: border-box;
-                outline: none;
-                white-space: pre;
-                overflow: auto;
-            }
-
-            #textbox:focus {
-                caret-color: var(--highlight-text);
-            }
-
-            #filename {
-                background: var(--menu-bg);
-                color: var(--text-color);
-                border: 1px solid var(--border-color);
-                padding: 0.2em 0.5em;
-                font-family: inherit;
-                font-size: 0.9em;
-            }
-
-            /* Popup Overlay */
-            #popup-overlay {
-                display: none;
-                position: fixed;
-                z-index: 100;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.6);
-                justify-content: center;
-                align-items: center;
-            }
-
-            .popup {
-                display: none;
-                background: var(--popup-bg);
-                color: var(--text-color);
-                padding: 1em;
-                border: 2px solid var(--border-color);
-                min-width: 300px;
-                max-width: 90vw;
-                box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-            }
-
-            .popup h2 {
-                margin-top: 0;
-                padding-bottom: 0.5em;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            .popup .close-btn {
-                position: absolute;
-                top: 0.5em;
-                right: 0.8em;
-                background: none;
-                border: none;
-                color: var(--text-color);
-                cursor: pointer;
-                font-size: 1.2em;
-            }
-
-            .popup label {
-                display: block;
-                margin: 0.5em 0 0.2em 0;
-            }
-
-            .popup input[type="text"] {
-                width: 100%;
-                padding: 0.4em;
-                background: var(--bg-color);
-                color: var(--text-color);
-                border: 1px solid var(--border-color);
-                border-radius: 0;
-                font-family: inherit;
-                font-size: 0.9em;
-                margin-bottom: 1em;
-            }
-
-            .popup .popup-actions {
-                display: flex;
-                gap: 0.5em;
-                justify-content: flex-end;
-                margin-top: 1em;
-            }
-
-            .popup button {
-                background: var(--button-bg);
-                color: var(--text-color);
-                border: none;
-                padding: 0.4em 0.8em;
-                cursor: pointer;
-                font-family: inherit;
-            }
-
-            .popup button:hover {
-                background: var(--button-hover);
-            }
-
-            /* Shortcuts info */
-            #about-popup table {
-                width: 100%;
-                border-collapse: collapse;
-                margin: 0.5em 0;
-            }
-
-            #about-popup table td,
-            #about-popup table th {
-                padding: 0.4em;
-                text-align: left;
-                border-bottom: 1px solid var(--border-color);
-            }
-
-            #about-popup .key {
-                background: var(--button-bg);
-                padding: 0.1em 0.3em;
-                border-radius: 0;
-                font-family: inherit;
-            }
-
-            /* Make the popup appear like a TUI dialog */
-            .popup {
-                position: relative;
-            }
-
-            .popup::before {
-                content: "";
-                position: absolute;
-                top: -1px;
-                left: -1px;
-                right: -1px;
-                height: 1.5em;
-                background: var(--highlight-bg);
-            }
-
-            .popup h2 {
-                position: relative;
-                z-index: 1;
-                margin-top: 0;
-                padding-top: 0;
-            }
-
-            /* Responsive adjustments */
-            @media (max-width: 768px) {
-                .menubar {
-                    flex-wrap: wrap;
-                }
-
-                .menubar .title {
-                    width: 100%;
-                    text-align: center;
-                }
-
-                .menubar .menu-items {
-                    width: 100%;
-                }
-
-                .menubar .menu-item {
-                    flex: 1;
-                    text-align: center;
-                    padding: 0.3em 0;
-                }
-            }
-
-            @media (max-width: 480px) {
-                .statusbar span {
-                    padding: 0 0.5em;
-                    font-size: 0.8em;
-                }
-
-                .menubar .menu-item .shortcut {
-                    display: none;
-                }
-            }
-
-            /* Adaptive toolbar & overflow */
-            .toolbar {
-                display: flex;
-                align-items: center;
-                gap: 0.5rem;
-                flex-wrap: nowrap;
-                overflow: hidden;
-                position: relative;
-            }
-            .actions {
-                display: flex;
-                gap: 0.25rem;
-                flex: 1 1 auto;
-                min-width: 0;
-            }
-            .overflow {
-                position: relative;
-                flex: none;
-            }
-            #more-toggle {
-                background: none;
-                border: 1px solid #ccc;
-                padding: 4px 8px;
-                cursor: pointer;
-                border-radius: 4px;
-            }
-            .overflow-menu {
-                position: absolute;
-                top: 100%;
-                right: 0;
-                background: var(--menu-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 6px;
-                box-shadow: 0 6px 18px rgba(0, 0, 0, 0.2);
-                display: flex;
-                flex-direction: column;
-                padding: 4px;
-                z-index: 10;
-                min-width: 120px;
-            }
-            .hidden {
-                display: none;
-            }
-            /* collapse status items on small screens */
-            @media (max-width: 800px) {
-                #word-count,
-                #line-pos,
-                #char-pos {
-                    display: none;
-                }
-            }
-        </style>
-    </head>
+            <script src="marked.js"></script>
+            <script src="html2canvas.js"></script>
+            <script src="jspdf.js"></script>
+        </head>
     <body>
-        <div class="tui-container">
-            <!-- Menu Bar -->
-            <div id="topbar" class="menubar toolbar">
-                <div class="title">editr</div>
-                <div id="primary-actions" class="menu-items actions">
-                    <div class="menu-item" id="new-btn" title="New (Ctrl+N)">
-                        New
-                    </div>
-                    <div class="menu-item" id="open-btn" title="Open (Ctrl+O)">
-                        Open
-                    </div>
-                    <div class="menu-item" id="save-btn" title="Save (Ctrl+S)">
-                        Save
-                    </div>
-                    <div class="menu-item" id="about-btn" title="About (F1)">
-                        About
-                    </div>
-                </div>
-                <div id="overflow-container" class="overflow">
-                    <button id="more-toggle">More ▾</button>
-                    <div id="overflow-menu" class="overflow-menu hidden"></div>
-                </div>
-            </div>
-
-            <!-- Status Bar -->
-            <div class="statusbar">
-                <span id="filename-display">file.txt</span>
-                <span>Line: <span id="line-pos">1</span></span>
-                <span>Col: <span id="char-pos">1</span></span>
-                <span>Words: <span id="word-count">0</span></span>
-            </div>
-
-            <!-- Editor Area -->
-            <div class="editor-wrapper">
-                <div class="line-numbers" id="line-numbers"></div>
+        <div class="snow-container">
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+            <div class="snowflake"></div>
+        </div>
+        <nav>
+            <span id="controls">
+                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
+                <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
+                <span id="filename-container">
+                    <input id="filename-1" placeholder="editr.txt" title="Filename" list="recent-files-datalist-1" />
+                    <datalist id="recent-files-datalist-1"></datalist>
+                    <input id="filename-2" placeholder="editr.txt" title="Filename" list="recent-files-datalist-2" style="display: none;" />
+                    <datalist id="recent-files-datalist-2"></datalist>
+                    <button id="recent-files-btn" title="Recent Files">&#9662;</button>
+                    <div id="recent-files-dropdown" class="dropdown-content"></div>
+                </span>
+                <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
+                <button id="preview-btn" title="Preview Markdown (CTRL + M)" style="display: none;"><strong>M↓</strong> <span class="button-text">Markdown</span></button>
+                <button id="export-html-btn" title="Export as HTML (CTRL + ;)" style="display: none;"><strong>HTML</strong></button>
+                <button id="export-pdf-btn" title="Export as PDF (CTRL + ')" style="display: none;"><strong>PDF</strong></button>
+                <button id="email-btn" title="Email (CTRL + E)"><strong>📧</strong> <span class="button-text">Email</span></button>
+                <button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
+                <button id="open-link-btn" title="(CTRL + K) Open web link" style="display: none;"><strong>&#128279;</strong> <span class="button-text">Link</span></button>
+                <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong> <span class="button-text">Undo</span></button>
+                <button id="split-view-btn" title="Split View (CTRL + I)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
+                        <path d="M1.5 1.5A1.5 1.5 0 0 1 3 0h10a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 13 16H3a1.5 1.5 0 0 1-1.5-1.5V1.5zM3 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V1.5a.5.5 0 0 0-.5-.5H3z"/>
+                        <path d="M4 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm4.5 6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/>
+                    </svg>
+                  <span class="button-text">Split</span>
+                </button>
+                 <button id="csv-mode-btn" title="CSV Grid View (CTRL + .)">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
+                        <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13zM1.5 1a.5.5 0 0 0-.5.5V5h4V1H1.5zM5 6H1v4h4V6zm0 5H1v3.5a.5.5 0 0 0 .5.5H5v-4zm1 0v4h4v-4H6zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11h-4zm0-1h4V6h-4v4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11v4zm-1 0V1H6v4h4z"/>
+                    </svg>
+                    <span class="button-text">CSV</span>
+                </button>
+                <span id="stats">
+                    <span class="stat-item" title="Current line number">
+                        <span class="stat-label">&#8595;</span>
+                        <span id="line-position">1</span>
+                    </span>
+                    <span class="stat-item" title="Current character position">
+                        <span class="stat-label">&#8594;</span>
+                        <span id="char-position">1</span>
+                    </span>
+                    <span class="stat-item" title="Total word count">
+                        <span class="stat-label">=</span>
+                        <span id="word-count">0</span>
+                    </span>
+                </span>
+                <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
+                <button id="editr-btn" title="editr help & settings (CTRL + /)">
+                    <span class="editr-text-full"><strong>e</strong>ditr</span>
+                    <span class="editr-text-short"><strong>e</strong></span>
+                </button>
+            </span>
+        </nav>
+        <div id="editor-container">
+            <div class="editor-pane" id="editor-pane-1">
+                <div id="active-line-1" class="active-line"></div>
+                <div id="highlight-layer-1" class="highlight-layer"></div>
                 <textarea
-                    id="textbox"
+                    id="textbox-1"
+                    class="textbox"
+                    autofocus
+                    placeholder="Welcome to editr. Start typing to begin. Click 'editr' or 'e' for help and settings."
                     spellcheck="false"
-                    placeholder="Type here..."
+                ></textarea>
+                <div id="csv-grid-container"></div>
+            </div>
+            <div class="editor-pane" id="editor-pane-2" style="display: none;">
+                <div id="preview-pane-2"></div>
+                <div id="active-line-2" class="active-line"></div>
+                <div id="highlight-layer-2" class="highlight-layer"></div>
+                <textarea
+                    id="textbox-2"
+                    class="textbox"
+                    placeholder="Open a second file or start typing."
+                    spellcheck="false"
                 ></textarea>
             </div>
-
-            <!-- Command Bar -->
-            <div class="command-bar">
-                <input type="text" id="filename" placeholder="file.txt" />
-                <span id="buffer-indicator">1</span>
-            </div>
         </div>
-
-        <!-- Popup Overlay and Popups -->
-        <div id="popup-overlay">
-            <div class="popup" id="about-popup">
-                <button class="close-btn" title="Close">×</button>
-                <h2>About</h2>
-                <p>
-                    editr is a bare bones text editor webapp with offline
-                    support.<br />
-                    <br />
-                    <b>Shortcuts:</b><br />
-                    CTRL + N = New editr tab.<br />
-                    CTRL + O = Open file from device.<br />
-                    CTRL + S = Save file to device.<br />
-                    CTRL + F = Find and replace.<br />
-                    CTRL + Z = Undo.<br />
-                    CTRL + Y = Redo.<br />
-                    CTRL + 1 - 9 = Change file buffers.<br />
-                    F1 = About editr.<br />
-                    <br />
-                    For a full featured text editor go to
-                    <a href="https://bedit.org">bEdit.org</a>
-                </p>
-                <p style="color: var(--dim-color)">Press ESC to close</p>
-            </div>
-
-            <div class="popup" id="find-popup">
-                <button class="close-btn" title="Close">×</button>
-                <h2>Find & Replace</h2>
-                <label for="find-text">Find:</label>
-                <input type="text" id="find-text" autocomplete="off" />
-                <label for="replace-text">Replace:</label>
-                <input type="text" id="replace-text" autocomplete="off" />
-                <div class="popup-actions">
-                    <button id="find-next-btn">Next (F3)</button>
+        <input type="file" id="open-input-1" style="display: none" />
+        <input type="file" id="open-input-2" style="display: none" />
+        <div id="popup-overlay"></div>
+        <div id="find-replace-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Find & Replace</h2>
+            <div>
+                <div class="find-replace-input-group">
+                    <input type="text" id="find-text" placeholder="Find" />
+                    <div class="find-options">
+                        <label title="Case-sensitive">
+                            <input type="checkbox" id="case-sensitive-checkbox" /> Aa
+                        </label>
+                        <label title="Use regular expressions">
+                            <input type="checkbox" id="regex-checkbox" /> .*
+                        </label>
+                    </div>
+                </div>
+                <div class="find-replace-input-group">
+                    <input type="text" id="replace-text" placeholder="Replace" />
+                </div>
+                <div id="find-replace-buttons">
+                    <span id="find-count"></span>
+                    <button id="find-btn">Find</button>
                     <button id="replace-btn">Replace</button>
                     <button id="replace-all-btn">Replace All</button>
                 </div>
-                <div
-                    id="find-count"
-                    style="margin-top: 0.7em; color: var(--dim-color)"
-                ></div>
             </div>
-
-            <input
-                type="file"
-                id="file-input"
-                accept=".txt,.md,.js,.html,.css,.json,.csv"
-                style="display: none"
-            />
+        </div>
+        <div id="password-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Protected Note</h2>
+            <p>Enter a password to unlock an existing note or create a new one.</p>
+            <div>
+                <div class="find-replace-input-group">
+                    <input type="password" id="password-input" placeholder="Password" style="width:100%;" />
+                </div>
+                <div id="password-buttons" style="display: flex; justify-content: flex-end; margin-top: 10px;">
+                    <button id="password-submit-btn">OK</button>
+                </div>
+            </div>
+        </div>
+        <div id="settings-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>editr Settings</h2>
+            <div class="b-modal-layout">
+                <div class="b-modal-column-left">
+                    <p>
+                        Open editr.cc in web browser and start writing. Changes are automatically saved in your browser. ("Save" a copy of your file before clearing your browser cache.)<br />
+                        editr can be used offline after the first use. Reopen editr.cc in your browser to continue working on your
+                        file.<br />
+                        Files can be opened from your device using the "Open" button or by dragging and dropping in to editr. To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
+                        editr PWA can edit and save local files directly once installed.<br />
+                    </p>
+                        <b>CTRL + N</b> (<span class="shortcut-symbol" id="help-new-btn">&#128196;</span> New) to create a blank file in a new tab.<br />
+                        <b>CTRL + O</b> (<span class="shortcut-symbol" id="help-open-btn">&#128194;</span> Open) to open a file from your computer.<br />
+                        <b>CTRL + S</b> (<span class="shortcut-symbol" id="help-save-btn">&#128190;</span> Save) to save a file to your computer (CTRL + SHFT + S to Save As.<br />
+                        <b>CTRL + E</b> (<span class="shortcut-symbol" id="help-email-btn">📧</span> Email) to open the content in your default email client.<br />
+                        <b>CTRL + I</b> (<span class="shortcut-symbol" id="help-split-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M1.5 1.5A1.5 1.5 0 0 1 3 0h10a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 13 16H3a1.5 1.5 0 0 1-1.5-1.5V1.5zM3 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V1.5a.5.5 0 0 0-.5-.5H3z"/><path d="M4 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm4.5 6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg></span> Split) to toggle split view.<br />
+                        <b>CTRL + M</b> (<span class="shortcut-symbol" id="help-preview-btn">M↓</span>) to toggle <a href="https://www.markdownguide.org/cheat-sheet/">Markdown</a> preview.<br />
+                        <b>CTRL + .</b> (<span class="shortcut-symbol" id="help-csv-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13zM1.5 1a.5.5 0 0 0-.5.5V5h4V1H1.5zM5 6H1v4h4V6zm0 5H1v3.5a.5.5 0 0 0 .5.5H5v-4zm1 0v4h4v-4H6zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11h-4zm0-1h4V6h-4v4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11v4zm-1 0V1H6v4h4z"/></svg></span> CSV) to toggle CSV grid.<br />
+                        <b>CTRL + ;</b> to save as .html when in Markdown preview.<br />
+                        <b>CTRL + '</b> to save as .pdf when in Markdown preview.<br />
+                        <b>CTRL + G</b> (<span class="shortcut-symbol" id="help-blackjack-btn">🃏</span> Blackjack) to play a game of Blackjack.<br />
+                        <b>CTRL + F</b> (<span class="shortcut-symbol" id="help-find-btn">&#128269;</span> Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
+                        <b>CTRL + K</b> (<span class="shortcut-symbol" id="help-link-btn">&#128279;</span> Link) to open a web link on current line in a new tab.<br />
+                        <b>CTRL + /</b> (<span class="shortcut-symbol" id="help-settings-btn"><b>b</b></span> Settings) to open the editr help and settings window.<br />
+                        <b>CTRL + =</b> (<span class="shortcut-symbol" id="help-lock-btn">🔒</span> Lock) to lock the current note with a password, or unlock an existing one.<br />
+                        <b>CTRL + Z</b> (<span class="shortcut-symbol" id="help-undo-btn">&#x21A9;</span> Undo) to undo the last change and CTRL + Y to redo it.<br />
+                        <b><span class="shortcut-symbol" id="help-pwa-btn">&#x2B07;</span> PWA</b> installs editr as an offline Progressive Web App.<br />
+                        <b>&#8595;</b> displays the current line number.<br />
+                        <b>&#8594;</b> displays the current character position.<br />
+                        <b>=</b> displays the current word count.<br />
+                    </p>
+                    <p>
+                        editr.cc does not (and cannot):<br />
+                        <ul>
+                        <li>access your content,</li>
+                        <li>criticize your writing or coding,</li>
+                        <li>track any activity on your computer,</li>
+                        <li>judge your music choices,</li>
+                        <li>identify who you are,</li>
+                        <li>sell your data.</li>
+                        </ul>
+                    </p>
+                    <p>
+                        editr was created by <a href="https://barney.me">Barney</a>. If you want to support editr.cc buy me a
+                        <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.<br />
+                        Read just some of the ways you can use
+                        <a href="https://editr.cc/plaintext.txt">plaintext</a>.<br />
+                    </p>
+                </div>
+                <div class="b-modal-column-right">
+                    <div id="settings-actions">
+                        <button id="import-settings-btn">Import Settings</button>
+                        <button id="export-settings-btn">Export Settings</button>
+                    </div>
+                    <div class="settings-section">
+                        <div class="setting-item">
+                            <label for="default-word-wrap">Word Wrap</label>
+                            <input type="checkbox" id="default-word-wrap" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-auto-indent">Auto Indent</label>
+                            <input type="checkbox" id="default-auto-indent" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-turbo-boost">Turbo Boost</label>
+                            <input type="checkbox" id="default-turbo-boost" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="enable-spell-checker">Spell Checker</label>
+                            <input type="checkbox" id="enable-spell-checker" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="auto-close-brackets">Autoclose brackets</label>
+                            <input type="checkbox" id="auto-close-brackets" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="focus-mode-check" title="Enter fullscreen for a distraction-free experience.">Focus Mode</label>
+                            <input type="checkbox" id="focus-mode-check" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="show-email-btn-check">Email Button</label>
+                            <input type="checkbox" id="show-email-btn-check" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="show-split-btn-check">Split/Markdown View</label>
+                            <input type="checkbox" id="show-split-btn-check" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="enable-csv-mode">Enable CSV Grid</label>
+                            <input type="checkbox" id="enable-csv-mode" />
+                        </div>
+                        <div class="setting-item">
+                            <label for="default-theme">Theme</label>
+                            <select id="default-theme">
+                                <option value="light">Light</option>
+                                <option value="dark">Dark</option>
+                                <option value="snow">Snow</option>
+                            </select>
+                        </div>
+                        <div class="setting-item">
+                            <label for="date-format-select">Date</label>
+                            <select id="date-format-select">
+                                <option value="MM/DD/YY">MM/DD/YY</option>
+                                <option value="DD-MMM-YYYY">DD-MMM-YYYY</option>
+                                <option value="YYYY-MMM-DD">YYYY-MMM-DD</option>
+                                <option value="YYMMYY">YYMMYY</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="settings-section" id="text-expansion-section">
+                        <div id="text-expansion-content"></div>
+                    </div>
+                </div>
+            </div>
+            <input type="file" id="import-settings-input" accept=".json" style="display: none;" />
         </div>
 
-        <script>
-            // ========== DOM CACHE ==========
-            const $ = (id) => document.getElementById(id);
-            const textbox = $("textbox");
-            const filenameBox = $("filename");
-            const filenameDisplay = $("filename-display");
-            const linePos = $("line-pos");
-            const charPos = $("char-pos");
-            const wordCount = $("word-count");
-            const lineNumbers = $("line-numbers");
-            const aboutBtn = $("about-btn");
-            const saveBtn = $("save-btn");
-            const openBtn = $("open-btn");
-            const newBtn = $("new-btn");
-            const popupOverlay = $("popup-overlay");
-            const aboutPopup = $("about-popup");
-            const findPopup = $("find-popup");
-            const findText = $("find-text");
-            const replaceText = $("replace-text");
-            const findNextBtn = $("find-next-btn");
-            const replaceBtn = $("replace-btn");
-            const replaceAllBtn = $("replace-all-btn");
-            const findCount = $("find-count");
-            const fileInput = $("file-input");
-
-            const bufferIndicator = $("buffer-indicator");
-
-            // ========== BUFFER SYSTEM ==========
-            let currentBuffer = 1;
-            const MAX_BUFFERS = 9;
-            const buffers = {};
-
-            // Initialize all buffers
-            for (let i = 1; i <= MAX_BUFFERS; i++) {
-                buffers[i] = {
-                    content: "",
-                    filename: "file.txt",
-                    originalContent: "",
-                    hasUnsavedChanges: false,
-                    fileHandle: null,
-                    history: [""],
-                    historyPtr: 0,
-                };
-            }
-
-            function saveCurrentBufferState() {
-                const buffer = buffers[currentBuffer];
-                buffer.content = textbox.value;
-                buffer.filename = filenameBox.value;
-                buffer.originalContent = originalContent;
-                buffer.hasUnsavedChanges = hasUnsavedChanges;
-                buffer.fileHandle = currentFileHandle;
-                buffer.history = [...history];
-                buffer.historyPtr = historyPtr;
-            }
-
-            function loadBufferState(bufferNum) {
-                const buffer = buffers[bufferNum];
-                textbox.value = buffer.content;
-                filenameBox.value = buffer.filename;
-                filenameDisplay.textContent = buffer.filename;
-                originalContent = buffer.originalContent;
-                hasUnsavedChanges = buffer.hasUnsavedChanges;
-                currentFileHandle = buffer.fileHandle;
-                history = [...buffer.history];
-                historyPtr = buffer.historyPtr;
-
-                updateStats();
-                updateLineNumbers();
-                bufferIndicator.textContent = bufferNum;
-            }
-
-            function switchToBuffer(bufferNum) {
-                if (bufferNum < 1 || bufferNum > MAX_BUFFERS) return;
-                if (bufferNum === currentBuffer) return;
-
-                // Save current buffer state
-                saveCurrentBufferState();
-
-                // Switch to new buffer
-                currentBuffer = bufferNum;
-                loadBufferState(bufferNum);
-
-                // Autosave the new buffer state
-                autosave();
-            }
-            let currentFileHandle = null;
-            let hasUnsavedChanges = false;
-            let originalContent = "";
-
-            // Check if File System Access API is supported
-            const supportsFileSystemAccess = "showOpenFilePicker" in window;
-
-            function markAsModified() {
-                if (textbox.value !== originalContent) {
-                    hasUnsavedChanges = true;
-                } else {
-                    hasUnsavedChanges = false;
-                }
-            }
-
-            // ========== UNDO/REDO HISTORY ==========
-            const MAX_HISTORY = 100;
-            let history = [""];
-            let historyPtr = 0;
-            let isUndoing = false;
-            let isRedoing = false;
-
-            function pushHistory(val) {
-                if (isUndoing || isRedoing) return;
-                // If not at end, truncate
-                if (historyPtr < history.length - 1) {
-                    history = history.slice(0, historyPtr + 1);
-                }
-                if (history[historyPtr] !== val) {
-                    history.push(val);
-                    if (history.length > MAX_HISTORY) history.shift();
-                    else historyPtr++;
-                }
-            }
-
-            function undo() {
-                if (historyPtr > 0) {
-                    isUndoing = true;
-                    historyPtr--;
-                    textbox.value = history[historyPtr];
-                    updateStats();
-                    updateLineNumbers();
-                    markAsModified();
-                    isUndoing = false;
-                }
-            }
-
-            function redo() {
-                if (historyPtr < history.length - 1) {
-                    isRedoing = true;
-                    historyPtr++;
-                    textbox.value = history[historyPtr];
-                    updateStats();
-                    updateLineNumbers();
-                    markAsModified();
-                    isRedoing = false;
-                }
-            }
-
-            // ========== NEW FILE FUNCTION ==========
-            function newFile() {
-                window.open("https://editr.cc", "_blank");
-            }
-
-            // ========== AUTOSAVE ==========
-            const tabId = (() => {
-                if (!window.name)
-                    window.name =
-                        "tab-" +
-                        Date.now() +
-                        "-" +
-                        Math.random().toString(36).slice(2, 8);
-                return window.name;
-            })();
-
-            function autosave() {
-                try {
-                    // Save current buffer state before autosaving
-                    saveCurrentBufferState();
-
-                    const saveData = {
-                        currentBuffer: currentBuffer,
-                        buffers: buffers,
-                        timestamp: Date.now(),
-                    };
-                    localStorage.setItem(
-                        "editor_" + tabId,
-                        JSON.stringify(saveData),
-                    );
-                    localStorage.setItem("editor_last_tab", tabId);
-                } catch (error) {
-                    console.warn("Could not save to localStorage:", error);
-                }
-            }
-
-            function loadAutosaved() {
-                try {
-                    // Try to load from current tab first
-                    let savedData = localStorage.getItem("editor_" + tabId);
-
-                    // If no data for current tab, try the last used tab
-                    if (!savedData) {
-                        const lastTab = localStorage.getItem("editor_last_tab");
-                        if (lastTab) {
-                            savedData = localStorage.getItem(
-                                "editor_" + lastTab,
-                            );
-                        }
-                    }
-
-                    if (savedData) {
-                        const data = JSON.parse(savedData);
-
-                        // Load buffers if they exist
-                        if (data.buffers) {
-                            Object.assign(buffers, data.buffers);
-                            currentBuffer = data.currentBuffer || 1;
-                        } else {
-                            // Legacy format - convert to buffer system
-                            buffers[1].content = data.content || "";
-                            buffers[1].filename = data.filename || "file.txt";
-                            buffers[1].originalContent = data.content || "";
-                            currentBuffer = 1;
-                        }
-
-                        loadBufferState(currentBuffer);
-
-                        // Update timestamp to show when content was last saved
-                        if (data.timestamp) {
-                            const lastSaved = new Date(data.timestamp);
-                            console.log(
-                                "Restored content from:",
-                                lastSaved.toLocaleString(),
-                            );
-                        }
-
-                        return true;
-                    }
-                } catch (error) {
-                    console.warn("Could not load from localStorage:", error);
-                }
-                return false;
-            }
-
-            // ========== LINE NUMBERS ==========
-            function updateLineNumbers() {
-                const lines = textbox.value.split("\n");
-                const count = lines.length;
-                let html = "";
-
-                for (let i = 1; i <= count; i++) {
-                    html += `${i}<br>`;
-                }
-
-                lineNumbers.innerHTML = html;
-
-                // Sync scrolling
-                lineNumbers.scrollTop = textbox.scrollTop;
-            }
-
-            // ========== STATS ==========
-            function updateStats() {
-                const val = textbox.value;
-                const cursorPosition = textbox.selectionStart;
-
-                // Get text up to cursor
-                const textUpToCursor = val.substring(0, cursorPosition);
-
-                // Calculate line number (counting newlines + 1)
-                const lines = textUpToCursor.split("\n");
-                const currentLine = lines.length;
-
-                // Calculate column/character position in current line
-                const currentColumn = lines[lines.length - 1].length + 1;
-
-                // Update display
-                linePos.textContent = currentLine;
-                charPos.textContent = currentColumn;
-
-                // Count words - if text is empty, count is 0
-                wordCount.textContent = val.trim()
-                    ? val.trim().split(/\s+/).length
-                    : 0;
-            }
-
-            // ========== POPUP MODALS ==========
-            function showPopup(popup) {
-                popupOverlay.style.display = "flex";
-                popup.style.display = "block";
-                setTimeout(
-                    () => popup.querySelector("input,button,textarea")?.focus(),
-                    100,
-                );
-            }
-
-            function hidePopups() {
-                popupOverlay.style.display = "none";
-                aboutPopup.style.display = "none";
-                findPopup.style.display = "none";
-                findText.value = "";
-                replaceText.value = "";
-                findCount.textContent = "";
-            }
-
-            popupOverlay.addEventListener("click", (e) => {
-                if (e.target === popupOverlay) hidePopups();
-            });
-
-            document
-                .querySelectorAll(".popup .close-btn")
-                .forEach((btn) => (btn.onclick = hidePopups));
-
-            aboutBtn.onclick = () => showPopup(aboutPopup);
-            newBtn.onclick = newFile;
-
-            // ========== FIND & REPLACE ==========
-            let lastFindIndex = 0;
-            function doFind(next = true) {
-                const text = textbox.value;
-                const query = findText.value;
-                if (!query) return;
-                const idx = next
-                    ? text.indexOf(query, textbox.selectionEnd)
-                    : text.lastIndexOf(
-                          query,
-                          textbox.selectionStart - query.length - 1,
-                      );
-                if (idx !== -1) {
-                    textbox.focus();
-                    textbox.setSelectionRange(idx, idx + query.length);
-                    lastFindIndex = idx + query.length;
-                    showFindCount();
-                } else {
-                    findCount.textContent = "Not found";
-                }
-            }
-
-            function showFindCount() {
-                const text = textbox.value;
-                const query = findText.value;
-                if (!query) {
-                    findCount.textContent = "";
-                    return;
-                }
-                const matches = (
-                    text.match(new RegExp(escapeRegExp(query), "g")) || []
-                ).length;
-                findCount.textContent = matches
-                    ? `${matches} match${matches > 1 ? "es" : ""}`
-                    : "Not found";
-            }
-
-            function escapeRegExp(str) {
-                return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-            }
-
-            function doReplace() {
-                const query = findText.value;
-                const replacement = replaceText.value;
-                if (!query) return;
-                const { selectionStart, selectionEnd, value } = textbox;
-                if (value.substring(selectionStart, selectionEnd) === query) {
-                    textbox.setRangeText(
-                        replacement,
-                        selectionStart,
-                        selectionEnd,
-                        "end",
-                    );
-                    pushHistory(textbox.value);
-                    updateStats();
-                    updateLineNumbers();
-                    markAsModified();
-                    doFind();
-                }
-            }
-
-            function doReplaceAll() {
-                const query = findText.value;
-                const replacement = replaceText.value;
-                if (!query) return;
-                textbox.value = textbox.value.split(query).join(replacement);
-                pushHistory(textbox.value);
-                updateStats();
-                updateLineNumbers();
-                markAsModified();
-                showFindCount();
-            }
-
-            findText.oninput = showFindCount;
-            findNextBtn.onclick = () => doFind(true);
-            replaceBtn.onclick = doReplace;
-            replaceAllBtn.onclick = doReplaceAll;
-
-            // ========== FILE OPERATIONS ==========
-            async function saveFile() {
-                const content = textbox.value;
-
-                try {
-                    if (currentFileHandle && supportsFileSystemAccess) {
-                        // Save to existing file using File System Access API
-                        const writable =
-                            await currentFileHandle.createWritable();
-                        await writable.write(content);
-                        await writable.close();
-
-                        hasUnsavedChanges = false;
-                        originalContent = content;
-
-                        console.log("File saved successfully");
-                        return;
-                    }
-                } catch (error) {
-                    console.error("Error saving file:", error);
-                    // Fall back to download method
-                }
-
-                // Fallback: traditional download method
-                const blob = new Blob([content], { type: "text/plain" });
-                const name = filenameBox.value.trim() || "file.txt";
-                const a = document.createElement("a");
-                a.href = URL.createObjectURL(blob);
-                a.download = name;
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }
-
-            async function openFile() {
-                try {
-                    if (supportsFileSystemAccess) {
-                        // Use File System Access API
-                        const [fileHandle] = await window.showOpenFilePicker({
-                            types: [
-                                {
-                                    description: "Text files",
-                                    accept: {
-                                        "text/plain": [
-                                            ".txt",
-                                            ".md",
-                                            ".js",
-                                            ".html",
-                                            ".css",
-                                            ".json",
-                                            ".csv",
-                                        ],
-                                    },
-                                },
-                            ],
-                        });
-
-                        const file = await fileHandle.getFile();
-                        const content = await file.text();
-
-                        textbox.value = content;
-                        originalContent = content;
-                        currentFileHandle = fileHandle;
-                        hasUnsavedChanges = false;
-
-                        filenameBox.value = file.name;
-                        filenameDisplay.textContent = file.name;
-
-                        pushHistory(textbox.value);
-                        updateStats();
-                        updateLineNumbers();
-
-                        console.log("File opened successfully");
-                        return;
-                    }
-                } catch (error) {
-                    if (error.name !== "AbortError") {
-                        console.error("Error opening file:", error);
-                    }
-                    // Fall back to traditional file input
-                }
-
-                // Fallback: use traditional file input
-                fileInput.click();
-            }
-
-            saveBtn.onclick = saveFile;
-            openBtn.onclick = openFile;
-
-            // Traditional file input handler (fallback)
-            fileInput.onchange = (e) => {
-                const file = e.target.files[0];
-                if (file) {
-                    const reader = new FileReader();
-                    reader.onload = (ev) => {
-                        textbox.value = ev.target.result;
-                        originalContent = ev.target.result;
-                        currentFileHandle = null; // Traditional file loading doesn't provide handle
-                        hasUnsavedChanges = false;
-
-                        // Update current buffer
-                        buffers[currentBuffer].content = ev.target.result;
-                        buffers[currentBuffer].originalContent =
-                            ev.target.result;
-                        buffers[currentBuffer].hasUnsavedChanges = false;
-                        buffers[currentBuffer].fileHandle = null;
-
-                        pushHistory(textbox.value);
-                        updateStats();
-                        updateLineNumbers();
-                    };
-                    reader.readAsText(file);
-                    filenameBox.value = file.name;
-                    filenameDisplay.textContent = file.name;
-                }
-                fileInput.value = "";
-            };
-
-            // ========== EVENT HANDLERS ==========
-            textbox.addEventListener("input", () => {
-                pushHistory(textbox.value);
-                updateStats();
-                updateLineNumbers();
-                markAsModified();
-                // Update current buffer
-                buffers[currentBuffer].content = textbox.value;
-                buffers[currentBuffer].hasUnsavedChanges = hasUnsavedChanges;
-                autosave();
-            });
-
-            // Also autosave on filename changes
-            filenameBox.addEventListener("input", () => {
-                filenameDisplay.textContent =
-                    filenameBox.value || "untitled.txt";
-                // Update current buffer filename
-                buffers[currentBuffer].filename = filenameBox.value;
-                autosave();
-            });
-
-            // Autosave periodically (every 30 seconds)
-            setInterval(autosave, 30000);
-
-            textbox.addEventListener("keyup", updateStats);
-            textbox.addEventListener("click", updateStats);
-            textbox.addEventListener("keydown", updateStats);
-            textbox.addEventListener("mouseup", updateStats);
-
-            textbox.addEventListener("scroll", () => {
-                lineNumbers.scrollTop = textbox.scrollTop;
-            });
-
-            // Keyboard shortcuts
-            document.addEventListener("keydown", (e) => {
-                // Buffer switching shortcuts (Ctrl + 1-9)
-                if ((e.ctrlKey || e.metaKey) && e.key >= "1" && e.key <= "9") {
-                    e.preventDefault();
-                    const bufferNum = parseInt(e.key);
-                    switchToBuffer(bufferNum);
-                    return;
-                }
-
-                // Standard shortcuts
-                if (e.ctrlKey || e.metaKey) {
-                    if (e.key === "z") {
-                        e.preventDefault();
-                        undo();
-                    }
-                    if (e.key === "y") {
-                        e.preventDefault();
-                        redo();
-                    }
-                    if (e.key === "s") {
-                        e.preventDefault();
-                        saveFile();
-                    }
-                    if (e.key === "f") {
-                        e.preventDefault();
-                        showPopup(findPopup);
-                    }
-                    if (e.key === "o") {
-                        e.preventDefault();
-                        openFile();
-                    }
-                    if (e.key === "n") {
-                        e.preventDefault();
-                        newFile();
-                    }
-                }
-
-                // Function key shortcuts
-                if (e.key === "F1") {
-                    e.preventDefault();
-                    showPopup(aboutPopup);
-                }
-                if (e.key === "F3") {
-                    e.preventDefault();
-                    doFind(true);
-                }
-
-                // Close popups with Escape
-                if (e.key === "Escape") hidePopups();
-            });
-
-            // Warn before closing if there are unsaved changes
-            window.addEventListener("beforeunload", (e) => {
-                if (hasUnsavedChanges) {
-                    e.preventDefault();
-                    e.returnValue =
-                        "You have unsaved changes. Are you sure you want to leave?";
-                    return e.returnValue;
-                }
-            });
-
-            // ========== INITIALIZATION ==========
-            // Load autosaved content
-            const hasLoadedContent = loadAutosaved();
-
-            // If no saved content, initialize with empty state
-            if (!hasLoadedContent) {
-                textbox.value = "";
-                filenameBox.value = "file.txt";
-                filenameDisplay.textContent = "file.txt";
-                originalContent = "";
-                currentBuffer = 1;
-                bufferIndicator.textContent = "1";
-            }
-
-            // Initialize history with current content
-            history = [textbox.value];
-            historyPtr = 0;
-
-            updateStats();
-            updateLineNumbers();
-            pushHistory(textbox.value);
-
-            // Helper: focus filename on load
-            filenameBox.addEventListener("keydown", (e) => {
-                if (e.key === "Enter") textbox.focus();
-            });
-
-            // Make sure stats are updated on document ready
-            document.addEventListener("DOMContentLoaded", () => {
-                updateStats();
-                updateLineNumbers();
-                textbox.focus();
-            });
-
-            // Log File System Access API support
-            console.log(
-                "File System Access API supported:",
-                supportsFileSystemAccess,
-            );
-
-            // ========== SERVICE WORKER REGISTRATION ==========
-            if ("serviceWorker" in navigator) {
-                window.addEventListener("load", () => {
-                    navigator.serviceWorker
-                        .register("/sw.js")
-                        .then((registration) => {
-                            console.log(
-                                "ServiceWorker registration successful with scope: ",
-                                registration.scope,
-                            );
-                        })
-                        .catch((error) => {
-                            console.log(
-                                "ServiceWorker registration failed: ",
-                                error,
-                            );
-                        });
-                });
-            }
-
-            // ======== Adaptive toolbar overflow logic ========
-            function adaptToolbar() {
-                const topbar = document.getElementById("topbar");
-                const actions = document.getElementById("primary-actions");
-                const overflowMenu = document.getElementById("overflow-menu");
-                const overflowContainer =
-                    document.getElementById("overflow-container");
-                if (!topbar || !actions) return;
-                // reset: move overflowed back
-                const moved = [...overflowMenu.querySelectorAll(".menu-item")];
-                moved.forEach((btn) => actions.appendChild(btn));
-                // clear menu (we moved elements already removed by appendChild)
-                // measure available space
-                const toolbarWidth = topbar.clientWidth;
-                const titleWidth =
-                    topbar.querySelector(".title")?.offsetWidth || 0;
-                const overflowWidth = overflowContainer.offsetWidth;
-                const paddingFudge = 40;
-                let used = titleWidth + paddingFudge;
-                const buttons = [...actions.querySelectorAll(".menu-item")];
-                buttons.forEach((btn) => {
-                    btn.style.display = "";
-                    const btnWidth = btn.offsetWidth;
-                    if (used + btnWidth + overflowWidth > toolbarWidth) {
-                        overflowMenu.appendChild(btn);
-                    } else {
-                        used += btnWidth;
-                    }
-                });
-                if (overflowMenu.children.length === 0) {
-                    overflowContainer.style.display = "none";
-                } else {
-                    overflowContainer.style.display = "";
-                }
-            }
-            function debounce(fn, ms) {
-                let t;
-                return (...args) => {
-                    clearTimeout(t);
-                    t = setTimeout(() => fn(...args), ms);
-                };
-            }
-            document.addEventListener("DOMContentLoaded", () => {
-                adaptToolbar();
-                window.addEventListener("resize", debounce(adaptToolbar, 100));
-                const moreToggle = document.getElementById("more-toggle");
-                const overflowMenu = document.getElementById("overflow-menu");
-                moreToggle?.addEventListener("click", (e) => {
-                    e.stopPropagation();
-                    overflowMenu.classList.toggle("hidden");
-                });
-                document.addEventListener("click", () => {
-                    overflowMenu.classList.add("hidden");
-                });
-            });
-        </script>
+        <div id="blackjack-popup" class="popup">
+            <button class="close-btn">×</button>
+            <h2>Blackjack</h2>
+            <div id="blackjack-output" class="game-output-area"></div>
+            <div id="blackjack-input-area">
+                <p style="text-align: center; font-family: monospace; padding-top: 10px;">
+                    Press [D] to Deal, [H] to Hit, [S] to Stand
+                </p>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
     </body>
 </html>
