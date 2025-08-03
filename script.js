@@ -274,12 +274,40 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Update filename placeholder to show buffer
     elements.filenameBox1.placeholder = `editr${currentBufferId}.txt`;
+
+    // Update buffer number in indicator
+    const bufferNumber = document.getElementById("buffer-number");
+    if (bufferNumber) {
+      bufferNumber.textContent = currentBufferId;
+    }
   }
 
-  // Create buffer indicator UI element (now just returns null since we don't show it visually)
+  // Create buffer indicator UI element
   function createBufferIndicator() {
-    // No longer creating a visual indicator
-    return null;
+    const bufferIndicator = document.createElement("button");
+    bufferIndicator.id = "buffer-indicator";
+    bufferIndicator.innerHTML = `<span id="buffer-number">${currentBufferId}</span>`;
+    bufferIndicator.title = "Buffer";
+    bufferIndicator.style.cssText = `
+      margin-left: 0.5em;
+      cursor: default;
+      pointer-events: none;
+      padding: 0.5em 0.75em;
+      border-radius: 4px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+    `;
+
+    // Find the filename container and insert the buffer indicator right after it
+    const filenameContainer = document.getElementById("filename-container");
+    if (filenameContainer && filenameContainer.parentNode) {
+      filenameContainer.parentNode.insertBefore(
+        bufferIndicator,
+        filenameContainer.nextSibling,
+      );
+    }
+    return bufferIndicator;
   }
 
   // Handle buffer switching keyboard shortcuts
