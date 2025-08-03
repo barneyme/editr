@@ -1140,4 +1140,70 @@ body.dark-mode #blackjack-input {
     .active-line {
         display: none;
     }
+    /* Buffer indicator styles */
+    #buffer-indicator {
+        background-color: #2980b9;
+        color: white;
+        padding: 0.25em 0.5em;
+        border-radius: 4px;
+        font-size: 12px;
+        margin-left: 0.5em;
+        display: flex;
+        align-items: center;
+        gap: 0.3em;
+    }
+
+    .buffer-label {
+        opacity: 0.8;
+        font-size: 0.9em;
+    }
+
+    #buffer-number {
+        font-weight: bold;
+        background-color: rgba(255, 255, 255, 0.2);
+        padding: 0.1em 0.4em;
+        border-radius: 2px;
+        min-width: 1.2em;
+        text-align: center;
+    }
+
+    /* Dark mode buffer indicator */
+    body.dark-mode #buffer-indicator {
+        background-color: #404040;
+        color: white;
+    }
+
+    body.dark-mode #buffer-number {
+        background-color: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Snow mode buffer indicator */
+    body.snow-mode #buffer-indicator {
+        background-color: #87ceeb;
+        color: #2c3e50;
+    }
+
+    body.snow-mode #buffer-number {
+        background-color: rgba(44, 62, 80, 0.1);
+    }
+
+    /* Mobile responsiveness for buffer indicator */
+    @media (max-width: 768px) {
+        #buffer-indicator {
+            font-size: 11px;
+            padding: 0.2em 0.4em;
+            margin-left: 0.3em;
+        }
+
+        .buffer-label {
+            display: none; /* Hide "Buffer:" text on mobile */
+        }
+    }
+
+    @media (max-width: 350px) {
+        #buffer-indicator {
+            font-size: 10px;
+            padding: 0.15em 0.3em;
+        }
+    }
 }

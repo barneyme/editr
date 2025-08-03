@@ -170,6 +170,256 @@ document.addEventListener("DOMContentLoaded", function () {
   let isCsvMode = false;
   let csvData = [];
 
+  // File buffer system
+  let fileBuffers = {};
+  let currentBufferId = 1;
+  const MAX_BUFFERS = 9;
+
+  // Initialize buffers
+  function initializeBuffers() {
+    for (let i = 1; i <= MAX_BUFFERS; i++) {
+      fileBuffers[i] = {
+        content: "",
+        filename: `editr${i}.txt`,
+        cursorPosition: 0,
+        fileHandle: null,
+        history: [],
+        historyIndex: -1,
+        historyCursorPositions: [],
+      };
+    }
+
+    // Set buffer 1 with any existing content
+    if (elements.textbox1.value) {
+      fileBuffers[1].content = elements.textbox1.value;
+      fileBuffers[1].filename = elements.filenameBox1.value || "editr1.txt";
+    }
+  }
+
+  // Switch to a specific buffer
+  function switchToBuffer(bufferId) {
+    if (
+      bufferId < 1 ||
+      bufferId > MAX_BUFFERS ||
+      bufferId === currentBufferId
+    ) {
+      return;
+    }
+
+    // Save current buffer state
+    saveCurrentBufferState();
+
+    // Switch to new buffer
+    currentBufferId = bufferId;
+    loadBufferState();
+
+    // Update UI to show current buffer
+    updateBufferIndicator();
+    updateAllUI();
+    elements.textbox1.focus();
+  }
+
+  // Save current buffer state
+  function saveCurrentBufferState() {
+    const buffer = fileBuffers[currentBufferId];
+    buffer.content = elements.textbox1.value;
+    buffer.filename =
+      elements.filenameBox1.value || `editr${currentBufferId}.txt`;
+    buffer.cursorPosition = elements.textbox1.selectionStart;
+    buffer.fileHandle = fileHandles["textbox-1"];
+    buffer.history = [...history];
+    buffer.historyIndex = currentHistoryIndex;
+    buffer.historyCursorPositions = [...historyCursorPositions];
+  }
+
+  // Load buffer state
+  function loadBufferState() {
+    const buffer = fileBuffers[currentBufferId];
+
+    elements.textbox1.value = buffer.content;
+    elements.filenameBox1.value = buffer.filename;
+    fileHandles["textbox-1"] = buffer.fileHandle;
+
+    // Restore history
+    history = [...buffer.history];
+    currentHistoryIndex = buffer.historyIndex;
+    historyCursorPositions = [...buffer.historyCursorPositions];
+
+    // If buffer is empty, initialize with empty history
+    if (history.length === 0) {
+      addToHistory(buffer.content, 0);
+    }
+
+    // Restore cursor position
+    setTimeout(() => {
+      elements.textbox1.setSelectionRange(
+        buffer.cursorPosition,
+        buffer.cursorPosition,
+      );
+      updateAllUI();
+    }, 0);
+
+    // Store locally
+    storeLocally(elements.textbox1);
+  }
+
+  // Update buffer indicator in the UI
+  function updateBufferIndicator() {
+    // Update the filename to show buffer number
+    const buffer = fileBuffers[currentBufferId];
+    let displayName = buffer.filename;
+
+    // Add buffer indicator to title
+    document.title = `editr - Buffer ${currentBufferId}: ${displayName}`;
+
+    // Update filename placeholder to show buffer
+    elements.filenameBox1.placeholder = `editr${currentBufferId}.txt`;
+
+    // Update buffer number in indicator
+    const bufferNumber = document.getElementById("buffer-number");
+    if (bufferNumber) {
+      bufferNumber.textContent = currentBufferId;
+    }
+  }
+
+  // Create buffer indicator UI element
+  function createBufferIndicator() {
+    const bufferIndicator = document.createElement("button");
+    bufferIndicator.id = "buffer-indicator";
+    bufferIndicator.innerHTML = `<span id="buffer-number">${currentBufferId}</span>`;
+    bufferIndicator.className = "nav-button";
+    bufferIndicator.title = `Current buffer: ${currentBufferId} (Ctrl+1-9 to switch)`;
+    bufferIndicator.style.cssText = `
+      margin-right: 0.5em;
+      cursor: default;
+      pointer-events: none;
+    `;
+
+    // Insert as first child in nav area to position it left of stats
+    if (elements.nav) {
+      elements.nav.insertBefore(bufferIndicator, elements.nav.firstChild);
+    }
+    return bufferIndicator;
+  }
+
+  // Handle buffer switching keyboard shortcuts
+  function handleBufferKeyboard(event) {
+    if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
+      const key = event.key;
+      const num = parseInt(key);
+
+      if (num >= 1 && num <= 9) {
+        event.preventDefault();
+        switchToBuffer(num);
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Enhanced file operations for buffers
+  function openFileToBuffer(targetBuffer = null) {
+    const bufferId = targetBuffer || currentBufferId;
+
+    if ("showOpenFilePicker" in window) {
+      window
+        .showOpenFilePicker()
+        .then(([handle]) => {
+          return handle.getFile();
+        })
+        .then((file) => {
+          const reader = new FileReader();
+          reader.onload = (e) => {
+            // Switch to target buffer first
+            if (bufferId !== currentBufferId) {
+              switchToBuffer(bufferId);
+            }
+
+            // Load file content
+            const content = e.target.result;
+            elements.textbox1.value = content;
+            elements.filenameBox1.value = file.name;
+            fileHandles["textbox-1"] = handle;
+
+            // Update buffer
+            const buffer = fileBuffers[currentBufferId];
+            buffer.content = content;
+            buffer.filename = file.name;
+            buffer.fileHandle = handle;
+            buffer.history = [];
+            buffer.historyIndex = -1;
+            buffer.historyCursorPositions = [];
+
+            addToHistory(content, 0);
+            addRecentFile(file.name, content);
+            storeLocally(elements.textbox1);
+            updateAllUI();
+            updateBufferIndicator();
+
+            // Handle CSV mode
+            if (
+              settings.enableCsvMode &&
+              file.name.toLowerCase().endsWith(".csv")
+            ) {
+              toggleCsvMode(true);
+            } else {
+              toggleCsvMode(false);
+            }
+          };
+          reader.readAsText(file);
+        })
+        .catch((err) => {
+          console.log("Open file dialog was cancelled or failed.", err);
+        });
+    } else {
+      // Fallback for browsers without File System Access API
+      elements.openInput1.click();
+    }
+  }
+
+  // Save current buffer
+  function saveCurrentBuffer() {
+    saveCurrentBufferState();
+    saveFile();
+  }
+
+  // Create new buffer
+  function createNewBuffer() {
+    // Find next available buffer or use current + 1
+    let targetBuffer = currentBufferId + 1;
+    if (targetBuffer > MAX_BUFFERS) {
+      targetBuffer = 1;
+    }
+
+    // Find first empty buffer
+    for (let i = 1; i <= MAX_BUFFERS; i++) {
+      if (fileBuffers[i].content === "" && !fileBuffers[i].fileHandle) {
+        targetBuffer = i;
+        break;
+      }
+    }
+
+    switchToBuffer(targetBuffer);
+
+    // Clear the buffer
+    elements.textbox1.value = "";
+    elements.filenameBox1.value = `editr${targetBuffer}.txt`;
+    fileHandles["textbox-1"] = null;
+
+    const buffer = fileBuffers[targetBuffer];
+    buffer.content = "";
+    buffer.filename = `editr${targetBuffer}.txt`;
+    buffer.fileHandle = null;
+    buffer.history = [];
+    buffer.historyIndex = -1;
+    buffer.historyCursorPositions = [];
+
+    addToHistory("", 0);
+    storeLocally(elements.textbox1);
+    updateAllUI();
+    elements.textbox1.focus();
+  }
+
   let settings = {};
   const defaultSettings = {
     wordWrap: false,
@@ -616,6 +866,15 @@ document.addEventListener("DOMContentLoaded", function () {
         historyCursorPositions = [];
         currentHistoryIndex = -1;
         addToHistory(content, 0);
+
+        // Update current buffer
+        const buffer = fileBuffers[currentBufferId];
+        buffer.content = content;
+        buffer.filename = file.name;
+        buffer.history = [...history];
+        buffer.historyIndex = currentHistoryIndex;
+        buffer.historyCursorPositions = [...historyCursorPositions];
+        updateBufferIndicator();
       }
       activeTextbox = targetTextbox;
       updateAllUI();
@@ -745,6 +1004,14 @@ document.addEventListener("DOMContentLoaded", function () {
         await writable.write(content);
         await writable.close();
         addRecentFile(saveAsHandle.name, content);
+
+        // Update buffer with new file handle and name
+        if (currentActiveTextbox === elements.textbox1) {
+          const buffer = fileBuffers[currentBufferId];
+          buffer.fileHandle = saveAsHandle;
+          buffer.filename = saveAsHandle.name;
+          updateBufferIndicator();
+        }
         return;
       } catch (err) {
         console.log("Save As dialog was cancelled or failed.", err);
@@ -867,6 +1134,9 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.textbox1.value = history[currentHistoryIndex];
     const cursorPos = historyCursorPositions[currentHistoryIndex];
 
+    // Update current buffer content
+    fileBuffers[currentBufferId].content = elements.textbox1.value;
+
     if (isCsvMode) {
       updateGridFromTextbox();
     }
@@ -888,7 +1158,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return string.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\      const dropdownItem =",
+    );
   }
 
   function findAllMatches() {
@@ -1037,6 +1310,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const newCursorPos = selectionStart + replacement.length;
     activeTextbox.setSelectionRange(newCursorPos, newCursorPos);
 
+    // Update current buffer content
+    if (activeTextbox === elements.textbox1) {
+      fileBuffers[currentBufferId].content = activeTextbox.value;
+    }
+
     storeLocally(activeTextbox);
     updateAllUI();
     findAllMatches();
@@ -1055,6 +1333,12 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const regex = new RegExp(pattern, flags);
       activeTextbox.value = activeTextbox.value.replace(regex, replacement);
+
+      // Update current buffer content
+      if (activeTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = activeTextbox.value;
+      }
+
       storeLocally(activeTextbox);
       updateAllUI();
       findAllMatches();
@@ -1285,6 +1569,12 @@ document.addEventListener("DOMContentLoaded", function () {
         textbox.value = textBefore + expansionText + textAfter;
         const newCursorPos = textBefore.length + expansionText.length;
         textbox.setSelectionRange(newCursorPos, newCursorPos);
+
+        // Update current buffer content
+        if (textbox === elements.textbox1) {
+          fileBuffers[currentBufferId].content = textbox.value;
+        }
+
         updateAllUI();
         storeLocally(textbox);
       }
@@ -1348,6 +1638,16 @@ document.addEventListener("DOMContentLoaded", function () {
       storeLocally(targetTextbox);
       if (targetTextbox === elements.textbox1) {
         addToHistory(selectedFile.content, 0);
+
+        // Update current buffer
+        const buffer = fileBuffers[currentBufferId];
+        buffer.content = selectedFile.content;
+        buffer.filename = selectedFile.filename;
+        buffer.fileHandle = null;
+        buffer.history = [...history];
+        buffer.historyIndex = currentHistoryIndex;
+        buffer.historyCursorPositions = [...historyCursorPositions];
+        updateBufferIndicator();
       }
       updateAllUI();
       if (!isCsvMode) targetTextbox.focus();
@@ -1408,6 +1708,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleKeyDown(event) {
+    // First check for buffer switching
+    if (handleBufferKeyboard(event)) {
+      return;
+    }
+
     const targetTextbox = event.target.closest(".textbox");
     if (!targetTextbox && !isCsvMode) return;
 
@@ -1442,6 +1747,11 @@ document.addEventListener("DOMContentLoaded", function () {
         targetTextbox.selectionStart = targetTextbox.selectionEnd = s + 1;
       }
 
+      // Update current buffer content
+      if (targetTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = targetTextbox.value;
+      }
+
       clearTimeout(saveTimer);
       saveTimer = setTimeout(() => {
         storeLocally(targetTextbox);
@@ -1468,6 +1778,12 @@ document.addEventListener("DOMContentLoaded", function () {
         targetTextbox.value = newText;
         targetTextbox.selectionStart = targetTextbox.selectionEnd =
           newCursorPos;
+
+        // Update current buffer content
+        if (targetTextbox === elements.textbox1) {
+          fileBuffers[currentBufferId].content = targetTextbox.value;
+        }
+
         updateAllUI();
       }
       return;
@@ -1482,6 +1798,12 @@ document.addEventListener("DOMContentLoaded", function () {
       targetTextbox.value = `${targetTextbox.value.substring(0, s)}${tabSpaces}${targetTextbox.value.substring(e)}`;
       targetTextbox.selectionStart = targetTextbox.selectionEnd =
         s + tabSpaces.length;
+
+      // Update current buffer content
+      if (targetTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = targetTextbox.value;
+      }
+
       updateAllUI();
       return;
     }
@@ -1493,10 +1815,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       switch (key) {
         case "o":
-          openFile();
+          openFileToBuffer();
           break;
         case "s":
-          saveFile();
+          saveCurrentBuffer();
           break;
         case "e":
           shareViaEmail();
@@ -1514,7 +1836,7 @@ document.addEventListener("DOMContentLoaded", function () {
           if (!isCsvMode) redo();
           break;
         case "n":
-          openNewTab();
+          createNewBuffer();
           break;
         case "m":
           if (
@@ -1583,6 +1905,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const targetTextbox = event.target;
     handleExpansion(event);
     updateAllUI();
+
+    // Update current buffer content
+    if (targetTextbox === elements.textbox1) {
+      fileBuffers[currentBufferId].content = targetTextbox.value;
+    }
+
     if (popups.findReplace.style.display === "block") {
       findAllMatches();
     }
@@ -1647,6 +1975,7 @@ document.addEventListener("DOMContentLoaded", function () {
       .map((row) => row.map(quoteField).join(","))
       .join("\n");
     elements.textbox1.value = csvString;
+    fileBuffers[currentBufferId].content = csvString;
     storeLocally(elements.textbox1);
     updateWordCount();
   }
@@ -1988,8 +2317,8 @@ document.addEventListener("DOMContentLoaded", function () {
     box.addEventListener("change", handleFilenameChange);
   });
 
-  elements.openBtn.addEventListener("click", openFile);
-  elements.saveBtn.addEventListener("click", saveFile);
+  elements.openBtn.addEventListener("click", () => openFileToBuffer());
+  elements.saveBtn.addEventListener("click", () => saveCurrentBuffer());
   elements.emailBtn.addEventListener("click", shareViaEmail);
   elements.csvModeBtn.addEventListener("click", () => toggleCsvMode());
   elements.openInput1.addEventListener("change", (e) =>
@@ -2135,15 +2464,15 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.overlay.addEventListener("click", () => togglePopup(null, false));
 
   elements.helpNewBtn.addEventListener("click", () => {
-    openNewTab();
+    createNewBuffer();
   });
   elements.helpOpenBtn.addEventListener("click", () => {
     togglePopup(null, false);
-    openFile();
+    openFileToBuffer();
   });
   elements.helpSaveBtn.addEventListener("click", () => {
     togglePopup(null, false);
-    saveFile();
+    saveCurrentBuffer();
   });
   elements.helpEmailBtn.addEventListener("click", () => {
     togglePopup(null, false);
@@ -2212,6 +2541,11 @@ document.addEventListener("DOMContentLoaded", function () {
   updateAllUI();
   updateRecentFilesUI();
 
+  // Initialize buffer system
+  initializeBuffers();
+  createBufferIndicator();
+  updateBufferIndicator();
+
   // Handle incoming shares, shortcuts, and file openings
   const urlParams = new URLSearchParams(window.location.search);
   const sharedTitle = urlParams.get("title");
@@ -2222,22 +2556,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const contentToLoad = `${sharedTitle ? sharedTitle + "\n\n" : ""}${sharedText ? sharedText + "\n\n" : ""}${sharedUrl ? sharedUrl : ""}`;
     elements.textbox1.value = contentToLoad.trim();
     elements.filenameBox1.value = (sharedTitle || "shared-note") + ".txt";
+
+    // Update current buffer
+    const buffer = fileBuffers[currentBufferId];
+    buffer.content = contentToLoad.trim();
+    buffer.filename = (sharedTitle || "shared-note") + ".txt";
+
     updateAllUI();
+    updateBufferIndicator();
     storeLocally(elements.textbox1);
     addToHistory(elements.textbox1.value, 0);
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if (urlParams.has("open")) {
-    openFile();
+    openFileToBuffer();
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if (urlParams.has("new")) {
-    elements.textbox1.value = "";
-    elements.filenameBox1.value = "editr.txt";
-    storeLocally(elements.textbox1);
-    history = [];
-    currentHistoryIndex = -1;
-    addToHistory("", 0);
-    updateAllUI();
-    elements.textbox1.focus();
+    createNewBuffer();
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
