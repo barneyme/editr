@@ -432,13 +432,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const defaultSettings = {
     wordWrap: false,
     theme: "dark",
-    autoIndent: true,
+    autoIndent: false,
     turboBoost: false,
     spellCheck: false,
-    autoCloseBrackets: true,
+    autoCloseBrackets: false,
     focusMode: false,
     showEmailButton: false,
-    showSplitButton: true,
+    showSplitButton: false,
     enableCsvMode: false,
     dateFormat: "DD-MMM-YYYY",
     expansions: {},
@@ -2087,10 +2087,13 @@ document.addEventListener("DOMContentLoaded", function () {
         const input = document.createElement("input");
         input.type = "text";
         input.value = headerText || "";
+        input.dataset.row = 0;
+        input.dataset.col = colIndex;
         input.oninput = () => {
           csvData[0][colIndex] = input.value;
           updateTextboxFromGrid();
         };
+        input.onkeydown = (e) => handleCsvGridKeyDown(e, 0, colIndex);
         th.appendChild(input);
 
         const deleteBtn = document.createElement("button");
@@ -2121,10 +2124,14 @@ document.addEventListener("DOMContentLoaded", function () {
         const input = document.createElement("input");
         input.type = "text";
         input.value = cell || "";
+        input.dataset.row = absoluteRowIndex;
+        input.dataset.col = colIndex;
         input.oninput = () => {
           csvData[absoluteRowIndex][colIndex] = input.value;
           updateTextboxFromGrid();
         };
+        input.onkeydown = (e) =>
+          handleCsvGridKeyDown(e, absoluteRowIndex, colIndex);
         td.appendChild(input);
         tr.appendChild(td);
       });
@@ -2159,6 +2166,43 @@ document.addEventListener("DOMContentLoaded", function () {
       activeTextbox = elements.textbox1;
       elements.textbox1.focus();
       updateAllUI();
+    }
+  }
+
+  function handleCsvGridKeyDown(event, rowIndex, colIndex) {
+    if (
+      !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
+    ) {
+      return;
+    }
+    event.preventDefault();
+
+    let nextRow = rowIndex;
+    let nextCol = colIndex;
+    const maxCol = csvData[rowIndex].length - 1;
+
+    switch (event.key) {
+      case "ArrowUp":
+        nextRow = Math.max(0, rowIndex - 1);
+        break;
+      case "ArrowDown":
+        const maxRow = csvData.length - 1;
+        nextRow = Math.min(maxRow, rowIndex + 1);
+        break;
+      case "ArrowLeft":
+        nextCol = Math.max(0, colIndex - 1);
+        break;
+      case "ArrowRight":
+        nextCol = Math.min(maxCol, colIndex + 1);
+        break;
+    }
+
+    const nextInput = document.querySelector(
+      `#csv-grid input[data-row='${nextRow}'][data-col='${nextCol}']`,
+    );
+    if (nextInput) {
+      nextInput.focus();
+      nextInput.select();
     }
   }
 
