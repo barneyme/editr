@@ -333,6 +333,7 @@ document.addEventListener("DOMContentLoaded", function () {
       window
         .showOpenFilePicker()
         .then(([handle]) => {
+          fileHandles["textbox-1"] = handle; // Store handle immediately
           return handle.getFile();
         })
         .then((file) => {
@@ -347,13 +348,13 @@ document.addEventListener("DOMContentLoaded", function () {
             const content = e.target.result;
             elements.textbox1.value = content;
             elements.filenameBox1.value = file.name;
-            fileHandles["textbox-1"] = handle;
+            // The handle is already in fileHandles['textbox-1']
 
             // Update buffer
             const buffer = fileBuffers[currentBufferId];
             buffer.content = content;
             buffer.filename = file.name;
-            buffer.fileHandle = handle;
+            buffer.fileHandle = fileHandles["textbox-1"];
             buffer.history = [];
             buffer.historyIndex = -1;
             buffer.historyCursorPositions = [];
@@ -364,15 +365,8 @@ document.addEventListener("DOMContentLoaded", function () {
             updateAllUI();
             updateBufferIndicator();
 
-            // Handle CSV mode
-            if (
-              settings.enableCsvMode &&
-              file.name.toLowerCase().endsWith(".csv")
-            ) {
-              toggleCsvMode(true);
-            } else {
-              toggleCsvMode(false);
-            }
+            // Handle contextual UI changes for special file types
+            handleSpecialFileTypes(file.name, elements.textbox1);
           };
           reader.readAsText(file);
         })
@@ -860,6 +854,36 @@ document.addEventListener("DOMContentLoaded", function () {
     updateRecentFilesUI();
   }
 
+  function handleSpecialFileTypes(filename, targetTextbox) {
+    const lowerCaseFilename = filename.toLowerCase();
+
+    // Markdown file handling: enable split view to show Preview button
+    if (lowerCaseFilename.endsWith(".md")) {
+      if (!elements.editorContainer.classList.contains("split-view-active")) {
+        toggleSplitView(true);
+      }
+    }
+
+    // CSV file handling
+    if (lowerCaseFilename.endsWith(".csv")) {
+      // Contextually show the button regardless of settings
+      elements.csvModeBtn.style.display = "inline-flex";
+      // If the global setting is enabled, also toggle the grid mode on
+      if (settings.enableCsvMode && targetTextbox === elements.textbox1) {
+        toggleCsvMode(true);
+      }
+    } else {
+      // For all non-CSV files, turn off CSV mode if it's on
+      if (isCsvMode) {
+        toggleCsvMode(false);
+      }
+      // And reset the button visibility based on the global setting
+      elements.csvModeBtn.style.display = settings.enableCsvMode
+        ? "inline-flex"
+        : "none";
+    }
+  }
+
   function openDroppedFile(file, targetTextbox, targetFilenameBox) {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -887,16 +911,14 @@ document.addEventListener("DOMContentLoaded", function () {
       activeTextbox = targetTextbox;
       updateAllUI();
 
-      if (settings.enableCsvMode && file.name.toLowerCase().endsWith(".csv")) {
-        if (targetTextbox === elements.textbox1) {
-          toggleCsvMode(true);
-        } else {
-          alert(
-            "CSV Grid view is only available in the left pane. Open the file there to use the grid editor.",
-          );
-        }
-      } else {
-        toggleCsvMode(false);
+      handleSpecialFileTypes(file.name, targetTextbox);
+      if (
+        file.name.toLowerCase().endsWith(".csv") &&
+        targetTextbox !== elements.textbox1
+      ) {
+        alert(
+          "CSV Grid view is only available in the left pane. Open the file there to use the grid editor.",
+        );
       }
     };
     reader.onerror = (e) => {
@@ -1681,11 +1703,7 @@ document.addEventListener("DOMContentLoaded", function () {
       updateAllUI();
       if (!isCsvMode) targetTextbox.focus();
 
-      if (settings.enableCsvMode && filename.toLowerCase().endsWith(".csv")) {
-        if (targetTextbox === elements.textbox1) toggleCsvMode(true);
-      } else {
-        toggleCsvMode(false);
-      }
+      handleSpecialFileTypes(selectedFile.filename, targetTextbox);
     }
   }
 
