@@ -49,7 +49,6 @@ document.addEventListener("DOMContentLoaded", function () {
     focusModeCheck: document.getElementById("focus-mode-check"),
     showEmailBtnCheck: document.getElementById("show-email-btn-check"),
     showSplitBtnCheck: document.getElementById("show-split-btn-check"),
-    showProjectBtnCheck: document.getElementById("show-project-btn-check"),
     enableCsvModeCheck: document.getElementById("enable-csv-mode"),
     defaultThemeSelect: document.getElementById("default-theme"),
     dateFormatSelect: document.getElementById("date-format-select"),
@@ -77,12 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
     csvModeBtn: document.getElementById("csv-mode-btn"),
     csvGridContainer: document.getElementById("csv-grid-container"),
     editorPane1: document.getElementById("editor-pane-1"),
-    // Project Elements
-    projectBtn: document.getElementById("project-btn"),
-    projectDropdown: document.getElementById("project-dropdown"),
-    exportProjectBtn: document.getElementById("export-project-btn"),
-    importProjectBtn: document.getElementById("import-project-btn"),
-    importProjectInput: document.getElementById("import-project-input"),
     // Blackjack game elements
     blackjackOutput: document.getElementById("blackjack-output"),
   };
@@ -103,7 +96,12 @@ document.addEventListener("DOMContentLoaded", function () {
       ["deriveKey"],
     );
     return window.crypto.subtle.deriveKey(
-      { name: "PBKDF2", salt: salt, iterations: 100000, hash: "SHA-256" },
+      {
+        name: "PBKDF2",
+        salt: salt,
+        iterations: 100000,
+        hash: "SHA-256",
+      },
       keyMaterial,
       { name: "AES-GCM", length: 256 },
       true,
@@ -165,7 +163,10 @@ document.addEventListener("DOMContentLoaded", function () {
   const MAX_RECENT_FILES = 5;
   let protectedNotes = {};
   let activeProtectedNotePassword = null;
-  let fileHandles = { "textbox-1": null, "textbox-2": null };
+  let fileHandles = {
+    "textbox-1": null,
+    "textbox-2": null,
+  };
   let isCsvMode = false;
   let csvData = [];
 
@@ -174,41 +175,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentBufferId = 1;
   const MAX_BUFFERS = 9;
 
-  // Global history state for the active buffer
-  let history = [];
-  let currentHistoryIndex = -1;
-  let historyCursorPositions = [];
-
-  // Syncs the UI state (textbox content, cursor, global history) to the fileBuffers object
-  function saveCurrentBufferState() {
-    const buffer = fileBuffers[currentBufferId];
-    if (buffer) {
-      buffer.content = elements.textbox1.value;
-      buffer.filename =
-        elements.filenameBox1.value || `editr${currentBufferId}.txt`;
-      buffer.cursorPosition = elements.textbox1.selectionStart;
-      buffer.fileHandle = fileHandles["textbox-1"];
-      buffer.history = [...history];
-      buffer.historyIndex = currentHistoryIndex;
-      buffer.historyCursorPositions = [...historyCursorPositions];
-    }
-  }
-
-  // The single function to persist the entire session state to localStorage
-  function persistSession() {
-    saveCurrentBufferState(); // Ensure the current UI state is captured in the model before saving
-    localStorage.setItem(
-      `editr_${tabId}_fileBuffers`,
-      JSON.stringify(fileBuffers),
-    );
-    localStorage.setItem(`editr_${tabId}_activeBufferId`, currentBufferId);
-    localStorage.setItem(
-      `editr_${tabId}_${elements.textbox2.id}`,
-      elements.textbox2.value,
-    );
-  }
-
-  // Creates a clean slate for all buffers in memory
+  // Initialize buffers
   function initializeBuffers() {
     for (let i = 1; i <= MAX_BUFFERS; i++) {
       fileBuffers[i] = {
@@ -221,43 +188,69 @@ document.addEventListener("DOMContentLoaded", function () {
         historyCursorPositions: [],
       };
     }
+
+    // Set buffer 1 with any existing content
+    if (elements.textbox1.value) {
+      fileBuffers[1].content = elements.textbox1.value;
+      fileBuffers[1].filename = elements.filenameBox1.value || "editr1.txt";
+    }
   }
 
-  // Switches the active buffer shown in the main editor pane
-  function switchToBuffer(bufferId, force = false) {
+  // Switch to a specific buffer
+  function switchToBuffer(bufferId) {
     if (
-      !force &&
-      (bufferId < 1 || bufferId > MAX_BUFFERS || bufferId === currentBufferId)
-    )
+      bufferId < 1 ||
+      bufferId > MAX_BUFFERS ||
+      bufferId === currentBufferId
+    ) {
       return;
-    if (!force) saveCurrentBufferState();
+    }
+
+    // Save current buffer state
+    saveCurrentBufferState();
+
+    // Switch to new buffer
     currentBufferId = bufferId;
     loadBufferState();
+
+    // Update UI to show current buffer
     updateBufferIndicator();
     updateAllUI();
     elements.textbox1.focus();
-    persistSession();
   }
 
-  // Loads the state of the current active buffer from memory into the UI
+  // Save current buffer state
+  function saveCurrentBufferState() {
+    const buffer = fileBuffers[currentBufferId];
+    buffer.content = elements.textbox1.value;
+    buffer.filename =
+      elements.filenameBox1.value || `editr${currentBufferId}.txt`;
+    buffer.cursorPosition = elements.textbox1.selectionStart;
+    buffer.fileHandle = fileHandles["textbox-1"];
+    buffer.history = [...history];
+    buffer.historyIndex = currentHistoryIndex;
+    buffer.historyCursorPositions = [...historyCursorPositions];
+  }
+
+  // Load buffer state
   function loadBufferState() {
     const buffer = fileBuffers[currentBufferId];
-    if (!buffer) {
-      console.error(
-        `Attempted to load non-existent buffer: ${currentBufferId}`,
-      );
-      currentBufferId = 1; // Fallback to buffer 1
-      loadBufferState();
-      return;
-    }
+
     elements.textbox1.value = buffer.content;
     elements.filenameBox1.value = buffer.filename;
     fileHandles["textbox-1"] = buffer.fileHandle;
-    // Restore the global history from the buffer's history
+
+    // Restore history
     history = [...buffer.history];
     currentHistoryIndex = buffer.historyIndex;
     historyCursorPositions = [...buffer.historyCursorPositions];
-    if (history.length === 0) addToHistory(buffer.content, 0);
+
+    // If buffer is empty, initialize with empty history
+    if (history.length === 0) {
+      addToHistory(buffer.content, 0);
+    }
+
+    // Restore cursor position
     setTimeout(() => {
       elements.textbox1.setSelectionRange(
         buffer.cursorPosition,
@@ -265,24 +258,48 @@ document.addEventListener("DOMContentLoaded", function () {
       );
       updateAllUI();
     }, 0);
+
+    // Store locally
+    storeLocally(elements.textbox1);
   }
 
+  // Update buffer indicator in the UI
   function updateBufferIndicator() {
+    // Update the filename to show buffer number
     const buffer = fileBuffers[currentBufferId];
-    if (!buffer) return;
     let displayName = buffer.filename;
+
+    // Add buffer indicator to title with bracket format
     document.title = `editr [${currentBufferId}]: ${displayName}`;
+
+    // Update filename placeholder to show buffer
     elements.filenameBox1.placeholder = `editr${currentBufferId}.txt`;
+
+    // Update buffer number in indicator
     const bufferNumber = document.getElementById("buffer-number");
-    if (bufferNumber) bufferNumber.textContent = currentBufferId;
+    if (bufferNumber) {
+      bufferNumber.textContent = currentBufferId;
+    }
   }
 
+  // Create buffer indicator UI element
   function createBufferIndicator() {
     const bufferIndicator = document.createElement("button");
     bufferIndicator.id = "buffer-indicator";
     bufferIndicator.innerHTML = `<span id="buffer-number">${currentBufferId}</span>`;
     bufferIndicator.title = "Buffer";
-    bufferIndicator.style.cssText = `margin-left: 0.5em; cursor: default; pointer-events: none; padding: 0.5em 0.75em; border-radius: 4px; font-size: 14px; display: inline-flex; align-items: center;`;
+    bufferIndicator.style.cssText = `
+      margin-left: 0.5em;
+      cursor: default;
+      pointer-events: none;
+      padding: 0.5em 0.75em;
+      border-radius: 4px;
+      font-size: 14px;
+      display: inline-flex;
+      align-items: center;
+    `;
+
+    // Find the filename container and insert the buffer indicator right after it
     const filenameContainer = document.getElementById("filename-container");
     if (filenameContainer && filenameContainer.parentNode) {
       filenameContainer.parentNode.insertBefore(
@@ -293,10 +310,12 @@ document.addEventListener("DOMContentLoaded", function () {
     return bufferIndicator;
   }
 
+  // Handle buffer switching keyboard shortcuts
   function handleBufferKeyboard(event) {
     if ((event.ctrlKey || event.metaKey) && !event.shiftKey && !event.altKey) {
       const key = event.key;
       const num = parseInt(key);
+
       if (num >= 1 && num <= 9) {
         event.preventDefault();
         switchToBuffer(num);
@@ -306,62 +325,99 @@ document.addEventListener("DOMContentLoaded", function () {
     return false;
   }
 
+  // Enhanced file operations for buffers
   function openFileToBuffer(targetBuffer = null) {
     const bufferId = targetBuffer || currentBufferId;
+
     if ("showOpenFilePicker" in window) {
       window
         .showOpenFilePicker()
         .then(([handle]) => {
-          fileHandles["textbox-1"] = handle;
+          fileHandles["textbox-1"] = handle; // Store handle immediately
           return handle.getFile();
         })
         .then((file) => {
           const reader = new FileReader();
           reader.onload = (e) => {
-            if (bufferId !== currentBufferId) switchToBuffer(bufferId);
+            // Switch to target buffer first
+            if (bufferId !== currentBufferId) {
+              switchToBuffer(bufferId);
+            }
+
+            // Load file content
             const content = e.target.result;
             elements.textbox1.value = content;
             elements.filenameBox1.value = file.name;
+            // The handle is already in fileHandles['textbox-1']
+
+            // Update buffer
+            const buffer = fileBuffers[currentBufferId];
+            buffer.content = content;
+            buffer.filename = file.name;
+            buffer.fileHandle = fileHandles["textbox-1"];
+            buffer.history = [];
+            buffer.historyIndex = -1;
+            buffer.historyCursorPositions = [];
+
             addToHistory(content, 0);
-            saveCurrentBufferState();
             addRecentFile(file.name, content);
-            persistSession();
+            storeLocally(elements.textbox1);
             updateAllUI();
             updateBufferIndicator();
+
+            // Handle contextual UI changes for special file types
             handleSpecialFileTypes(file.name, elements.textbox1);
           };
           reader.readAsText(file);
         })
-        .catch((err) =>
-          console.log("Open file dialog was cancelled or failed.", err),
-        );
+        .catch((err) => {
+          console.log("Open file dialog was cancelled or failed.", err);
+        });
     } else {
+      // Fallback for browsers without File System Access API
       elements.openInput1.click();
     }
   }
 
+  // Save current buffer
   function saveCurrentBuffer() {
     saveCurrentBufferState();
     saveFile();
   }
 
+  // Create new buffer
   function createNewBuffer() {
+    // Find next available buffer or use current + 1
     let targetBuffer = currentBufferId + 1;
-    if (targetBuffer > MAX_BUFFERS) targetBuffer = 1;
+    if (targetBuffer > MAX_BUFFERS) {
+      targetBuffer = 1;
+    }
+
+    // Find first empty buffer
     for (let i = 1; i <= MAX_BUFFERS; i++) {
       if (fileBuffers[i].content === "" && !fileBuffers[i].fileHandle) {
         targetBuffer = i;
         break;
       }
     }
-    saveCurrentBufferState();
+
     switchToBuffer(targetBuffer);
+
+    // Clear the buffer
     elements.textbox1.value = "";
     elements.filenameBox1.value = `editr${targetBuffer}.txt`;
     fileHandles["textbox-1"] = null;
+
+    const buffer = fileBuffers[targetBuffer];
+    buffer.content = "";
+    buffer.filename = `editr${targetBuffer}.txt`;
+    buffer.fileHandle = null;
+    buffer.history = [];
+    buffer.historyIndex = -1;
+    buffer.historyCursorPositions = [];
+
     addToHistory("", 0);
-    saveCurrentBufferState();
-    persistSession();
+    storeLocally(elements.textbox1);
     updateAllUI();
     elements.textbox1.focus();
   }
@@ -377,7 +433,6 @@ document.addEventListener("DOMContentLoaded", function () {
     focusMode: false,
     showEmailButton: false,
     showSplitButton: false,
-    showProjectButton: false,
     enableCsvMode: false,
     dateFormat: "DD-MMM-YYYY",
     expansions: {},
@@ -386,6 +441,7 @@ document.addEventListener("DOMContentLoaded", function () {
   function saveSettings() {
     localStorage.setItem("editr-settings", JSON.stringify(settings));
   }
+
   function loadSettings() {
     const savedSettings = localStorage.getItem("editr-settings");
     settings = savedSettings
@@ -397,26 +453,29 @@ document.addEventListener("DOMContentLoaded", function () {
     const isWordWrapEnabled = settings.wordWrap;
     elements.textbox1.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
     elements.textbox2.classList.toggle("word-wrap-enabled", isWordWrapEnabled);
+
     elements.textbox1.spellcheck = settings.spellCheck;
     elements.textbox2.spellcheck = settings.spellCheck;
+
     document.body.className = document.body.className
       .replace(/\b(dark|snow)-mode\b/g, "")
       .trim();
-    if (settings.theme === "dark") document.body.classList.add("dark-mode");
-    else if (settings.theme === "snow")
+    if (settings.theme === "dark") {
+      document.body.classList.add("dark-mode");
+    } else if (settings.theme === "snow") {
       document.body.classList.add("snow-mode");
+    }
+
     elements.emailBtn.style.display = settings.showEmailButton
       ? "inline-flex"
       : "none";
     elements.splitViewBtn.style.display = settings.showSplitButton
       ? "inline-flex"
       : "none";
-    elements.projectBtn.style.display = settings.showProjectButton
-      ? "inline-flex"
-      : "none";
     elements.csvModeBtn.style.display = settings.enableCsvMode
       ? "inline-flex"
       : "none";
+
     elements.defaultWordWrapCheck.checked = settings.wordWrap;
     elements.defaultAutoIndentCheck.checked = settings.autoIndent;
     elements.defaultTurboBoostCheck.checked = settings.turboBoost;
@@ -425,7 +484,6 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.focusModeCheck.checked = settings.focusMode;
     elements.showEmailBtnCheck.checked = settings.showEmailButton;
     elements.showSplitBtnCheck.checked = settings.showSplitButton;
-    elements.showProjectBtnCheck.checked = settings.showProjectButton;
     elements.enableCsvModeCheck.checked = settings.enableCsvMode;
     elements.defaultThemeSelect.value = settings.theme;
     elements.dateFormatSelect.value = settings.dateFormat;
@@ -438,6 +496,7 @@ document.addEventListener("DOMContentLoaded", function () {
       JSON.stringify(protectedNotes),
     );
   }
+
   function loadProtectedNotes() {
     const savedNotes = localStorage.getItem("editr-protected-notes");
     protectedNotes = savedNotes ? JSON.parse(savedNotes) : {};
@@ -451,32 +510,34 @@ document.addEventListener("DOMContentLoaded", function () {
       return;
     }
     if (!activeProtectedNotePassword) return;
+
     const content = elements.textbox1.value;
     const password = activeProtectedNotePassword;
     activeProtectedNotePassword = null;
+
     if (content.trim() === "") {
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
         "Welcome to editr. Start typing to begin or click the 'b' button for help and settings.";
-      saveCurrentBufferState();
-      persistSession();
       updateAllUI();
+      storeLocally(elements.textbox1);
       alert(
         "Protected note session ended. No content was saved as the note was empty.",
       );
       return;
     }
+
     try {
       const encryptedData = await encrypt(content, password);
       const noteId = await getNoteId(password);
       protectedNotes[noteId] = encryptedData;
       saveProtectedNotes();
+
       elements.textbox1.value = "";
       elements.textbox1.placeholder =
         "Welcome to editr. Start typing to begin or click the 'b' button for help and settings.";
-      saveCurrentBufferState();
-      persistSession();
       updateAllUI();
+      storeLocally(elements.textbox1);
       alert("Note locked and saved.");
     } catch (error) {
       console.error("Encryption failed:", error);
@@ -492,21 +553,24 @@ document.addEventListener("DOMContentLoaded", function () {
       togglePopup(null, false);
       return;
     }
+
     togglePopup(null, false);
-    toggleCsvMode(false);
+    toggleCsvMode(false); // Exit CSV mode when dealing with protected notes
+
     const noteId = await getNoteId(password);
+
     if (protectedNotes.hasOwnProperty(noteId)) {
       const encryptedData = protectedNotes[noteId];
       const decryptedContent = await decrypt(encryptedData, password);
+
       if (decryptedContent !== null) {
         addToHistory(elements.textbox1.value, elements.textbox1.selectionStart);
         elements.textbox1.value = decryptedContent;
         elements.textbox1.placeholder =
           "Note unlocked. Press Ctrl + = to lock and save.";
         activeProtectedNotePassword = password;
-        saveCurrentBufferState();
-        persistSession();
         updateAllUI();
+        storeLocally(elements.textbox1);
         elements.textbox1.focus();
       } else {
         alert("Incorrect password.");
@@ -518,9 +582,8 @@ document.addEventListener("DOMContentLoaded", function () {
       elements.textbox1.placeholder =
         "New protected note. Type content and press Ctrl + = to lock and save.";
       activeProtectedNotePassword = password;
-      saveCurrentBufferState();
-      persistSession();
       updateAllUI();
+      storeLocally(elements.textbox1);
       elements.textbox1.focus();
     }
   }
@@ -537,6 +600,7 @@ document.addEventListener("DOMContentLoaded", function () {
       elem.msRequestFullscreen();
     }
   }
+
   function exitFullScreen() {
     if (document.exitFullscreen) {
       document.exitFullscreen();
@@ -548,6 +612,7 @@ document.addEventListener("DOMContentLoaded", function () {
       document.msExitFullscreen();
     }
   }
+
   function onFullScreenChange() {
     const isFullScreen = !!(
       document.fullscreenElement ||
@@ -561,12 +626,14 @@ document.addEventListener("DOMContentLoaded", function () {
       saveSettings();
     }
   }
+
   function isPWAInstalled() {
     return (
       window.matchMedia("(display-mode: standalone)").matches ||
       navigator.standalone === true
     );
   }
+
   function isMobileDevice() {
     return /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
       navigator.userAgent,
@@ -577,11 +644,14 @@ document.addEventListener("DOMContentLoaded", function () {
     window.addEventListener("load", () => {
       navigator.serviceWorker
         .register("./service-worker.js")
-        .then((reg) => console.log("ServiceWorker registration successful"))
-        .catch((err) =>
-          console.log("ServiceWorker registration failed: ", err),
-        );
+        .then((registration) => {
+          console.log("ServiceWorker registration successful");
+        })
+        .catch((error) => {
+          console.log("ServiceWorker registration failed: ", error);
+        });
     });
+
     if (!isPWAInstalled()) {
       window.addEventListener("beforeinstallprompt", (e) => {
         e.preventDefault();
@@ -590,13 +660,15 @@ document.addEventListener("DOMContentLoaded", function () {
           elements.installButton.style.display = "inline-flex";
         }
       });
+
       elements.installButton.addEventListener("click", (e) => {
         if (!deferredPrompt) return;
         deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choice) => {
+        deferredPrompt.userChoice.then((choiceResult) => {
           deferredPrompt = null;
         });
       });
+
       window.addEventListener("appinstalled", (evt) => {
         elements.installButton.style.display = "none";
       });
@@ -612,14 +684,19 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentMatches = [];
   let currentMatchIndex = -1;
   const MAX_HISTORY = 100;
+  let history = [];
+  let currentHistoryIndex = -1;
   let isUndoing = false;
   let lastChangeTime = 0;
   const CHANGE_DELAY = 1000;
   let cachedCharWidth = 0;
 
+  let historyCursorPositions = [];
+
   function adjustTextareaHeight() {
     elements.editorContainer.style.top = `${elements.nav.offsetHeight}px`;
   }
+
   function storeLocally(textbox) {
     if (!textbox) return;
     const key = `editr_${tabId}_${textbox.id}`;
@@ -630,17 +707,23 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!activeTextbox) return;
     const text = activeTextbox.value;
     const cursorPos = activeTextbox.selectionStart;
+
     const lineStartIndex = text.lastIndexOf("\n", cursorPos - 1) + 1;
     let lineEndIndex = text.indexOf("\n", cursorPos);
-    if (lineEndIndex === -1) lineEndIndex = text.length;
+    if (lineEndIndex === -1) {
+      lineEndIndex = text.length;
+    }
+
     const currentLineText = text.substring(lineStartIndex, lineEndIndex);
     const urlRegex = /https?:\/\/[^\s]+/g;
     let match;
     let foundLink = null;
+
     while ((match = urlRegex.exec(currentLineText)) !== null) {
       const urlStartIndexInLine = match.index;
       const urlEndIndexInLine = urlStartIndexInLine + match[0].length;
       const cursorIndexInLine = cursorPos - lineStartIndex;
+
       if (
         cursorIndexInLine >= urlStartIndexInLine &&
         cursorIndexInLine <= urlEndIndexInLine
@@ -664,6 +747,7 @@ document.addEventListener("DOMContentLoaded", function () {
     updateLinkButtonState();
     updateUndoRedoButtons();
   }
+
   function updateCursorPosition() {
     if (!activeTextbox) return;
     const text = activeTextbox.value;
@@ -680,11 +764,14 @@ document.addEventListener("DOMContentLoaded", function () {
         ? elements.activeLine1
         : elements.activeLine2;
     if (!activeLineEl) return;
+
     const text = activeTextbox.value;
     const cursorPos = activeTextbox.selectionStart;
     const lines = text.substring(0, cursorPos).split("\n");
     const lineIndex = lines.length - 1;
+
     const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
+
     activeLineEl.style.top = `${lineIndex * lineHeight}px`;
     activeLineEl.style.height = `${lineHeight}px`;
     activeLineEl.style.display = "block";
@@ -693,14 +780,19 @@ document.addEventListener("DOMContentLoaded", function () {
   function updateWordCount() {
     const text1 = elements.textbox1.value.trim();
     const text2 = elements.textbox2.value.trim();
-    const words1 = text1 ? text1.split(/\s+/).filter((w) => w.length > 0) : [];
+
+    const words1 = text1
+      ? text1.split(/\s+/).filter((word) => word.length > 0)
+      : [];
     let totalWords = words1.length;
+
     if (elements.editorContainer.classList.contains("split-view-active")) {
       const words2 = text2
-        ? text2.split(/\s+/).filter((w) => w.length > 0)
+        ? text2.split(/\s+/).filter((word) => word.length > 0)
         : [];
       totalWords += words2.length;
     }
+
     elements.wordCount.textContent = totalWords.toString();
   }
 
@@ -708,9 +800,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const files = localStorage.getItem("editr-recent-files");
     return files ? JSON.parse(files) : [];
   }
+
   function removeRecentFile(filenameToRemove) {
     let recentFiles = getRecentFiles();
-    recentFiles = recentFiles.filter((f) => f.filename !== filenameToRemove);
+    recentFiles = recentFiles.filter(
+      (file) => file.filename !== filenameToRemove,
+    );
     localStorage.setItem("editr-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
@@ -723,21 +818,26 @@ document.addEventListener("DOMContentLoaded", function () {
       recentFilesDropdown,
       recentFilesBtn,
     } = elements;
+
     recentFilesDatalist1.innerHTML = "";
     recentFilesDatalist2.innerHTML = "";
     recentFilesDropdown.innerHTML = "";
+
     recentFilesBtn.disabled = files.length === 0;
+
     const fragment = document.createDocumentFragment();
     files.forEach((file) => {
       const option = document.createElement("option");
       option.value = file.filename;
       fragment.appendChild(option);
+
       const dropdownItem = document.createElement("div");
       dropdownItem.className = "recent-file-item";
       dropdownItem.dataset.filename = file.filename;
       dropdownItem.innerHTML = `<span class="recent-filename">${file.filename}</span><span class="delete-recent-btn" title="Remove from list" data-filename="${file.filename}"> [X]</span>`;
       recentFilesDropdown.appendChild(dropdownItem);
     });
+
     recentFilesDatalist1.appendChild(fragment.cloneNode(true));
     recentFilesDatalist2.appendChild(fragment);
   }
@@ -745,25 +845,39 @@ document.addEventListener("DOMContentLoaded", function () {
   function addRecentFile(filename, content) {
     if (!filename || content === null || content === undefined) return;
     let recentFiles = getRecentFiles();
-    recentFiles = recentFiles.filter((f) => f.filename !== filename);
+    recentFiles = recentFiles.filter((file) => file.filename !== filename);
     recentFiles.unshift({ filename, content, timestamp: Date.now() });
-    if (recentFiles.length > MAX_RECENT_FILES) recentFiles.pop();
+    if (recentFiles.length > MAX_RECENT_FILES) {
+      recentFiles.pop();
+    }
     localStorage.setItem("editr-recent-files", JSON.stringify(recentFiles));
     updateRecentFilesUI();
   }
 
   function handleSpecialFileTypes(filename, targetTextbox) {
     const lowerCaseFilename = filename.toLowerCase();
+
+    // Markdown file handling: enable split view to show Preview button
     if (lowerCaseFilename.endsWith(".md")) {
-      if (!elements.editorContainer.classList.contains("split-view-active"))
+      if (!elements.editorContainer.classList.contains("split-view-active")) {
         toggleSplitView(true);
+      }
     }
+
+    // CSV file handling
     if (lowerCaseFilename.endsWith(".csv")) {
+      // Contextually show the button regardless of settings
       elements.csvModeBtn.style.display = "inline-flex";
-      if (settings.enableCsvMode && targetTextbox === elements.textbox1)
+      // If the global setting is enabled, also toggle the grid mode on
+      if (settings.enableCsvMode && targetTextbox === elements.textbox1) {
         toggleCsvMode(true);
+      }
     } else {
-      if (isCsvMode) toggleCsvMode(false);
+      // For all non-CSV files, turn off CSV mode if it's on
+      if (isCsvMode) {
+        toggleCsvMode(false);
+      }
+      // And reset the button visibility based on the global setting
       elements.csvModeBtn.style.display = settings.enableCsvMode
         ? "inline-flex"
         : "none";
@@ -777,12 +891,26 @@ document.addEventListener("DOMContentLoaded", function () {
       targetTextbox.value = content;
       targetFilenameBox.value = file.name;
       addRecentFile(file.name, content);
-      if (targetTextbox === elements.textbox1) addToHistory(content, 0);
-      saveCurrentBufferState();
-      persistSession();
+      storeLocally(targetTextbox);
+
+      if (targetTextbox === elements.textbox1) {
+        history = [];
+        historyCursorPositions = [];
+        currentHistoryIndex = -1;
+        addToHistory(content, 0);
+
+        // Update current buffer
+        const buffer = fileBuffers[currentBufferId];
+        buffer.content = content;
+        buffer.filename = file.name;
+        buffer.history = [...history];
+        buffer.historyIndex = currentHistoryIndex;
+        buffer.historyCursorPositions = [...historyCursorPositions];
+        updateBufferIndicator();
+      }
       activeTextbox = targetTextbox;
       updateAllUI();
-      updateBufferIndicator();
+
       handleSpecialFileTypes(file.name, targetTextbox);
       if (
         file.name.toLowerCase().endsWith(".csv") &&
@@ -793,8 +921,9 @@ document.addEventListener("DOMContentLoaded", function () {
         );
       }
     };
-    reader.onerror = (e) =>
+    reader.onerror = (e) => {
       console.warn("Could not read the file.", file.name, e);
+    };
     reader.readAsText(file);
   }
 
@@ -811,6 +940,7 @@ document.addEventListener("DOMContentLoaded", function () {
           targetTextbox === elements.textbox2
             ? elements.filenameBox2
             : elements.filenameBox1;
+
         fileHandles[targetTextbox.id] = handle;
         openDroppedFile(file, targetTextbox, targetFilenameBox);
       } catch (err) {
@@ -832,22 +962,28 @@ document.addEventListener("DOMContentLoaded", function () {
       openDroppedFile(file, targetTextbox, targetFilenameBox);
     }
   }
+
   async function saveFile() {
-    if (isCsvMode) updateTextboxFromGrid();
+    if (isCsvMode) {
+      updateTextboxFromGrid();
+    }
+
     const currentActiveTextbox = isCsvMode ? elements.textbox1 : activeTextbox;
     if (
       currentActiveTextbox === elements.textbox1 &&
       activeProtectedNotePassword
     ) {
-      if (
-        !confirm(
-          "Warning: This is a password-protected note. Saving it to your device will remove the password protection and save the content as plain text. Are you sure you want to continue?",
-        )
-      )
+      const userConfirmed = confirm(
+        "Warning: This is a password-protected note. Saving it to your device will remove the password protection and save the content as plain text. Are you sure you want to continue?",
+      );
+      if (!userConfirmed) {
         return;
+      }
     }
+
     const handle = fileHandles[currentActiveTextbox.id];
     const content = currentActiveTextbox.value;
+
     if (handle && "createWritable" in handle) {
       try {
         const writable = await handle.createWritable();
@@ -864,6 +1000,7 @@ document.addEventListener("DOMContentLoaded", function () {
         fileHandles[currentActiveTextbox.id] = null;
       }
     }
+
     if ("showSaveFilePicker" in window) {
       try {
         const filenameBox =
@@ -892,13 +1029,17 @@ document.addEventListener("DOMContentLoaded", function () {
         });
         fileHandles[currentActiveTextbox.id] = saveAsHandle;
         filenameBox.value = saveAsHandle.name;
+
         const writable = await saveAsHandle.createWritable();
         await writable.write(content);
         await writable.close();
         addRecentFile(saveAsHandle.name, content);
+
+        // Update buffer with new file handle and name
         if (currentActiveTextbox === elements.textbox1) {
-          saveCurrentBufferState();
-          persistSession();
+          const buffer = fileBuffers[currentBufferId];
+          buffer.fileHandle = saveAsHandle;
+          buffer.filename = saveAsHandle.name;
           updateBufferIndicator();
         }
         return;
@@ -907,12 +1048,14 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
     }
+
     const filenameBox =
       currentActiveTextbox === elements.textbox2
         ? elements.filenameBox2
         : elements.filenameBox1;
     const filename = filenameBox.value || "editr.txt";
     addRecentFile(filename, content);
+
     const blob = new Blob([content], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -924,8 +1067,10 @@ document.addEventListener("DOMContentLoaded", function () {
   function openNewTab() {
     window.open(window.location.href, "_blank");
   }
+
   function handleBlackjackKeyPress(event) {
     if (popups.blackjack.style.display !== "block") return;
+
     const key = event.key.toLowerCase();
     switch (key) {
       case "d":
@@ -942,10 +1087,12 @@ document.addEventListener("DOMContentLoaded", function () {
         break;
     }
   }
+
   function togglePopup(popupId, show) {
-    Object.values(popups).forEach((p) => (p.style.display = "none"));
+    Object.values(popups).forEach((popup) => (popup.style.display = "none"));
     elements.overlay.style.display = "none";
     document.removeEventListener("keydown", handleBlackjackKeyPress);
+
     if (show && popupId && popups[popupId]) {
       popups[popupId].style.display = "block";
       elements.overlay.style.display = "block";
@@ -969,14 +1116,19 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") togglePopup(null, false);
+    if (event.key === "Escape") {
+      togglePopup(null, false);
+    }
   });
+
   function addToHistory(state, cursorPosition) {
     if (
       activeTextbox !== elements.textbox1 ||
       history[currentHistoryIndex] === state
-    )
+    ) {
       return;
+    }
+
     if (currentHistoryIndex < history.length - 1) {
       history.splice(currentHistoryIndex + 1);
       historyCursorPositions.splice(currentHistoryIndex + 1);
@@ -996,6 +1148,7 @@ document.addEventListener("DOMContentLoaded", function () {
     currentHistoryIndex--;
     restoreState();
   }
+
   function redo() {
     if (
       activeTextbox !== elements.textbox1 ||
@@ -1005,15 +1158,25 @@ document.addEventListener("DOMContentLoaded", function () {
     currentHistoryIndex++;
     restoreState();
   }
+
   function restoreState() {
     isUndoing = true;
     elements.textbox1.value = history[currentHistoryIndex];
     const cursorPos = historyCursorPositions[currentHistoryIndex];
+
+    // Update current buffer content
+    fileBuffers[currentBufferId].content = elements.textbox1.value;
+
+    if (isCsvMode) {
+      updateGridFromTextbox();
+    }
+
     elements.textbox1.focus();
     elements.textbox1.setSelectionRange(cursorPos, cursorPos);
+
     activeTextbox = elements.textbox1;
     updateAllUI();
-    persistSession();
+    storeLocally(elements.textbox1);
     updateHighlights();
     isUndoing = false;
   }
@@ -1023,8 +1186,12 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.undoButton.disabled =
       !isPrimaryActive || currentHistoryIndex <= 0 || isCsvMode;
   }
+
   function escapeRegExp(string) {
-    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    return string.replace(
+      /[.*+?^${}()|[\]\\]/g,
+      "\\      const dropdownItem =",
+    );
   }
 
   function findAllMatches() {
@@ -1038,11 +1205,12 @@ document.addEventListener("DOMContentLoaded", function () {
       const isRegex = elements.regexCheckbox.checked;
       const flags = isCaseSensitive ? "g" : "gi";
       const pattern = isRegex ? searchTerm : escapeRegExp(searchTerm);
+
       try {
         const regex = new RegExp(pattern, flags);
-        currentMatches = [...text.matchAll(regex)].map((m) => ({
-          start: m.index,
-          end: m.index + m[0].length,
+        currentMatches = [...text.matchAll(regex)].map((match) => ({
+          start: match.index,
+          end: match.index + match[0].length,
         }));
       } catch (e) {
         currentMatches = [];
@@ -1075,24 +1243,30 @@ document.addEventListener("DOMContentLoaded", function () {
         ? elements.highlightLayer1
         : elements.highlightLayer2;
     highlightLayer.innerHTML = "";
+
     if (
       currentMatches.length === 0 ||
       currentMatchIndex < 0 ||
       currentMatchIndex >= currentMatches.length
-    )
+    ) {
       return;
+    }
+
     const match = currentMatches[currentMatchIndex];
     const text = activeTextbox.value;
     const frag = document.createDocumentFragment();
     const lineHeight = parseFloat(getComputedStyle(activeTextbox).lineHeight);
     const charWidth = getCharWidth(activeTextbox);
+
     const textBefore = text.substring(0, match.start);
     const lines = textBefore.split("\n");
     const lineIndex = lines.length - 1;
     const charPos = lines[lineIndex].length;
+
     const highlight = document.createElement("div");
     highlight.className = "highlight";
     highlight.style.cssText = `top: ${lineIndex * lineHeight}px; left: ${charPos * charWidth}px; width: ${(match.end - match.start) * charWidth}px; height: ${lineHeight}px;`;
+
     frag.appendChild(highlight);
     highlightLayer.appendChild(frag);
   }
@@ -1107,11 +1281,15 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function findNext() {
     if (!activeTextbox) return;
-    if (currentMatches.length === 0 && elements.findText.value)
+    if (currentMatches.length === 0 && elements.findText.value) {
       findAllMatches();
+    }
     if (currentMatches.length === 0) return;
+
     const currentPosition = activeTextbox.selectionStart;
+
     let nextMatchIndex;
+
     if (
       currentMatchIndex !== -1 &&
       currentMatches[currentMatchIndex] &&
@@ -1120,14 +1298,18 @@ document.addEventListener("DOMContentLoaded", function () {
       nextMatchIndex = (currentMatchIndex + 1) % currentMatches.length;
     } else {
       nextMatchIndex = currentMatches.findIndex(
-        (m) => m.start >= currentPosition,
+        (match) => match.start >= currentPosition,
       );
-      if (nextMatchIndex === -1) nextMatchIndex = 0;
+      if (nextMatchIndex === -1) {
+        nextMatchIndex = 0;
+      }
     }
+
     if (nextMatchIndex !== -1) {
       currentMatchIndex = nextMatchIndex;
       const match = currentMatches[currentMatchIndex];
       activeTextbox.setSelectionRange(match.start, match.end);
+
       const highlightLayer =
         activeTextbox === elements.textbox1
           ? elements.highlightLayer1
@@ -1154,10 +1336,16 @@ document.addEventListener("DOMContentLoaded", function () {
       currentText.slice(0, selectionStart) +
       replacement +
       currentText.slice(selectionEnd);
+
     const newCursorPos = selectionStart + replacement.length;
     activeTextbox.setSelectionRange(newCursorPos, newCursorPos);
-    saveCurrentBufferState();
-    persistSession();
+
+    // Update current buffer content
+    if (activeTextbox === elements.textbox1) {
+      fileBuffers[currentBufferId].content = activeTextbox.value;
+    }
+
+    storeLocally(activeTextbox);
     updateAllUI();
     findAllMatches();
   }
@@ -1175,8 +1363,13 @@ document.addEventListener("DOMContentLoaded", function () {
     try {
       const regex = new RegExp(pattern, flags);
       activeTextbox.value = activeTextbox.value.replace(regex, replacement);
-      saveCurrentBufferState();
-      persistSession();
+
+      // Update current buffer content
+      if (activeTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = activeTextbox.value;
+      }
+
+      storeLocally(activeTextbox);
       updateAllUI();
       findAllMatches();
     } catch (e) {
@@ -1195,54 +1388,46 @@ document.addEventListener("DOMContentLoaded", function () {
   function toggleSplitView(forceOn = false) {
     if (isCsvMode) return;
     const container = elements.editorContainer;
-    let isActive = forceOn
-      ? true
-      : container.classList.toggle("split-view-active");
-    if (forceOn) container.classList.add("split-view-active");
+    let isActive;
+    if (forceOn) {
+      isActive = true;
+      container.classList.add("split-view-active");
+    } else {
+      isActive = container.classList.toggle("split-view-active");
+    }
+
     elements.filenameBox2.style.display = isActive ? "inline-block" : "none";
     elements.previewBtn.style.display = isActive ? "inline-flex" : "none";
-    if (!isActive && container.classList.contains("preview-active"))
-      togglePreviewMode();
+
+    if (!isActive) {
+      if (container.classList.contains("preview-active")) {
+        togglePreviewMode();
+      }
+    }
     (isActive ? elements.textbox2 : elements.textbox1).focus();
     updateWordCount();
     return isActive;
-  }
-
-  function updatePreview() {
-    if (typeof marked === "undefined") {
-      elements.previewPane2.innerHTML = `
-        <div style="padding: 1em; color: #ff5555; font-family: sans-serif;">
-          <h3>Markdown Preview Error</h3>
-          <p>The 'marked.js' library is not loaded. Please add the following line to your HTML file, usually in the &lt;head&gt; section:</p>
-          <code>&lt;script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"&gt;&lt;/script&gt;</code>
-        </div>
-      `;
-      return;
-    }
-    const markdownText = elements.textbox1.value;
-    try {
-      elements.previewPane2.innerHTML = marked.parse(markdownText);
-    } catch (e) {
-      console.error("Markdown parsing error:", e);
-      elements.previewPane2.innerHTML = `<p style="color: red;">Error parsing Markdown.</p>`;
-    }
   }
 
   function togglePreviewMode() {
     if (isCsvMode) return;
     const container = elements.editorContainer;
     const isPreviewing = container.classList.toggle("preview-active");
+
     elements.textbox2.style.display = isPreviewing ? "none" : "block";
     elements.activeLine2.style.display = isPreviewing ? "none" : "block";
     elements.highlightLayer2.style.display = isPreviewing ? "none" : "block";
+
     const isSplitViewActive = container.classList.contains("split-view-active");
     elements.filenameBox2.style.display =
       isPreviewing || !isSplitViewActive ? "none" : "inline-block";
+
     elements.previewPane2.style.display = isPreviewing ? "block" : "none";
     elements.exportHtmlBtn.style.display = isPreviewing
       ? "inline-flex"
       : "none";
     elements.exportPdfBtn.style.display = isPreviewing ? "inline-flex" : "none";
+
     if (isPreviewing) {
       elements.previewBtn.style.display = "none";
       elements.splitViewBtn.style.display = "inline-flex";
@@ -1257,12 +1442,35 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function updatePreview() {
+    const markdownText = elements.textbox1.value;
+    elements.previewPane2.innerHTML = marked.parse(markdownText);
+  }
+
   function handleExportHTML() {
     const content = elements.previewPane2.innerHTML;
     const filename =
       (elements.filenameBox1.value || "editr").replace(/\.[^/.]+$/, "") +
       ".html";
-    const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>${filename}</title><style>body{font-family:sans-serif;line-height:1.6;padding:2em;max-width:800px;margin:0 auto;}h1,h2,h3{border-bottom:1px solid #eee;padding-bottom:0.3em;}code{background-color:#f7f7f7;padding:0.2em 0.4em;border-radius:3px;}pre code{display:block;padding:0.5em;border-radius:4px;overflow-x:auto;}</style></head><body>${content}</body></html>`;
+    const fullHtml = `
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>${filename}</title>
+            <style>
+                body { font-family: sans-serif; line-height: 1.6; padding: 2em; max-width: 800px; margin: 0 auto; }
+                h1, h2, h3 { border-bottom: 1px solid #eee; padding-bottom: 0.3em; }
+                code { background-color: #f7f7f7; padding: 0.2em 0.4em; border-radius: 3px; }
+                pre code { display: block; padding: 0.5em; border-radius: 4px; overflow-x: auto; }
+            </style>
+        </head>
+        <body>
+            ${content}
+        </body>
+        </html>
+      `;
     const blob = new Blob([fullHtml], { type: "text/html" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
@@ -1272,55 +1480,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleExportPDF() {
-    if (typeof jspdf === "undefined" || typeof html2canvas === "undefined") {
-      let errorMessage =
-        "PDF Export Error: The following required libraries are not loaded:\n\n";
-      if (typeof jspdf === "undefined") errorMessage += "• jsPDF\n";
-      if (typeof html2canvas === "undefined") errorMessage += "• html2canvas\n";
-      errorMessage +=
-        "\nPlease add the following script tags to your HTML file, usually in the <head> section:\n\n";
-      errorMessage +=
-        '<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"><\/script>\n';
-      errorMessage +=
-        '<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"><\/script>';
-      alert(errorMessage);
-      return;
-    }
-
-    const { jsPDF } = jspdf;
+    const { jsPDF } = window.jspdf;
     const content = elements.previewPane2;
     const filename =
       (elements.filenameBox1.value || "editr").replace(/\.[^/.]+$/, "") +
       ".pdf";
 
-    html2canvas(content, { scale: 2, useCORS: true })
-      .then((canvas) => {
-        const imgData = canvas.toDataURL("image/png");
-        const pdf = new jsPDF({ orientation: "p", unit: "pt", format: "a4" });
-        const pdfWidth = pdf.internal.pageSize.getWidth();
-        const pdfHeight = pdf.internal.pageSize.getHeight();
-        const canvasWidth = canvas.width;
-        const canvasHeight = canvas.height;
-        const ratio = canvasHeight / canvasWidth;
-        const imgHeight = pdfWidth * ratio;
-        let heightLeft = imgHeight;
-        let position = 0;
-        pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-        heightLeft -= pdfHeight;
-        while (heightLeft > 0) {
-          position = heightLeft - imgHeight;
-          pdf.addPage();
-          pdf.addImage(imgData, "PNG", 0, position, pdfWidth, imgHeight);
-          heightLeft -= pdfHeight;
-        }
-        pdf.save(filename);
-      })
-      .catch((err) => {
-        console.error("PDF Export failed:", err);
-        alert(
-          "An error occurred while generating the PDF. Please check the console for details.",
-        );
+    html2canvas(content).then((canvas) => {
+      const imgData = canvas.toDataURL("image/png");
+      const pdf = new jsPDF({
+        orientation: "p",
+        unit: "pt",
+        format: "a4",
       });
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const canvasWidth = canvas.width;
+      const canvasHeight = canvas.height;
+      const ratio = canvasHeight / canvasWidth;
+      const newHeight = pdfWidth * ratio;
+      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, newHeight);
+      pdf.save(filename);
+    });
   }
 
   function initializeExpansionSettings() {
@@ -1328,14 +1509,19 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!container) return;
     container.innerHTML = "";
     if (!settings.expansions) settings.expansions = {};
+
     const fragment = document.createDocumentFragment();
     for (let i = 0; i < 26; i++) {
       const char = String.fromCharCode(97 + i);
       const shortcutKey = `.${char}`;
       const row = document.createElement("div");
       row.className = "expansion-row";
-      row.innerHTML = `<label for="expansion-input-${char}">${shortcutKey}</label><input type="text" id="expansion-input-${char}" placeholder="Expanded text for ${shortcutKey}">`;
+      row.innerHTML = `
+        <label for="expansion-input-${char}">${shortcutKey}</label>
+        <input type="text" id="expansion-input-${char}" placeholder="Expanded text for ${shortcutKey}">
+      `;
       const input = row.querySelector("input");
+
       if (char === "d") {
         input.value = "(Date)";
         input.readOnly = true;
@@ -1358,9 +1544,11 @@ document.addEventListener("DOMContentLoaded", function () {
     const text = textbox.value;
     const cursorPos = textbox.selectionStart;
     const triggerMatch = text.substring(0, cursorPos).match(/\.([a-z])\s$/);
+
     if (triggerMatch) {
       const key = triggerMatch[1];
       let expansionText;
+
       if (key === "d") {
         const date = new Date();
         const day = String(date.getDate()).padStart(2, "0");
@@ -1382,6 +1570,7 @@ document.addEventListener("DOMContentLoaded", function () {
           "DEC",
         ];
         const monthName = monthNames[date.getMonth()];
+
         switch (settings.dateFormat) {
           case "MM/DD/YY":
             expansionText = `${monthNum}/${day}/${yearShort}`;
@@ -1400,6 +1589,7 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         expansionText = settings.expansions[key];
       }
+
       if (expansionText) {
         event.preventDefault();
         const triggerLength = 3;
@@ -1409,9 +1599,14 @@ document.addEventListener("DOMContentLoaded", function () {
         textbox.value = textBefore + expansionText + textAfter;
         const newCursorPos = textBefore.length + expansionText.length;
         textbox.setSelectionRange(newCursorPos, newCursorPos);
-        saveCurrentBufferState();
-        persistSession();
+
+        // Update current buffer content
+        if (textbox === elements.textbox1) {
+          fileBuffers[currentBufferId].content = textbox.value;
+        }
+
         updateAllUI();
+        storeLocally(textbox);
       }
     }
   }
@@ -1425,9 +1620,11 @@ document.addEventListener("DOMContentLoaded", function () {
     a.click();
     URL.revokeObjectURL(a.href);
   }
+
   function handleImportSettings(event) {
     const file = event.target.files[0];
     if (!file) return;
+
     const reader = new FileReader();
     reader.onload = (e) => {
       try {
@@ -1443,35 +1640,69 @@ document.addEventListener("DOMContentLoaded", function () {
         console.error("Settings import error:", error);
       }
     };
-    reader.onerror = () => alert("Error reading the file.");
+    reader.onerror = () => {
+      alert("Error reading the file.");
+    };
     reader.readAsText(file);
     event.target.value = "";
   }
 
   function openRecentFile(filename) {
     const recentFiles = getRecentFiles();
-    const selectedFile = recentFiles.find((f) => f.filename === filename);
+    const selectedFile = recentFiles.find((file) => file.filename === filename);
+
     if (selectedFile) {
       const targetTextbox =
         isCsvMode || activeTextbox === elements.textbox1
           ? elements.textbox1
           : activeTextbox;
+      const targetFilenameBox =
+        targetTextbox === elements.textbox1
+          ? elements.filenameBox1
+          : elements.filenameBox2;
+
+      // If opening to textbox1, handle buffer system
       if (targetTextbox === elements.textbox1) {
+        // Save current buffer state before switching
         saveCurrentBufferState();
-        elements.textbox1.value = selectedFile.content;
-        elements.filenameBox1.value = selectedFile.filename;
-        fileHandles[elements.textbox1.id] = null;
+
+        // Load the file content
+        targetTextbox.value = selectedFile.content;
+        targetFilenameBox.value = selectedFile.filename;
+        fileHandles[targetTextbox.id] = null;
+
+        // Update current buffer with the loaded file
+        const buffer = fileBuffers[currentBufferId];
+        buffer.content = selectedFile.content;
+        buffer.filename = selectedFile.filename;
+        buffer.fileHandle = null;
+        buffer.history = [];
+        buffer.historyIndex = -1;
+        buffer.historyCursorPositions = [];
+
+        // Reset history for the new file
+        history = [];
+        currentHistoryIndex = -1;
+        historyCursorPositions = [];
         addToHistory(selectedFile.content, 0);
-        saveCurrentBufferState();
+
+        // Update buffer history
+        buffer.history = [...history];
+        buffer.historyIndex = currentHistoryIndex;
+        buffer.historyCursorPositions = [...historyCursorPositions];
+
         updateBufferIndicator();
       } else {
+        // For textbox2, just load normally (no buffer system)
         targetTextbox.value = selectedFile.content;
-        elements.filenameBox2.value = selectedFile.filename;
+        targetFilenameBox.value = selectedFile.filename;
         fileHandles[targetTextbox.id] = null;
       }
-      persistSession();
+
+      storeLocally(targetTextbox);
       updateAllUI();
       if (!isCsvMode) targetTextbox.focus();
+
       handleSpecialFileTypes(selectedFile.filename, targetTextbox);
     }
   }
@@ -1479,16 +1710,23 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleFilenameChange(event) {
     openRecentFile(event.target.value);
   }
+
   function openHighlightedLink() {
     const textbox = activeTextbox;
     if (!textbox) return;
+
     const selectedText = textbox.value
       .substring(textbox.selectionStart, textbox.selectionEnd)
       .trim();
     let urlToOpen = selectedText || currentLinkUrl;
+
     if (!urlToOpen) return;
+
     let url = urlToOpen;
-    if (!/^https?:\/\//i.test(url)) url = "https://" + url;
+    if (!/^https?:\/\//i.test(url)) {
+      url = "https://" + url;
+    }
+
     try {
       new URL(url);
       window.open(url, "_blank", "noopener,noreferrer");
@@ -1501,6 +1739,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const currentActiveTextbox = isCsvMode ? elements.textbox1 : activeTextbox;
     if (!currentActiveTextbox) return;
     if (isCsvMode) updateTextboxFromGrid();
+
     const content = currentActiveTextbox.value;
     if (!content) {
       alert("There is no content to email.");
@@ -1515,118 +1754,15 @@ document.addEventListener("DOMContentLoaded", function () {
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   }
 
-  function exportProject() {
-    saveCurrentBufferState();
-    const isSplitView =
-      elements.editorContainer.classList.contains("split-view-active");
-    const projectData = {
-      version: 2,
-      settings: settings,
-      buffers: [],
-      activeBufferId: currentBufferId,
-      isSplitViewActive: isSplitView,
-      splitViewFile: null,
-    };
-    for (let i = 1; i <= MAX_BUFFERS; i++) {
-      const buffer = fileBuffers[i];
-      if (buffer.content.trim() !== "") {
-        const bufferToSave = {
-          bufferId: i,
-          filename: buffer.filename,
-          content: buffer.content,
-          history: buffer.history,
-          historyIndex: buffer.historyIndex,
-          historyCursorPositions: buffer.historyCursorPositions,
-          cursorPosition: buffer.cursorPosition,
-        };
-        projectData.buffers.push(bufferToSave);
-      }
-    }
-    if (isSplitView && elements.textbox2.value.trim() !== "") {
-      projectData.splitViewFile = {
-        filename: elements.filenameBox2.value || "split-pane.txt",
-        content: elements.textbox2.value,
-      };
-    }
-    try {
-      const jsonString = JSON.stringify(projectData, null, 2);
-      const compressed = pako.gzip(jsonString);
-      const blob = new Blob([compressed], { type: "application/gzip" });
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "editr-project.editr";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    } catch (error) {
-      console.error("Project export failed:", error);
-      alert("Could not export the project. See console for details.");
-    }
-  }
-
-  function importProject(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const compressedData = new Uint8Array(e.target.result);
-        const decompressed = pako.inflate(compressedData, { to: "string" });
-        const projectData = JSON.parse(decompressed);
-        if (!projectData.version || !projectData.settings)
-          throw new Error("Invalid or corrupted project file.");
-        settings = { ...defaultSettings, ...projectData.settings };
-        saveSettings();
-        applySettings();
-        initializeBuffers();
-        const filesToLoad = projectData.files || projectData.buffers;
-        if (filesToLoad) {
-          filesToLoad.forEach((fileData) => {
-            if (fileData.bufferId && fileData.bufferId <= MAX_BUFFERS) {
-              const buffer = fileBuffers[fileData.bufferId];
-              buffer.content = fileData.content || "";
-              buffer.filename =
-                fileData.filename || `editr${fileData.bufferId}.txt`;
-              buffer.history = fileData.history || [fileData.content || ""];
-              buffer.historyIndex = fileData.historyIndex ?? 0;
-              buffer.historyCursorPositions =
-                fileData.historyCursorPositions || [0];
-              buffer.cursorPosition = fileData.cursorPosition || 0;
-            }
-          });
-        }
-        const isCurrentlySplit =
-          elements.editorContainer.classList.contains("split-view-active");
-        if (projectData.isSplitViewActive) {
-          if (!isCurrentlySplit) toggleSplitView(true);
-          if (projectData.splitViewFile && projectData.splitViewFile.content) {
-            elements.textbox2.value = projectData.splitViewFile.content;
-            elements.filenameBox2.value = projectData.splitViewFile.filename;
-          }
-        } else {
-          if (isCurrentlySplit) toggleSplitView(false);
-        }
-        const bufferToActivate = projectData.activeBufferId || 1;
-        switchToBuffer(bufferToActivate, true);
-        persistSession();
-        updateRecentFilesUI();
-        alert("Project imported successfully!");
-      } catch (error) {
-        console.error("Project import failed:", error);
-        alert(
-          "Could not import project. The file may be corrupted or not a valid editr project file.",
-        );
-      } finally {
-        event.target.value = "";
-      }
-    };
-    reader.onerror = () => alert("Error reading the project file.");
-    reader.readAsArrayBuffer(file);
-  }
-
   function handleKeyDown(event) {
-    if (handleBufferKeyboard(event)) return;
+    // First check for buffer switching
+    if (handleBufferKeyboard(event)) {
+      return;
+    }
+
     const targetTextbox = event.target.closest(".textbox");
     if (!targetTextbox && !isCsvMode) return;
+
     const pairs = {
       "(": ")",
       "[": "]",
@@ -1657,12 +1793,20 @@ document.addEventListener("DOMContentLoaded", function () {
         targetTextbox.value = `${text.substring(0, s)}${openChar}${closeChar}${text.substring(e)}`;
         targetTextbox.selectionStart = targetTextbox.selectionEnd = s + 1;
       }
-      saveCurrentBufferState();
+
+      // Update current buffer content
+      if (targetTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = targetTextbox.value;
+      }
+
       clearTimeout(saveTimer);
-      saveTimer = setTimeout(persistSession, 500);
+      saveTimer = setTimeout(() => {
+        storeLocally(targetTextbox);
+      }, 500);
       updateAllUI();
       return;
     }
+
     if (targetTextbox && event.key === "Enter") {
       if (settings.autoIndent) {
         event.preventDefault();
@@ -1672,17 +1816,26 @@ document.addEventListener("DOMContentLoaded", function () {
         const lineStart = text.lastIndexOf("\n", s - 1) + 1;
         const currentLine = text.substring(lineStart, s);
         const indentation = currentLine.match(/^\s*/)[0];
+
         addToHistory(text, s);
+
         const newText = `${text.substring(0, s)}\n${indentation}${text.substring(e)}`;
         const newCursorPos = s + 1 + indentation.length;
+
         targetTextbox.value = newText;
         targetTextbox.selectionStart = targetTextbox.selectionEnd =
           newCursorPos;
-        saveCurrentBufferState();
+
+        // Update current buffer content
+        if (targetTextbox === elements.textbox1) {
+          fileBuffers[currentBufferId].content = targetTextbox.value;
+        }
+
         updateAllUI();
       }
       return;
     }
+
     if (targetTextbox && event.key === "Tab") {
       event.preventDefault();
       const tabSpaces = "    ";
@@ -1692,14 +1845,21 @@ document.addEventListener("DOMContentLoaded", function () {
       targetTextbox.value = `${targetTextbox.value.substring(0, s)}${tabSpaces}${targetTextbox.value.substring(e)}`;
       targetTextbox.selectionStart = targetTextbox.selectionEnd =
         s + tabSpaces.length;
-      saveCurrentBufferState();
+
+      // Update current buffer content
+      if (targetTextbox === elements.textbox1) {
+        fileBuffers[currentBufferId].content = targetTextbox.value;
+      }
+
       updateAllUI();
       return;
     }
+
     if (event.ctrlKey || event.metaKey) {
       const key = event.key.toLowerCase();
-      if ("osfkzynhmie/='.".includes(key) || key === "g")
+      if ("osfkzynhmie/='.".includes(key) || key === "g") {
         event.preventDefault();
+      }
       switch (key) {
         case "o":
           openFileToBuffer();
@@ -1726,8 +1886,11 @@ document.addEventListener("DOMContentLoaded", function () {
           createNewBuffer();
           break;
         case "m":
-          if (!elements.editorContainer.classList.contains("split-view-active"))
+          if (
+            !elements.editorContainer.classList.contains("split-view-active")
+          ) {
             toggleSplitView(true);
+          }
           togglePreviewMode();
           break;
         case "i":
@@ -1737,25 +1900,33 @@ document.addEventListener("DOMContentLoaded", function () {
           togglePopup("settings", true);
           break;
         case "=":
-          if (activeProtectedNotePassword) lockAndSaveProtectedNote();
-          else togglePopup("password", true);
+          if (activeProtectedNotePassword) {
+            lockAndSaveProtectedNote();
+          } else {
+            togglePopup("password", true);
+          }
           break;
         case ".":
-          if (settings.enableCsvMode) toggleCsvMode();
+          if (settings.enableCsvMode) {
+            toggleCsvMode();
+          }
           break;
         case "'":
-          if (elements.editorContainer.classList.contains("preview-active"))
+          if (elements.editorContainer.classList.contains("preview-active")) {
             handleExportPDF();
+          }
           break;
         case ";":
-          if (elements.editorContainer.classList.contains("preview-active"))
+          if (elements.editorContainer.classList.contains("preview-active")) {
             handleExportHTML();
+          }
           break;
         case "g":
           togglePopup("blackjack", true);
           break;
       }
     }
+
     if (
       targetTextbox &&
       [
@@ -1776,27 +1947,36 @@ document.addEventListener("DOMContentLoaded", function () {
   function handleMouseUp() {
     setTimeout(updateAllUI, 0);
   }
+
   function handleInput(event) {
     const targetTextbox = event.target;
     handleExpansion(event);
     updateAllUI();
-    if (popups.findReplace.style.display === "block") findAllMatches();
+
+    // Update current buffer content
+    if (targetTextbox === elements.textbox1) {
+      fileBuffers[currentBufferId].content = targetTextbox.value;
+    }
+
+    if (popups.findReplace.style.display === "block") {
+      findAllMatches();
+    }
+
     if (!isUndoing) {
       const now = Date.now();
       if (now - lastChangeTime > CHANGE_DELAY || history.length === 0) {
-        if (targetTextbox === elements.textbox1)
-          addToHistory(targetTextbox.value, targetTextbox.selectionStart);
+        addToHistory(targetTextbox.value, targetTextbox.selectionStart);
         lastChangeTime = now;
       }
     }
-    saveCurrentBufferState();
+
     clearTimeout(saveTimer);
     saveTimer = setTimeout(() => {
-      if (targetTextbox === elements.textbox1) persistSession();
-      else storeLocally(targetTextbox);
+      storeLocally(targetTextbox);
     }, 500);
   }
 
+  // CSV Mode Functions
   function parseCsv(csvString) {
     const rows = csvString
       .replace(/\r\n/g, "\n")
@@ -1805,9 +1985,9 @@ document.addEventListener("DOMContentLoaded", function () {
     return rows
       .filter((row) => row.trim() !== "")
       .map((row) => {
-        let result = [],
-          currentField = "",
-          inQuotes = false;
+        const result = [];
+        let currentField = "";
+        let inQuotes = false;
         for (let i = 0; i < row.length; i++) {
           const char = row[i];
           if (char === '"') {
@@ -1828,47 +2008,56 @@ document.addEventListener("DOMContentLoaded", function () {
         return result;
       });
   }
+
   function updateTextboxFromGrid() {
     if (!isCsvMode) return;
     const quoteField = (field) => {
       const f = field === null || field === undefined ? "" : String(field);
-      if (f.includes(",") || f.includes('"') || f.includes("\n"))
+      if (f.includes(",") || f.includes('"') || f.includes("\n")) {
         return `"${f.replace(/"/g, '""')}"`;
+      }
       return f;
     };
     const csvString = csvData
       .map((row) => row.map(quoteField).join(","))
       .join("\n");
     elements.textbox1.value = csvString;
-    saveCurrentBufferState();
-    persistSession();
+    fileBuffers[currentBufferId].content = csvString;
+    storeLocally(elements.textbox1);
     updateWordCount();
   }
+
   function updateGridFromTextbox() {
     if (!isCsvMode) return;
     csvData = parseCsv(elements.textbox1.value);
     renderCsvGrid();
   }
+
   function addRow() {
     const numCols = csvData.length > 0 ? csvData[0].length : 1;
     csvData.push(new Array(numCols).fill(""));
     renderCsvGrid();
     updateTextboxFromGrid();
   }
+
   function addColumn() {
     const newColName = prompt(
       "Enter new column header name:",
       `Column ${csvData.length > 0 ? csvData[0].length + 1 : 1}`,
     );
     if (newColName === null) return;
+
     if (csvData.length === 0) {
       csvData.push([newColName]);
     } else {
-      csvData.forEach((row, index) => row.push(index === 0 ? newColName : ""));
+      csvData.forEach((row, index) => {
+        row.push(index === 0 ? newColName : "");
+      });
     }
     renderCsvGrid();
     updateTextboxFromGrid();
   }
+
   function deleteRow(rowIndex) {
     if (confirm(`Are you sure you want to delete row ${rowIndex + 1}?`)) {
       csvData.splice(rowIndex, 1);
@@ -1876,24 +2065,39 @@ document.addEventListener("DOMContentLoaded", function () {
       updateTextboxFromGrid();
     }
   }
+
   function deleteColumn(colIndex) {
     if (
       confirm(
         `Are you sure you want to delete column "${csvData[0][colIndex]}"?`,
       )
     ) {
-      csvData.forEach((row) => row.splice(colIndex, 1));
+      csvData.forEach((row) => {
+        row.splice(colIndex, 1);
+      });
       renderCsvGrid();
       updateTextboxFromGrid();
     }
   }
+
   function renderCsvGrid() {
     if (!isCsvMode || !csvData) return;
     const container = elements.csvGridContainer;
-    container.innerHTML = `<div id="csv-grid-controls"><button id="csv-add-row-btn">Add Row</button><button id="csv-add-col-btn">Add Column</button></div><table id="csv-grid"><thead></thead><tbody></tbody></table>`;
+    container.innerHTML = `
+          <div id="csv-grid-controls">
+              <button id="csv-add-row-btn">Add Row</button>
+              <button id="csv-add-col-btn">Add Column</button>
+          </div>
+          <table id="csv-grid">
+              <thead></thead>
+              <tbody></tbody>
+          </table>
+      `;
+
     const table = container.querySelector("#csv-grid");
     const thead = table.querySelector("thead");
     const tbody = table.querySelector("tbody");
+
     if (csvData.length > 0) {
       const headerRow = document.createElement("tr");
       csvData[0].forEach((headerText, colIndex) => {
@@ -1909,6 +2113,7 @@ document.addEventListener("DOMContentLoaded", function () {
         };
         input.onkeydown = (e) => handleCsvGridKeyDown(e, 0, colIndex);
         th.appendChild(input);
+
         const deleteBtn = document.createElement("button");
         deleteBtn.className = "csv-col-delete-btn";
         deleteBtn.innerHTML = "&times;";
@@ -1919,6 +2124,7 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       thead.appendChild(headerRow);
     }
+
     const dataRows = csvData.slice(1);
     dataRows.forEach((row, rowIndex) => {
       const tr = document.createElement("tr");
@@ -1949,15 +2155,19 @@ document.addEventListener("DOMContentLoaded", function () {
       });
       tbody.appendChild(tr);
     });
+
     document.getElementById("csv-add-row-btn").onclick = addRow;
     document.getElementById("csv-add-col-btn").onclick = addColumn;
   }
+
   function toggleCsvMode(forceOn) {
     if (!settings.enableCsvMode && forceOn) return;
     const shouldBeOn = forceOn !== undefined ? forceOn : !isCsvMode;
     if (shouldBeOn === isCsvMode) return;
+
     isCsvMode = shouldBeOn;
     elements.editorPane1.classList.toggle("csv-view", isCsvMode);
+
     const buttonsToDisable = [
       elements.findReplaceBtn,
       elements.previewBtn,
@@ -1965,6 +2175,7 @@ document.addEventListener("DOMContentLoaded", function () {
       elements.undoButton,
     ];
     buttonsToDisable.forEach((btn) => (btn.disabled = isCsvMode));
+
     if (isCsvMode) {
       activeTextbox = null;
       updateGridFromTextbox();
@@ -1975,15 +2186,19 @@ document.addEventListener("DOMContentLoaded", function () {
       updateAllUI();
     }
   }
+
   function handleCsvGridKeyDown(event, rowIndex, colIndex) {
     if (
       !["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(event.key)
-    )
+    ) {
       return;
+    }
     event.preventDefault();
-    let nextRow = rowIndex,
-      nextCol = colIndex;
+
+    let nextRow = rowIndex;
+    let nextCol = colIndex;
     const maxCol = csvData[rowIndex].length - 1;
+
     switch (event.key) {
       case "ArrowUp":
         nextRow = Math.max(0, rowIndex - 1);
@@ -1999,6 +2214,7 @@ document.addEventListener("DOMContentLoaded", function () {
         nextCol = Math.min(maxCol, colIndex + 1);
         break;
     }
+
     const nextInput = document.querySelector(
       `#csv-grid input[data-row='${nextRow}'][data-col='${nextCol}']`,
     );
@@ -2007,6 +2223,8 @@ document.addEventListener("DOMContentLoaded", function () {
       nextInput.select();
     }
   }
+
+  // --- Blackjack Game Logic ---
   const blackjack = {
     deck: [],
     playerHand: [],
@@ -2014,6 +2232,7 @@ document.addEventListener("DOMContentLoaded", function () {
     playerScore: 0,
     dealerScore: 0,
     gameOver: true,
+
     createDeck() {
       this.deck = [];
       const suits = ["♥", "♦", "♣", "♠"];
@@ -2032,54 +2251,64 @@ document.addEventListener("DOMContentLoaded", function () {
         "Q",
         "K",
       ];
-      for (let s of suits)
-        for (let v of values) this.deck.push({ suit: s, value: v });
+      for (let suit of suits) {
+        for (let value of values) {
+          this.deck.push({ suit, value });
+        }
+      }
     },
+
     shuffle() {
       for (let i = this.deck.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
       }
     },
-    getCardValue(c) {
-      if (["J", "Q", "K"].includes(c.value)) return 10;
-      if (c.value === "A") return 11;
-      return parseInt(c.value);
+
+    getCardValue(card) {
+      if (["J", "Q", "K"].includes(card.value)) return 10;
+      if (card.value === "A") return 11;
+      return parseInt(card.value);
     },
-    calculateScore(h) {
-      let score = 0,
-        aces = 0;
-      for (let c of h) {
-        score += this.getCardValue(c);
-        if (c.value === "A") aces++;
+
+    calculateScore(hand) {
+      let score = 0;
+      let aceCount = 0;
+      for (let card of hand) {
+        score += this.getCardValue(card);
+        if (card.value === "A") aceCount++;
       }
-      while (score > 21 && aces > 0) {
+      while (score > 21 && aceCount > 0) {
         score -= 10;
-        aces--;
+        aceCount--;
       }
       return score;
     },
-    renderText(t) {
-      const o = elements.blackjackOutput;
-      o.innerHTML += t + "\n";
-      o.scrollTop = o.scrollHeight;
+
+    renderText(text) {
+      const output = elements.blackjackOutput;
+      output.innerHTML += text + "\n";
+      output.scrollTop = output.scrollHeight;
     },
+
     renderHands() {
-      let d = "---------------------------------\n";
-      let dHandStr = this.gameOver
+      let handsDisplay = "---------------------------------\n";
+      let dealerHandStr = this.gameOver
         ? this.dealerHand.map((c) => `${c.value}${c.suit}`).join(" ")
         : `${this.dealerHand[0].value}${this.dealerHand[0].suit} [?]`;
-      let dScoreStr = this.gameOver
+      let dealerScoreStr = this.gameOver
         ? `(${this.calculateScore(this.dealerHand)})`
         : "";
-      d += `Dealer's Hand: ${dHandStr} ${dScoreStr}\n`;
-      let pHandStr = this.playerHand
+      handsDisplay += `Dealer's Hand: ${dealerHandStr} ${dealerScoreStr}\n`;
+
+      let playerHandStr = this.playerHand
         .map((c) => `${c.value}${c.suit}`)
         .join(" ");
-      d += `Your Hand:     ${pHandStr} (${this.calculateScore(this.playerHand)})\n`;
-      d += "---------------------------------\n";
-      this.renderText(d);
+      handsDisplay += `Your Hand:     ${playerHandStr} (${this.calculateScore(this.playerHand)})\n`;
+      handsDisplay += "---------------------------------\n";
+      this.renderText(handsDisplay);
     },
+
     deal() {
       this.createDeck();
       this.shuffle();
@@ -2089,12 +2318,14 @@ document.addEventListener("DOMContentLoaded", function () {
       elements.blackjackOutput.innerHTML = "";
       this.renderText("New hand dealt!");
       this.renderHands();
+
       this.playerScore = this.calculateScore(this.playerHand);
       if (this.playerScore === 21) {
         this.renderText("Blackjack! You win!");
         this.gameOver = true;
       }
     },
+
     hit() {
       if (this.gameOver) {
         this.renderText("Game is over. Press [D] to start a new game.");
@@ -2108,6 +2339,7 @@ document.addEventListener("DOMContentLoaded", function () {
         this.gameOver = true;
       }
     },
+
     stand() {
       if (this.gameOver) {
         this.renderText("Game is over. Press [D] to start a new game.");
@@ -2116,6 +2348,7 @@ document.addEventListener("DOMContentLoaded", function () {
       this.gameOver = true;
       this.dealerTurn();
     },
+
     dealerTurn() {
       this.dealerScore = this.calculateScore(this.dealerHand);
       while (this.dealerScore < 17) {
@@ -2124,23 +2357,27 @@ document.addEventListener("DOMContentLoaded", function () {
       }
       this.determineWinner();
     },
+
     determineWinner() {
       this.renderText("--- Final Results ---");
       this.renderHands();
-      const pScore = this.calculateScore(this.playerHand);
-      const dScore = this.calculateScore(this.dealerHand);
-      if (pScore > 21) {
-      } else if (dScore > 21) {
+      const playerScore = this.calculateScore(this.playerHand);
+      const dealerScore = this.calculateScore(this.dealerHand);
+
+      if (playerScore > 21) {
+        // Already handled in hit()
+      } else if (dealerScore > 21) {
         this.renderText("Dealer busts! You win!");
-      } else if (pScore > dScore) {
+      } else if (playerScore > dealerScore) {
         this.renderText("You win!");
-      } else if (dScore > pScore) {
+      } else if (dealerScore > playerScore) {
         this.renderText("You lose.");
       } else {
         this.renderText("It's a push (tie).");
       }
       this.renderText("\nPress [D] to play again.");
     },
+
     startGame() {
       elements.blackjackOutput.innerHTML = "";
       this.renderText("Welcome to Blackjack! Press [D] to begin.");
@@ -2148,7 +2385,10 @@ document.addEventListener("DOMContentLoaded", function () {
     },
   };
 
-  // --- EVENT LISTENERS ---
+  loadSettings();
+  loadProtectedNotes();
+  applySettings(true);
+
   [elements.textbox1, elements.textbox2].forEach((tb) => {
     tb.addEventListener("focus", (e) => {
       if (!isCsvMode) activeTextbox = e.target;
@@ -2163,9 +2403,11 @@ document.addEventListener("DOMContentLoaded", function () {
     tb.addEventListener("mouseup", handleMouseUp);
     tb.addEventListener("input", handleInput);
   });
-  [elements.filenameBox1, elements.filenameBox2].forEach((box) =>
-    box.addEventListener("change", handleFilenameChange),
-  );
+
+  [elements.filenameBox1, elements.filenameBox2].forEach((box) => {
+    box.addEventListener("change", handleFilenameChange);
+  });
+
   elements.openBtn.addEventListener("click", () => openFileToBuffer());
   elements.saveBtn.addEventListener("click", () => saveCurrentBuffer());
   elements.emailBtn.addEventListener("click", shareViaEmail);
@@ -2195,31 +2437,18 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     }
   });
-  elements.projectBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const dropdown = elements.projectDropdown;
-    dropdown.style.display =
-      dropdown.style.display === "block" ? "none" : "block";
-  });
-  elements.exportProjectBtn.addEventListener("click", () => {
-    exportProject();
-    elements.projectDropdown.style.display = "none";
-  });
-  elements.importProjectBtn.addEventListener("click", () => {
-    elements.importProjectInput.click();
-    elements.projectDropdown.style.display = "none";
-  });
-  elements.importProjectInput.addEventListener("change", importProject);
+
   document.addEventListener("fullscreenchange", onFullScreenChange);
   document.addEventListener("webkitfullscreenchange", onFullScreenChange);
   document.addEventListener("mozfullscreenchange", onFullScreenChange);
   document.addEventListener("MSFullscreenChange", onFullScreenChange);
+
   window.addEventListener("click", (e) => {
-    if (!elements.recentFilesBtn.contains(e.target))
+    if (!elements.recentFilesBtn.contains(e.target)) {
       elements.recentFilesDropdown.style.display = "none";
-    if (!elements.projectBtn.contains(e.target))
-      elements.projectDropdown.style.display = "none";
+    }
   });
+
   elements.findReplaceBtn.addEventListener("click", () =>
     togglePopup("findReplace", true),
   );
@@ -2230,9 +2459,11 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.editrBtn.addEventListener("click", () =>
     togglePopup("settings", true),
   );
+
   elements.previewBtn.addEventListener("click", togglePreviewMode);
   elements.exportHtmlBtn.addEventListener("click", handleExportHTML);
   elements.exportPdfBtn.addEventListener("click", handleExportPDF);
+
   elements.defaultWordWrapCheck.addEventListener("change", (e) => {
     settings.wordWrap = e.target.checked;
     saveSettings();
@@ -2258,8 +2489,11 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.focusModeCheck.addEventListener("change", (e) => {
     settings.focusMode = e.target.checked;
     saveSettings();
-    if (settings.focusMode) enterFullScreen();
-    else exitFullScreen();
+    if (settings.focusMode) {
+      enterFullScreen();
+    } else {
+      exitFullScreen();
+    }
   });
   elements.showEmailBtnCheck.addEventListener("change", (e) => {
     settings.showEmailButton = e.target.checked;
@@ -2271,16 +2505,13 @@ document.addEventListener("DOMContentLoaded", function () {
     saveSettings();
     applySettings();
   });
-  elements.showProjectBtnCheck.addEventListener("change", (e) => {
-    settings.showProjectButton = e.target.checked;
-    saveSettings();
-    applySettings();
-  });
   elements.enableCsvModeCheck.addEventListener("change", (e) => {
     settings.enableCsvMode = e.target.checked;
     saveSettings();
     applySettings();
-    if (!settings.enableCsvMode && isCsvMode) toggleCsvMode(false);
+    if (!settings.enableCsvMode && isCsvMode) {
+      toggleCsvMode(false);
+    }
   });
   elements.defaultThemeSelect.addEventListener("change", (e) => {
     settings.theme = e.target.value;
@@ -2296,6 +2527,7 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.importSettingsInput.click(),
   );
   elements.importSettingsInput.addEventListener("change", handleImportSettings);
+
   elements.findText.addEventListener("input", findAllMatches);
   elements.findText.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -2315,11 +2547,16 @@ document.addEventListener("DOMContentLoaded", function () {
       handlePasswordSubmit();
     }
   });
-  elements.closeButtons.forEach((button) =>
-    button.addEventListener("click", () => togglePopup(null, false)),
-  );
+
+  elements.closeButtons.forEach((button) => {
+    button.addEventListener("click", () => togglePopup(null, false));
+  });
+
   elements.overlay.addEventListener("click", () => togglePopup(null, false));
-  elements.helpNewBtn.addEventListener("click", () => createNewBuffer());
+
+  elements.helpNewBtn.addEventListener("click", () => {
+    createNewBuffer();
+  });
   elements.helpOpenBtn.addEventListener("click", () => {
     togglePopup(null, false);
     openFileToBuffer();
@@ -2334,8 +2571,9 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   elements.helpSplitBtn.addEventListener("click", toggleSplitView);
   elements.helpPreviewBtn.addEventListener("click", () => {
-    if (!elements.editorContainer.classList.contains("split-view-active"))
+    if (!elements.editorContainer.classList.contains("split-view-active")) {
       toggleSplitView(true);
+    }
     togglePreviewMode();
   });
   elements.helpCsvBtn.addEventListener("click", () => {
@@ -2346,16 +2584,16 @@ document.addEventListener("DOMContentLoaded", function () {
       alert("CSV Mode is disabled. You can enable it in the settings panel.");
     }
   });
-  elements.helpFindBtn.addEventListener("click", () =>
-    togglePopup("findReplace", true),
-  );
+  elements.helpFindBtn.addEventListener("click", () => {
+    togglePopup("findReplace", true);
+  });
   elements.helpLinkBtn.addEventListener("click", () => {
     togglePopup(null, false);
     openHighlightedLink();
   });
-  elements.helpSettingsBtn.addEventListener("click", () =>
-    togglePopup(null, false),
-  );
+  elements.helpSettingsBtn.addEventListener("click", () => {
+    togglePopup(null, false);
+  });
   elements.helpLockBtn.addEventListener("click", () => {
     if (activeProtectedNotePassword) {
       togglePopup(null, false);
@@ -2368,65 +2606,57 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.helpPwaBtn.addEventListener("click", () => {
     if (elements.installButton) elements.installButton.click();
   });
-  elements.helpBlackjackBtn.addEventListener("click", () =>
-    togglePopup("blackjack", true),
+  elements.helpBlackjackBtn.addEventListener("click", () => {
+    togglePopup("blackjack", true);
+  });
+
+  adjustTextareaHeight();
+  window.addEventListener("resize", adjustTextareaHeight);
+
+  const savedContent1 = localStorage.getItem(
+    `editr_${tabId}_${elements.textbox1.id}`,
   );
-
-  // --- INITIALIZATION ---
-  loadSettings();
-  loadProtectedNotes();
-  applySettings(true);
-  updateRecentFilesUI();
-
-  const savedBuffersJSON = localStorage.getItem(`editr_${tabId}_fileBuffers`);
-  if (savedBuffersJSON) {
-    try {
-      const savedBuffers = JSON.parse(savedBuffersJSON);
-      initializeBuffers();
-      Object.keys(savedBuffers).forEach((key) => {
-        if (fileBuffers[key])
-          fileBuffers[key] = { ...fileBuffers[key], ...savedBuffers[key] };
-      });
-    } catch (e) {
-      console.error("Could not parse saved buffers. Starting fresh.", e);
-      initializeBuffers();
-    }
+  if (savedContent1) {
+    elements.textbox1.value = savedContent1;
+    addToHistory(savedContent1, 0);
   } else {
-    initializeBuffers();
+    addToHistory(elements.textbox1.value, 0);
   }
-
-  const savedActiveBufferId =
-    parseInt(localStorage.getItem(`editr_${tabId}_activeBufferId`)) || 1;
-  currentBufferId =
-    savedActiveBufferId >= 1 && savedActiveBufferId <= MAX_BUFFERS
-      ? savedActiveBufferId
-      : 1;
-  loadBufferState();
-
   const savedContent2 = localStorage.getItem(
     `editr_${tabId}_${elements.textbox2.id}`,
   );
-  if (savedContent2) elements.textbox2.value = savedContent2;
+  if (savedContent2) {
+    elements.textbox2.value = savedContent2;
+  }
 
+  updateAllUI();
+  updateRecentFilesUI();
+
+  // Initialize buffer system
+  initializeBuffers();
   createBufferIndicator();
   updateBufferIndicator();
-  adjustTextareaHeight();
-  window.addEventListener("resize", adjustTextareaHeight);
-  updateAllUI();
 
+  // Handle incoming shares, shortcuts, and file openings
   const urlParams = new URLSearchParams(window.location.search);
   const sharedTitle = urlParams.get("title");
   const sharedText = urlParams.get("text");
   const sharedUrl = urlParams.get("url");
+
   if (sharedTitle || sharedText || sharedUrl) {
     const contentToLoad = `${sharedTitle ? sharedTitle + "\n\n" : ""}${sharedText ? sharedText + "\n\n" : ""}${sharedUrl ? sharedUrl : ""}`;
     elements.textbox1.value = contentToLoad.trim();
     elements.filenameBox1.value = (sharedTitle || "shared-note") + ".txt";
-    addToHistory(elements.textbox1.value, 0);
-    saveCurrentBufferState();
-    persistSession();
+
+    // Update current buffer
+    const buffer = fileBuffers[currentBufferId];
+    buffer.content = contentToLoad.trim();
+    buffer.filename = (sharedTitle || "shared-note") + ".txt";
+
     updateAllUI();
     updateBufferIndicator();
+    storeLocally(elements.textbox1);
+    addToHistory(elements.textbox1.value, 0);
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if (urlParams.has("open")) {
     openFileToBuffer();
@@ -2437,20 +2667,23 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   const { editorContainer } = elements;
-  editorContainer.addEventListener("dragover", (e) => {
-    e.preventDefault();
+  editorContainer.addEventListener("dragover", (event) => {
+    event.preventDefault();
     editorContainer.classList.add("drag-over");
   });
-  editorContainer.addEventListener("dragleave", (e) => {
-    e.preventDefault();
+  editorContainer.addEventListener("dragleave", (event) => {
+    event.preventDefault();
     editorContainer.classList.remove("drag-over");
   });
-  editorContainer.addEventListener("drop", (e) => {
-    e.preventDefault();
+  editorContainer.addEventListener("drop", (event) => {
+    event.preventDefault();
     editorContainer.classList.remove("drag-over");
-    const files = e.dataTransfer.files;
-    if (!files || files.length === 0) return;
-    const targetTextbox = e.target.closest(".textbox");
+    const files = event.dataTransfer.files;
+    if (!files || files.length === 0) {
+      return;
+    }
+
+    const targetTextbox = event.target.closest(".textbox");
     if (targetTextbox === elements.textbox2) {
       fileHandles[elements.textbox2.id] = null;
       openDroppedFile(files[0], elements.textbox2, elements.filenameBox2);
@@ -2469,9 +2702,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   if ("launchQueue" in window) {
     launchQueue.setConsumer(async (launchParams) => {
-      if (!launchParams.files || launchParams.files.length === 0) return;
+      if (!launchParams.files || launchParams.files.length === 0) {
+        return;
+      }
+
       const fileHandle = launchParams.files[0];
       const file = await fileHandle.getFile();
+
       let targetTextbox, targetFilenameBox;
       if (
         elements.textbox1.value === "" &&
@@ -2493,10 +2730,9 @@ document.addEventListener("DOMContentLoaded", function () {
             ? elements.filenameBox1
             : elements.filenameBox2;
       }
+
       fileHandles[targetTextbox.id] = fileHandle;
       openDroppedFile(file, targetTextbox, targetFilenameBox);
     });
   }
-
-  window.addEventListener("beforeunload", persistSession);
 });

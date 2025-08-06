@@ -193,8 +193,7 @@ button:disabled {
 #theme-toggle,
 #preview-btn,
 #export-html-btn,
-#export-pdf-btn,
-#project-btn {
+#export-pdf-btn {
     background-color: #2980b9;
     border-color: #5dade2;
     color: white;
@@ -219,8 +218,7 @@ button:disabled {
 #theme-toggle:hover,
 #preview-btn:hover,
 #export-html-btn:hover,
-#export-pdf-btn:hover,
-#project-btn:hover {
+#export-pdf-btn:hover {
     background-color: #5dade2;
 }
 
@@ -257,12 +255,6 @@ button:disabled {
 #recent-files-btn:hover {
     background-color: #5dade2;
 }
-
-.dropdown-container {
-    position: relative;
-    display: inline-block;
-}
-
 .dropdown-content {
     display: none;
     position: absolute;
@@ -603,8 +595,7 @@ body.dark-mode #email-btn,
 body.dark-mode #recent-files-btn,
 body.dark-mode #preview-btn,
 body.dark-mode #export-html-btn,
-body.dark-mode #export-pdf-btn,
-body.dark-mode #project-btn {
+body.dark-mode #export-pdf-btn {
     background-color: #404040;
     border-color: #666;
 }
@@ -623,8 +614,7 @@ body.dark-mode #email-btn:hover,
 body.dark-mode #recent-files-btn:hover,
 body.dark-mode #preview-btn:hover,
 body.dark-mode #export-html-btn:hover,
-body.dark-mode #export-pdf-btn:hover,
-body.dark-mode #project-btn:hover {
+body.dark-mode #export-pdf-btn:hover {
     background-color: #555;
 }
 body.dark-mode #filename-container input {
@@ -806,8 +796,7 @@ body.snow-mode #wrap-btn,
 body.snow-mode #email-btn,
 body.snow-mode #preview-btn,
 body.snow-mode #export-html-btn,
-body.snow-mode #export-pdf-btn,
-body.snow-mode #project-btn {
+body.snow-mode #export-pdf-btn {
     background-color: #87ceeb;
     border-color: #add8e6;
     color: #2c3e50;
@@ -831,8 +820,7 @@ body.snow-mode #email-btn:hover,
 body.snow-mode #editr-btn:hover,
 body.snow-mode #preview-btn:hover,
 body.snow-mode #export-html-btn:hover,
-body.snow-mode #export-pdf-btn:hover,
-body.snow-mode #project-btn:hover {
+body.snow-mode #export-pdf-btn:hover {
     background-color: #b0e0e6;
 }
 body.snow-mode #filename-container input {

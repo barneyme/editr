@@ -8,6 +8,7 @@ const APP_SHELL = [
   "./html2canvas.js",
   "./jspdf.js",
   "./marked.js",
+  "./pako.js",
   "./manifest.json",
   "./editr192.svg",
   "./editr512.svg",
