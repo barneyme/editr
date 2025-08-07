@@ -1224,3 +1224,59 @@ body.dark-mode #blackjack-input {
         display: none;
     }
 }
+/* Add this CSS to your style.css file - Red X button for removing files from dropdown */
+
+/* Red X button styling for recent files dropdown */
+.dropdown-content .remove-file-btn {
+    color: #e74c3c;
+    background: none;
+    border: none;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 5px;
+    margin-left: 5px;
+    border-radius: 3px;
+    line-height: 1;
+    float: right;
+}
+
+.dropdown-content .remove-file-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* Dark mode support */
+body.dark-mode .dropdown-content .remove-file-btn {
+    color: #e74c3c;
+}
+
+body.dark-mode .dropdown-content .remove-file-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* Snow mode support */
+body.snow-mode .dropdown-content .remove-file-btn {
+    color: #e74c3c;
+}
+
+body.snow-mode .dropdown-content .remove-file-btn:hover {
+    background-color: #e74c3c;
+    color: white;
+}
+
+/* Adjust dropdown item layout to accommodate the X button */
+.dropdown-content div {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-right: 5px;
+}
+
+.dropdown-content .file-name {
+    flex-grow: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
