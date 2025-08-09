@@ -196,6 +196,25 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // Navigate through buffers with left/right arrows
+  function navigateBuffers(direction) {
+    let targetBuffer;
+
+    if (direction === "next") {
+      targetBuffer = currentBufferId + 1;
+      if (targetBuffer > MAX_BUFFERS) {
+        targetBuffer = 1; // Wrap to first buffer
+      }
+    } else if (direction === "prev") {
+      targetBuffer = currentBufferId - 1;
+      if (targetBuffer < 1) {
+        targetBuffer = MAX_BUFFERS; // Wrap to last buffer
+      }
+    }
+
+    switchToBuffer(targetBuffer);
+  }
+
   // Switch to a specific buffer
   function switchToBuffer(bufferId) {
     if (
@@ -316,9 +335,21 @@ document.addEventListener("DOMContentLoaded", function () {
       const key = event.key;
       const num = parseInt(key);
 
+      // Handle Ctrl+1-9 for direct buffer access
       if (num >= 1 && num <= 9) {
         event.preventDefault();
         switchToBuffer(num);
+        return true;
+      }
+
+      // Handle Ctrl+Left/Right arrow keys for buffer navigation
+      if (key === "ArrowLeft") {
+        event.preventDefault();
+        navigateBuffers("prev");
+        return true;
+      } else if (key === "ArrowRight") {
+        event.preventDefault();
+        navigateBuffers("next");
         return true;
       }
     }
@@ -816,43 +847,43 @@ document.addEventListener("DOMContentLoaded", function () {
     updateRecentFilesUI();
   }
 
-function updateRecentFilesUI() {
-  const files = getRecentFiles();
-  const {
-    recentFilesDatalist1,
-    recentFilesDatalist2,
-    recentFilesDropdown,
-    recentFilesBtn,
-  } = elements;
+  function updateRecentFilesUI() {
+    const files = getRecentFiles();
+    const {
+      recentFilesDatalist1,
+      recentFilesDatalist2,
+      recentFilesDropdown,
+      recentFilesBtn,
+    } = elements;
 
-  recentFilesDatalist1.innerHTML = "";
-  recentFilesDatalist2.innerHTML = "";
-  recentFilesDropdown.innerHTML = "";
+    recentFilesDatalist1.innerHTML = "";
+    recentFilesDatalist2.innerHTML = "";
+    recentFilesDropdown.innerHTML = "";
 
-  recentFilesBtn.disabled = files.length === 0;
+    recentFilesBtn.disabled = files.length === 0;
 
-  const fragment = document.createDocumentFragment();
-  files.forEach((file) => {
-    const option = document.createElement("option");
-    option.value = file.filename;
-    fragment.appendChild(option);
+    const fragment = document.createDocumentFragment();
+    files.forEach((file) => {
+      const option = document.createElement("option");
+      option.value = file.filename;
+      fragment.appendChild(option);
 
-    const dropdownItem = document.createElement("div");
-    dropdownItem.className = "recent-file-item";
-    dropdownItem.dataset.filename = file.filename;
-    
-    // Updated HTML structure with proper classes and red X styling
-    dropdownItem.innerHTML = `
+      const dropdownItem = document.createElement("div");
+      dropdownItem.className = "recent-file-item";
+      dropdownItem.dataset.filename = file.filename;
+
+      // Updated HTML structure with proper classes and red X styling
+      dropdownItem.innerHTML = `
       <span class="file-name">${file.filename}</span>
       <button class="remove-file-btn" title="Remove from list" data-filename="${file.filename}">×</button>
     `;
-    
-    recentFilesDropdown.appendChild(dropdownItem);
-  });
 
-  recentFilesDatalist1.appendChild(fragment.cloneNode(true));
-  recentFilesDatalist2.appendChild(fragment);
-}
+      recentFilesDropdown.appendChild(dropdownItem);
+    });
+
+    recentFilesDatalist1.appendChild(fragment.cloneNode(true));
+    recentFilesDatalist2.appendChild(fragment);
+  }
 
   function addRecentFile(filename, content) {
     if (!filename || content === null || content === undefined) return;
@@ -1174,7 +1205,7 @@ function updateRecentFilesUI() {
   function escapeRegExp(string) {
     return string.replace(
       /[.*+?^${}()|[\]\\]/g,
-      "\\      const dropdownItem =",
+      "\\    elements.wordCount.textContent = totalWords.toString",
     );
   }
 
@@ -2415,7 +2446,7 @@ function updateRecentFilesUI() {
   elements.recentFilesDropdown.addEventListener("click", (e) => {
     const target = e.target;
     e.stopPropagation();
-    if (target.classList.contains("delete-recent-btn")) {
+    if (target.classList.contains("remove-file-btn")) {
       removeRecentFile(target.dataset.filename);
     } else {
       const item = target.closest(".recent-file-item");
