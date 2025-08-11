@@ -168,6 +168,7 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   let isCsvMode = false;
   let csvData = [];
+  let isHandlingInput = false;
 
   // File buffer/tab system
   let fileBuffers = {};
@@ -280,11 +281,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Store locally
     storeLocally(elements.textbox1);
-
-    // If in markdown preview mode, update the preview pane as content has changed
-    if (elements.editorContainer.classList.contains("preview-active")) {
-      updatePreview();
-    }
   }
 
   // Render the tab bar UI
@@ -842,6 +838,11 @@ document.addEventListener("DOMContentLoaded", function () {
     updateWordCount();
     updateLinkButtonState();
     updateUndoRedoButtons();
+
+    // If in markdown preview mode, and not currently handling a direct input, update the preview.
+    if (elements.editorContainer.classList.contains("preview-active") && !isHandlingInput) {
+        updatePreview();
+    }
   }
 
   function updateCursorPosition() {
@@ -1827,6 +1828,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleInput(event) {
+    isHandlingInput = true;
     const targetTextbox = event.target;
     handleExpansion(event);
     updateAllUI();
@@ -1849,6 +1851,7 @@ document.addEventListener("DOMContentLoaded", function () {
     saveTimer = setTimeout(() => {
       storeLocally(targetTextbox);
     }, 500);
+    isHandlingInput = false;
   }
 
   // CSV Mode Functions
