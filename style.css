@@ -234,56 +234,13 @@ button:disabled {
 #filename-container input {
     padding: 0.5em;
     border: 1px solid #2980b9;
-    border-radius: 4px 0 0 4px;
+    border-radius: 4px;
     font-size: 14px;
     min-width: 100px;
     max-width: 200px;
     background-color: #d6eaf8;
     color: #0a3d62;
 }
-#recent-files-btn {
-    padding: 0.5em 0.4em;
-    background-color: #3498db;
-    border: 1px solid #2980b9;
-    border-left: none;
-    border-radius: 0 4px 4px 0;
-    cursor: pointer;
-    color: white;
-    margin-left: -1px;
-    height: 100%;
-}
-#recent-files-btn:hover {
-    background-color: #5dade2;
-}
-.dropdown-content {
-    display: none;
-    position: absolute;
-    top: calc(100% + 2px);
-    left: 0;
-    background-color: #ffffff;
-    min-width: 100%;
-    box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
-    z-index: 5;
-    border-radius: 4px;
-    border: 1px solid #aed6f1;
-    max-height: 250px;
-    overflow-y: auto;
-}
-.dropdown-content div {
-    color: #0a3d62;
-    padding: 10px 12px;
-    text-decoration: none;
-    display: block;
-    cursor: pointer;
-    font-size: 14px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-.dropdown-content div:hover {
-    background-color: #eaf3fb;
-}
-
 .popup {
     display: none;
     position: fixed;
@@ -672,7 +629,6 @@ body.dark-mode #csv-mode-btn,
 body.dark-mode #wrap-btn,
 body.dark-mode #editr-btn,
 body.dark-mode #email-btn,
-body.dark-mode #recent-files-btn,
 body.dark-mode #preview-btn,
 body.dark-mode #export-html-btn,
 body.dark-mode #export-pdf-btn,
@@ -692,7 +648,6 @@ body.dark-mode #csv-mode-btn:hover,
 body.dark-mode #wrap-btn:hover,
 body.dark-mode #editr-btn:hover,
 body.dark-mode #email-btn:hover,
-body.dark-mode #recent-files-btn:hover,
 body.dark-mode #preview-btn:hover,
 body.dark-mode #export-html-btn:hover,
 body.dark-mode #export-pdf-btn:hover,
@@ -727,16 +682,7 @@ body.dark-mode #filename-container input {
     color: white;
     border-color: #555;
 }
-body.dark-mode .dropdown-content {
-    background-color: #2d2d2d;
-    border-color: #555;
-}
-body.dark-mode .dropdown-content div {
-    color: white;
-}
-body.dark-mode .dropdown-content div:hover {
-    background-color: #3d3d3d;
-}
+
 body.dark-mode #stats {
     background-color: #404040;
     color: white;
@@ -1352,60 +1298,4 @@ body.dark-mode #blackjack-input {
     .active-line {
         display: none;
     }
-}
-/* Add this CSS to your style.css file - Red X button for removing files from dropdown */
-
-/* Red X button styling for recent files dropdown */
-.dropdown-content .remove-file-btn {
-    color: #e74c3c;
-    background: none;
-    border: none;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0 5px;
-    margin-left: 5px;
-    border-radius: 3px;
-    line-height: 1;
-    float: right;
-}
-
-.dropdown-content .remove-file-btn:hover {
-    background-color: #e74c3c;
-    color: white;
-}
-
-/* Dark mode support */
-body.dark-mode .dropdown-content .remove-file-btn {
-    color: #e74c3c;
-}
-
-body.dark-mode .dropdown-content .remove-file-btn:hover {
-    background-color: #e74c3c;
-    color: white;
-}
-
-/* Snow mode support */
-body.snow-mode .dropdown-content .remove-file-btn {
-    color: #e74c3c;
-}
-
-body.snow-mode .dropdown-content .remove-file-btn:hover {
-    background-color: #e74c3c;
-    color: white;
-}
-
-/* Adjust dropdown item layout to accommodate the X button */
-.dropdown-content div {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-right: 5px;
-}
-
-.dropdown-content .file-name {
-    flex-grow: 1;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
 }

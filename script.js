@@ -4,10 +4,6 @@ document.addEventListener("DOMContentLoaded", function () {
     textbox2: document.getElementById("textbox-2"),
     filenameBox1: document.getElementById("filename-1"),
     filenameBox2: document.getElementById("filename-2"),
-    recentFilesDatalist1: document.getElementById("recent-files-datalist-1"),
-    recentFilesDatalist2: document.getElementById("recent-files-datalist-2"),
-    recentFilesBtn: document.getElementById("recent-files-btn"),
-    recentFilesDropdown: document.getElementById("recent-files-dropdown"),
     linePosition: document.getElementById("line-position"),
     charPosition: document.getElementById("char-position"),
     wordCount: document.getElementById("word-count"),
@@ -164,7 +160,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let deferredPrompt;
   let activeTextbox = elements.textbox1;
   let currentLinkUrl = null;
-  const MAX_RECENT_FILES = 5;
   let protectedNotes = {};
   let activeProtectedNotePassword = null;
   let fileHandles = {
@@ -450,7 +445,6 @@ document.addEventListener("DOMContentLoaded", function () {
           elements.textbox1.value = content;
           elements.filenameBox1.value = file.name;
 
-          addRecentFile(file.name, content);
           storeLocally(elements.textbox1);
 
           // Reset history for the new file content
@@ -893,77 +887,12 @@ document.addEventListener("DOMContentLoaded", function () {
     elements.wordCount.textContent = totalWords.toString();
   }
 
-  function getRecentFiles() {
-    const files = localStorage.getItem("editr-recent-files");
-    return files ? JSON.parse(files) : [];
-  }
-
-  function removeRecentFile(filenameToRemove) {
-    let recentFiles = getRecentFiles();
-    recentFiles = recentFiles.filter(
-      (file) => file.filename !== filenameToRemove,
-    );
-    localStorage.setItem("editr-recent-files", JSON.stringify(recentFiles));
-    updateRecentFilesUI();
-  }
-
-  function updateRecentFilesUI() {
-    const files = getRecentFiles();
-    const {
-      recentFilesDatalist1,
-      recentFilesDatalist2,
-      recentFilesDropdown,
-      recentFilesBtn,
-    } = elements;
-
-    recentFilesDatalist1.innerHTML = "";
-    recentFilesDatalist2.innerHTML = "";
-    recentFilesDropdown.innerHTML = "";
-
-    recentFilesBtn.disabled = files.length === 0;
-
-    const fragment = document.createDocumentFragment();
-    files.forEach((file) => {
-      const option = document.createElement("option");
-      option.value = file.filename;
-      fragment.appendChild(option);
-
-      const dropdownItem = document.createElement("div");
-      dropdownItem.className = "recent-file-item";
-      dropdownItem.dataset.filename = file.filename;
-
-      // Updated HTML structure with proper classes and red X styling
-      dropdownItem.innerHTML = `
-      <span class="file-name">${file.filename}</span>
-      <button class="remove-file-btn" title="Remove from list" data-filename="${file.filename}">×</button>
-    `;
-
-      recentFilesDropdown.appendChild(dropdownItem);
-    });
-
-    recentFilesDatalist1.appendChild(fragment.cloneNode(true));
-    recentFilesDatalist2.appendChild(fragment);
-  }
-
-  function addRecentFile(filename, content) {
-    if (!filename || content === null || content === undefined) return;
-    let recentFiles = getRecentFiles();
-    recentFiles = recentFiles.filter((file) => file.filename !== filename);
-    recentFiles.unshift({ filename, content, timestamp: Date.now() });
-    if (recentFiles.length > MAX_RECENT_FILES) {
-      recentFiles.pop();
-    }
-    localStorage.setItem("editr-recent-files", JSON.stringify(recentFiles));
-    updateRecentFilesUI();
-  }
-
   function openDroppedFile(file, targetTextbox, targetFilenameBox) {
     const reader = new FileReader();
     reader.onload = (e) => {
       const content = e.target.result;
       targetTextbox.value = content;
       targetFilenameBox.value = file.name;
-      addRecentFile(file.name, content);
       storeLocally(targetTextbox);
 
       if (targetTextbox === elements.textbox1) {
@@ -996,31 +925,7 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   async function openFile() {
-    if ("showOpenFilePicker" in window) {
-      try {
-        const [handle] = await window.showOpenFilePicker();
-        const file = await handle.getFile();
-        const targetTextbox =
-          activeTextbox === elements.textbox2 && !isCsvMode
-            ? elements.textbox2
-            : elements.textbox1;
-        const targetFilenameBox =
-          targetTextbox === elements.textbox2
-            ? elements.filenameBox2
-            : elements.filenameBox1;
-
-        fileHandles[targetTextbox.id] = handle;
-        openDroppedFile(file, targetTextbox, targetFilenameBox);
-      } catch (err) {
-        console.log("Open file dialog was cancelled or failed.", err);
-      }
-    } else {
-      const openInput =
-        activeTextbox === elements.textbox2 && !isCsvMode
-          ? elements.openInput2
-          : elements.openInput1;
-      openInput.click();
-    }
+      openFileToBuffer();
   }
 
   function handleFileOpen(event, targetTextbox, targetFilenameBox) {
@@ -1060,7 +965,6 @@ document.addEventListener("DOMContentLoaded", function () {
         const writable = await handle.createWritable();
         await writable.write(content);
         await writable.close();
-        addRecentFile(handle.name, content);
         console.log("File saved successfully to existing handle.");
         return;
       } catch (err) {
@@ -1105,25 +1009,19 @@ document.addEventListener("DOMContentLoaded", function () {
         const writable = await saveAsHandle.createWritable();
         await writable.write(content);
         await writable.close();
-        addRecentFile(saveAsHandle.name, content);
         return;
       } catch (err) {
         console.log("Save As dialog was cancelled or failed.", err);
         return;
       }
     }
-
-    addRecentFile(filename, content);
+    
     const blob = new Blob([content], { type: "text/plain" });
     const a = document.createElement("a");
     a.href = URL.createObjectURL(blob);
     a.download = filename;
     a.click();
     URL.revokeObjectURL(a.href);
-  }
-
-  function openNewTabInBrowser() {
-    window.open(window.location.href, "_blank");
   }
 
   function handleBlackjackKeyPress(event) {
@@ -1690,40 +1588,6 @@ document.addEventListener("DOMContentLoaded", function () {
     };
     reader.readAsText(file);
     event.target.value = "";
-  }
-
-  function openRecentFile(filename) {
-    const recentFiles = getRecentFiles();
-    const selectedFile = recentFiles.find((file) => file.filename === filename);
-
-    if (selectedFile) {
-      addNewTab(); // This will create and switch to a new tab
-
-      // Now we are on a new blank tab, let's load the file into it.
-      elements.textbox1.value = selectedFile.content;
-      elements.filenameBox1.value = selectedFile.filename;
-      fileHandles["textbox-1"] = null; // Recent files don't have a handle
-
-      addRecentFile(selectedFile.filename, selectedFile.content);
-      storeLocally(elements.textbox1);
-
-      // Reset history for the new file content
-      history = [];
-      currentHistoryIndex = -1;
-      historyCursorPositions = [];
-      addToHistory(selectedFile.content, 0);
-
-      saveCurrentTabState(); // Save all new info to the current tab object
-
-      updateAllUI();
-      updateUIForViewMode();
-
-      if (settings.enableCsvMode && filename.toLowerCase().endsWith(".csv")) {
-        toggleCsvMode(true);
-      } else {
-        toggleCsvMode(false);
-      }
-    }
   }
 
   function handleFilenameChange(event) {
@@ -2422,36 +2286,11 @@ document.addEventListener("DOMContentLoaded", function () {
   elements.openInput2.addEventListener("change", (e) =>
     handleFileOpen(e, elements.textbox2, elements.filenameBox2),
   );
-  elements.recentFilesBtn.addEventListener("click", (e) => {
-    e.stopPropagation();
-    const dropdown = elements.recentFilesDropdown;
-    dropdown.style.display =
-      dropdown.style.display === "block" ? "none" : "block";
-  });
-  elements.recentFilesDropdown.addEventListener("click", (e) => {
-    const target = e.target;
-    e.stopPropagation();
-    if (target.classList.contains("remove-file-btn")) {
-      removeRecentFile(target.dataset.filename);
-    } else {
-      const item = target.closest(".recent-file-item");
-      if (item) {
-        openRecentFile(item.dataset.filename);
-        elements.recentFilesDropdown.style.display = "none";
-      }
-    }
-  });
-
+  
   document.addEventListener("fullscreenchange", onFullScreenChange);
   document.addEventListener("webkitfullscreenchange", onFullScreenChange);
   document.addEventListener("mozfullscreenchange", onFullScreenChange);
   document.addEventListener("MSFullscreenChange", onFullScreenChange);
-
-  window.addEventListener("click", (e) => {
-    if (!elements.recentFilesBtn.contains(e.target)) {
-      elements.recentFilesDropdown.style.display = "none";
-    }
-  });
 
   elements.findReplaceBtn.addEventListener("click", () =>
     togglePopup("findReplace", true),
@@ -2640,7 +2479,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   updateAllUI();
-  updateRecentFilesUI();
 
   // Initialize buffer system
   initializeTabs();
