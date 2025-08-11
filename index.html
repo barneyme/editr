@@ -358,7 +358,6 @@
                         this.currentGridRow = 0;
                         this.currentGridCol = 0;
                         this.isInitializingGrid = false;
-                        this.isSwitchingFile = false;
 
                         this.editorEl = document.getElementById("editor");
                         this.tabsContainerEl =
@@ -809,7 +808,6 @@
                     }
 
                     switchToFile(fileId) {
-                        this.isSwitchingFile = true;
                         this.activeFileId = fileId;
                         const file = this.files.get(fileId);
                         if (file) {
@@ -824,7 +822,6 @@
                         }
                         this.renderTabs();
                         this.updateStatusBar();
-                        this.isSwitchingFile = false;
                     }
 
                     createNewFile() {
@@ -863,7 +860,6 @@
                     }
 
                     handleEditorInput() {
-                        if (this.isSwitchingFile) return;
                         const file = this.files.get(this.activeFileId);
                         if (file) {
                             file.content = this.editorEl.value;
@@ -1013,13 +1009,18 @@
                     }
 
                     addExpander() {
-                        const trigger =
-                            document.getElementById("expanderTrigger").value;
+                        const trigger = document
+                            .getElementById("expanderTrigger")
+                            .value.trim();
                         const text =
                             document.getElementById("expanderText").value;
                         if (trigger && text) {
                             this.expanders.set(trigger, text);
                             this.saveExpanders();
+                            this.updateSettingsExpandersList();
+                            document.getElementById("expanderTrigger").value =
+                                "";
+                            document.getElementById("expanderText").value = "";
                             this.closeExpanderModal();
                         }
                     }
@@ -1045,16 +1046,35 @@
                     }
 
                     saveExpanders() {
-                        localStorage.setItem(
-                            "editr_expanders",
-                            JSON.stringify(
-                                Array.from(this.expanders.entries()),
-                            ),
-                        );
+                        try {
+                            localStorage.setItem(
+                                "editr_expanders",
+                                JSON.stringify(
+                                    Array.from(this.expanders.entries()),
+                                ),
+                            );
+                        } catch (e) {
+                            console.error(
+                                "Failed to save expanders to localStorage:",
+                                e,
+                            );
+                        }
                     }
+
                     loadExpanders() {
-                        const data = localStorage.getItem("editr_expanders");
-                        if (data) this.expanders = new Map(JSON.parse(data));
+                        try {
+                            const data =
+                                localStorage.getItem("editr_expanders");
+                            if (data) {
+                                this.expanders = new Map(JSON.parse(data));
+                            }
+                        } catch (e) {
+                            console.error(
+                                "Failed to load expanders from localStorage:",
+                                e,
+                            );
+                            this.expanders = new Map();
+                        }
                     }
                 }
                 new TextEditor();
