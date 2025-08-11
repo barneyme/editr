@@ -12,7 +12,7 @@ body {
 }
 #editor-container {
     position: fixed;
-    top: 3rem;
+    top: 3rem; /* Fallback, JS will adjust this */
     left: 0;
     right: 0;
     bottom: 0;
@@ -492,6 +492,86 @@ body.snow-mode .popup-section-divider {
     display: inline;
 }
 
+/* Tab Bar styles */
+#tab-bar-container {
+    position: fixed;
+    top: 3rem; /* Fallback, JS will set this */
+    left: 0;
+    width: 100%;
+    background-color: #000;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #333;
+}
+#tab-bar {
+    display: flex;
+    flex-grow: 1;
+    overflow-x: auto;
+    scrollbar-width: thin;
+}
+#tab-bar::-webkit-scrollbar {
+    height: 3px;
+}
+#tab-bar::-webkit-scrollbar-track {
+    background: #333;
+}
+#tab-bar::-webkit-scrollbar-thumb {
+    background: #5dade2;
+}
+.tab-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5em 0.75em;
+    cursor: pointer;
+    border-right: 1px solid #333;
+    background-color: #404040;
+    color: white;
+    font-size: 14px;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+.tab-item:hover {
+    background-color: #555;
+}
+.tab-item.active {
+    background-color: #eaf3fb;
+    color: #0a3d62;
+    font-weight: bold;
+}
+.close-tab-btn {
+    margin-left: 8px;
+    background: none;
+    border: none;
+    color: inherit;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 0 4px;
+    border-radius: 50%;
+    line-height: 1;
+    cursor: pointer;
+}
+.close-tab-btn:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+.tab-item.active .close-tab-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    color: #e74c3c;
+}
+#add-tab-btn {
+    background-color: #2980b9;
+    border: none;
+    border-left: 1px solid #333;
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    padding: 0.4em 0.8em;
+    cursor: pointer;
+}
+#add-tab-btn:hover {
+    background-color: #5dade2;
+}
+
 /* Buffer indicator styles */
 #buffer-indicator {
     background-color: #2980b9;
@@ -595,7 +675,8 @@ body.dark-mode #email-btn,
 body.dark-mode #recent-files-btn,
 body.dark-mode #preview-btn,
 body.dark-mode #export-html-btn,
-body.dark-mode #export-pdf-btn {
+body.dark-mode #export-pdf-btn,
+body.dark-mode #add-tab-btn {
     background-color: #404040;
     border-color: #666;
 }
@@ -614,9 +695,33 @@ body.dark-mode #email-btn:hover,
 body.dark-mode #recent-files-btn:hover,
 body.dark-mode #preview-btn:hover,
 body.dark-mode #export-html-btn:hover,
-body.dark-mode #export-pdf-btn:hover {
+body.dark-mode #export-pdf-btn:hover,
+body.dark-mode #add-tab-btn:hover {
     background-color: #555;
 }
+
+/* Dark mode tabs */
+body.dark-mode #tab-bar-container {
+    background-color: #1a1a1a;
+    border-bottom-color: #333;
+}
+body.dark-mode .tab-item {
+    background-color: #2b2b2b;
+    color: #ddd;
+    border-right-color: #333;
+}
+body.dark-mode .tab-item:hover {
+    background-color: #3c3c3c;
+}
+body.dark-mode .tab-item.active {
+    background-color: #1a1a1a;
+    color: white;
+    border-top: 2px solid #5dade2;
+}
+body.dark-mode .tab-item.active {
+    background-color: #3d3d3d;
+}
+
 body.dark-mode #filename-container input {
     background-color: #3d3d3d;
     color: white;
@@ -772,6 +877,33 @@ body.snow-mode nav {
     background-color: #87ceeb;
     border-bottom: 1px solid #76b6d4;
 }
+
+/* Snow mode tabs */
+body.snow-mode #tab-bar-container {
+    background-color: #87ceeb;
+    border-bottom-color: #76b6d4;
+}
+body.snow-mode .tab-item {
+    background-color: #add8e6;
+    color: #2c3e50;
+    border-right-color: #76b6d4;
+}
+body.snow-mode .tab-item:hover {
+    background-color: #b0e0e6;
+}
+body.snow-mode .tab-item.active {
+    background-color: #f0f8ff;
+    color: #2c3e50;
+}
+body.snow-mode #add-tab-btn {
+    background-color: #87ceeb;
+    border-color: #add8e6;
+    color: #2c3e50;
+}
+body.snow-mode #add-tab-btn:hover {
+    background-color: #b0e0e6;
+}
+
 body.snow-mode #app-name {
     color: #2c3e50;
 }
@@ -1095,9 +1227,7 @@ body.dark-mode #blackjack-input {
         align-items: center;
     }
 
-    /* Fix for mobile editor container overlap */
     #editor-container {
-        top: 4rem; /* Increased from 3rem to match nav height */
         padding-top: 1em; /* Additional padding to prevent text overlap */
     }
 
@@ -1150,9 +1280,7 @@ body.dark-mode #blackjack-input {
         max-width: none;
     }
 
-    /* Further adjustment for very small screens */
     #editor-container {
-        top: 4.5rem; /* Match nav height */
         padding-top: 1.5em; /* More padding for very small screens */
     }
 
@@ -1185,7 +1313,6 @@ body.dark-mode #blackjack-input {
     }
 
     #editor-container {
-        top: 5rem; /* Match nav height */
         padding-top: 2em; /* Maximum padding for tiny screens */
     }
 
@@ -1196,13 +1323,15 @@ body.dark-mode #blackjack-input {
 }
 
 @media print {
-    nav {
+    nav,
+    #tab-bar-container {
         display: none;
     }
     #editor-container {
         position: static;
         display: block;
         height: auto;
+        top: 0 !important;
     }
     .editor-pane {
         position: static;
