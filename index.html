@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>editr</title>
+    <title>Editr</title>
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDAwMDAwIi8+Cjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lPC90ZXh0Pgo8L3N2Zz4K" type="image/svg+xml">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <style>
@@ -46,17 +46,17 @@
 </head>
 <body>
     <div class="header">
-        <div class="logo">editr</div>
+        <div class="logo">Editr</div>
         <div class="toolbar">
-            <button class="btn" id="newFileBtn">New</button>
-            <button class="btn" id="openFileBtn">Open</button>
-            <button class="btn" id="saveFileBtn">Save</button>
-            <button class="btn" id="saveAsFileBtn">Save As</button>
-            <button class="btn" id="previewBtn" style="display: none;">Preview</button>
-            <button class="btn" id="gridModeBtn" style="display: none;">Grid</button>
-            <button class="btn" id="pdfBtn" style="display: none;">PDF</button>
-            <button class="btn" id="htmlBtn" style="display: none;">HTML</button>
-            <button class="btn" id="textBtn">Text</button>
+            <button class="btn" id="newFileBtn" title="New File (Ctrl+N)">New</button>
+            <button class="btn" id="openFileBtn" title="Open File (Ctrl+O)">Open</button>
+            <button class="btn" id="saveFileBtn" title="Save File (Ctrl+S)">Save</button>
+            <button class="btn" id="saveAsFileBtn" title="Save As (Ctrl+Shift+S)">Save As</button>
+            <button class="btn" id="previewBtn" style="display: none;" title="Toggle Preview (Ctrl+P)">Preview</button>
+            <button class="btn" id="gridModeBtn" style="display: none;" title="Toggle Grid Mode (Ctrl+G)">Grid</button>
+            <button class="btn" id="pdfBtn" style="display: none;" title="Export to PDF">PDF</button>
+            <button class="btn" id="htmlBtn" style="display: none;" title="Export to HTML">HTML</button>
+            <button class="btn" id="textBtn" title="Text Expansions (Ctrl+E)">Text</button>
         </div>
     </div>
     <div class="main-container">
@@ -136,17 +136,18 @@
                 }
 
                 setupEventListeners() {
+                    // Toolbar buttons
                     document.getElementById('newFileBtn').addEventListener('click', () => this.createNewFile());
                     document.getElementById('openFileBtn').addEventListener('click', () => this.openFile());
                     document.getElementById('saveFileBtn').addEventListener('click', () => this.saveFile());
                     document.getElementById('saveAsFileBtn').addEventListener('click', () => this.saveAsFile());
                     document.getElementById('textBtn').addEventListener('click', () => this.showTextModal());
-                    
                     this.previewBtn.addEventListener('click', () => this.togglePreview());
                     this.gridModeBtn.addEventListener('click', () => this.toggleGridMode());
                     this.pdfBtn.addEventListener('click', () => this.exportToPDF());
                     this.htmlBtn.addEventListener('click', () => this.exportToHTML());
                     
+                    // Modal buttons
                     document.getElementById('closeTextModalBtn').addEventListener('click', () => this.closeTextModal());
                     document.getElementById('addExpanderBtn').addEventListener('click', () => this.showExpanderModal());
                     document.getElementById('exportExpandersBtn').addEventListener('click', () => this.exportExpanders());
@@ -154,12 +155,35 @@
                     document.getElementById('cancelExpanderBtn').addEventListener('click', () => this.closeExpanderModal());
                     document.getElementById('expanderSaveBtn').addEventListener('click', () => this.addExpander());
                     
+                    // Editor and global events
                     this.editorEl.addEventListener('input', () => this.handleEditorInput());
                     this.editorEl.addEventListener('keyup', () => this.updateStatusBar());
                     this.editorEl.addEventListener('click', () => this.updateStatusBar());
+                    document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
+                }
+                
+                handleGlobalKeydown(e) {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key.toLowerCase()) {
+                            case 'n': e.preventDefault(); this.createNewFile(); break;
+                            case 'o': e.preventDefault(); this.openFile(); break;
+                            case 's':
+                                e.preventDefault();
+                                if (e.shiftKey) {
+                                    this.saveAsFile();
+                                } else {
+                                    this.saveFile();
+                                }
+                                break;
+                            case 'p': e.preventDefault(); this.togglePreview(); break;
+                            case 'g': e.preventDefault(); this.toggleGridMode(); break;
+                            case 'e': e.preventDefault(); this.showTextModal(); break;
+                        }
+                    }
                 }
 
                 togglePreview() {
+                    if (!this.files.get(this.activeFileId)?.name.endsWith('.md')) return;
                     this.isPreviewActive = !this.isPreviewActive;
                     this.previewPane.classList.toggle('active', this.isPreviewActive);
                     if (this.isPreviewActive) this.updatePreview();
@@ -171,6 +195,7 @@
                 }
 
                 toggleGridMode() {
+                    if (!this.files.get(this.activeFileId)?.name.endsWith('.csv')) return;
                     this.isGridActive = !this.isGridActive;
                     this.editorWrapper.classList.toggle('grid-mode-active', this.isGridActive);
                     if (this.isGridActive) this.renderCsvGrid();
@@ -184,7 +209,7 @@
                     const data = lines.map(line => line.split(','));
 
                     let tableHTML = '<thead><tr>';
-                    data[0].forEach(header => tableHTML += `<th>${header}</th>`);
+                    (data[0] || []).forEach(header => tableHTML += `<th>${header}</th>`);
                     tableHTML += '</tr></thead><tbody>';
 
                     data.slice(1).forEach((row, rowIndex) => {
@@ -449,7 +474,6 @@
                     }
                     const lines = [];
                     this.expanders.forEach((text, trigger) => {
-                        // Escape newlines so each expansion is on a single line in the file
                         const escapedText = text.replace(/\n/g, '\\n');
                         lines.push(`${trigger}=${escapedText}`);
                     });
@@ -481,7 +505,7 @@
                                     
                                     const trigger = line.substring(0, separatorIndex);
                                     const escapedText = line.substring(separatorIndex + 1);
-                                    const text = escapedText.replace(/\\n/g, '\n'); // Un-escape newlines
+                                    const text = escapedText.replace(/\\n/g, '\n');
                                     
                                     if (trigger) {
                                         newExpanders.set(trigger, text);
@@ -508,7 +532,7 @@
                         try {
                             this.expanders = new Map(JSON.parse(data));
                         } catch {
-                            this.expanders = new Map(); // Handle corrupted data
+                            this.expanders = new Map();
                         }
                     }
                 }
