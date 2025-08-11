@@ -168,7 +168,6 @@ document.addEventListener("DOMContentLoaded", function () {
   };
   let isCsvMode = false;
   let csvData = [];
-  let isHandlingInput = false;
 
   // File buffer/tab system
   let fileBuffers = {};
@@ -269,6 +268,10 @@ document.addEventListener("DOMContentLoaded", function () {
     if (history.length === 0) {
       addToHistory(buffer.content, 0);
     }
+    
+    // ** THE FIX IS HERE **
+    // Manually dispatch an input event to trigger all related updates, including markdown preview
+    elements.textbox1.dispatchEvent(new Event('input', { bubbles: true }));
 
     // Restore cursor position
     setTimeout(() => {
@@ -838,11 +841,6 @@ document.addEventListener("DOMContentLoaded", function () {
     updateWordCount();
     updateLinkButtonState();
     updateUndoRedoButtons();
-
-    // If in markdown preview mode, and not currently handling a direct input, update the preview.
-    if (elements.editorContainer.classList.contains("preview-active") && !isHandlingInput) {
-        updatePreview();
-    }
   }
 
   function updateCursorPosition() {
@@ -1828,7 +1826,6 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function handleInput(event) {
-    isHandlingInput = true;
     const targetTextbox = event.target;
     handleExpansion(event);
     updateAllUI();
@@ -1851,7 +1848,6 @@ document.addEventListener("DOMContentLoaded", function () {
     saveTimer = setTimeout(() => {
       storeLocally(targetTextbox);
     }, 500);
-    isHandlingInput = false;
   }
 
   // CSV Mode Functions
