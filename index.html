@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Editr</title>
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVkaXRyIiwKICAic2hvcnRfbmFtZSI6ICJFZGl0ciIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQmdBQUFBUUNBWUFBQUFmOC85aEFBQUFCSE5DU1ZRSUNBZ0lmQWhrZUFBQUFBbFFURlJGNy8vLy9CZ0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsCiAgICAgICJzaXplcyI6ICIyNHgyNCIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDAwMDAwIi8+Cjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lPC90ZXh0Pgo8L3N2Zz4K" type="image/svg+xml">
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVkaXRyIiwKICAic2hvcnRfbmFtZSI6ICJFZGl0ciIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU16SWlJR2hsYVdkb2REMGlNekpwSUhacFpYZENiM2c5SWpBZ01DQXpNaUF6TWlJZ1ptbHNiRDBpYm05dVpTSWdlRzFzYm5NOUltaDBkSEE2THk5M2QzY3Vkek11YjNKbkx6SXdNREF2YzNabklqNEtQSEpsWTNRZ2QybGtkR2c5SWpNeUlpQm9aV2xuYUhROUlqTXlJaUJtYVd4c1BTSWpNREF3TURBd0lpOCtDbkowWlhoMElIZzlJakUySWlCNVBTSXlNaUlnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzTENBemMyRnVjeTF6WlhKcFpuSWlJR1p2Ym5RdGMybDZaVDBpTVRnaUlHWnZiblF0ZDJWcFoyaDBQU0kwTUNBd0lpQm1hV3hzUFNJalpqWm1abVptWmlJZ2RHVjRkQzFoYm1Ob2IzSTlJbTFwWkdSc1pTSStaVHd2ZEdWNGRENEtQQzl6ZG1jKyIsCiAgICAgICJzaXplcyI6ICIzMngzMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9LAogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU5UUWlJR2hsYVdkb2REMGlOVFJwSUhacFpYZENiM2c5SWpBZ01DQTFOQ0ExTkNJZ1ptbHNiRDBpYm05dVpTSWdlRzFzYm5NOUltaDBkSEE2THk5M2QzY3Vkek11YjNKbkx6SXdNREF2YzNabklqNEtQSEpsWTNRZ2QybGtkR2c5SWpVMElpQm9aV2xuYUhROUlqVTBJaUJtYVd4c1BTSWpNREF3TURBd0lpOCtDbkowWlhoMElIZzlJakk1SWlCNVBTSXpPU0lnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzTENBemMyRnVjeTF6WlhKcFpuSWlJR1p2Ym5RdGMybDZaVDBpTXpRaUlHWnZiblF0ZDJWcFoyaDBQU0kwTUNBd0lpQm1hV3hzUFNJalpqWm1abVptWmlJZ2RHVjRkQzFoYm1Ob2IzSTlJbTFwWkdSc1pTSStaVHd2ZEdWNGRENEtQQzl6ZG1jKyIsCiAgICAgICJzaXplcyI6ICI1NHg1NCIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
     <style>
         * {
             margin: 0;
@@ -225,14 +226,18 @@
             border-collapse: collapse;
             background: #1e1e1e;
             color: #e0e0e0;
+            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
+            font-size: 12px;
         }
 
         .csv-grid th,
         .csv-grid td {
             border: 1px solid #3e3e42;
-            padding: 8px;
+            padding: 4px 8px;
             text-align: left;
-            font-size: 12px;
+            position: relative;
+            min-width: 80px;
+            max-width: 200px;
         }
 
         .csv-grid th {
@@ -240,11 +245,76 @@
             font-weight: 600;
             position: sticky;
             top: 0;
-            z-index: 1;
+            z-index: 2;
+            text-align: center;
         }
 
         .csv-grid tr:nth-child(even) {
             background: #252526;
+        }
+
+        .csv-grid tr:hover {
+            background: #2a2a2b;
+        }
+
+        .csv-grid-input {
+            background: transparent;
+            border: none;
+            color: inherit;
+            font: inherit;
+            width: 100%;
+            padding: 0;
+            outline: none;
+        }
+
+        .csv-grid-input:focus {
+            background: #3c3c3c;
+            border: 1px solid #569cd6;
+            border-radius: 2px;
+            padding: 2px;
+        }
+
+        .csv-grid-container {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: #1e1e1e;
+        }
+
+        .csv-add-row, .csv-add-col {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 4px 8px;
+            margin: 2px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .csv-add-row:hover, .csv-add-col:hover {
+            background: #4a4a4a;
+        }
+
+        .csv-controls {
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            padding: 8px 16px;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .grid-mode-active .editor {
+            display: none;
+        }
+
+        .grid-mode-active .csv-grid-container {
+            display: block;
+        }
+
+        .csv-grid-container {
+            display: none;
         }
 
         .status-bar {
@@ -356,9 +426,10 @@
             <button class="btn" onclick="openFile()" title="Open (Ctrl+O)">Open</button>
             <button class="btn" onclick="saveFile()" title="Save (Ctrl+S)">Save</button>
             <button class="btn" onclick="saveAsFile()" title="Save As (Ctrl+Shift+S)">Save As</button>
-            <button class="btn" onclick="togglePreview()" title="Preview .MD (Ctrl+P)">Preview</button>
-            <button class="btn" onclick="exportToPDF()" title="Export .MD > PDF">PDF</button>
-            <button class="btn" onclick="exportToHTML()" title="Export .MD > HTML">HTML</button>
+            <button class="btn" onclick="togglePreview()" title="Preview .MD (Ctrl+P)" id="previewBtn" style="display: none;">Preview</button>
+            <button class="btn" onclick="toggleGridMode()" title="CSV Grid Mode (Ctrl+G)" id="gridModeBtn" style="display: none;">Grid</button>
+            <button class="btn" onclick="exportToPDF()" title="Export MD > PDF" id="pdfBtn" style="display: none;">PDF</button>
+            <button class="btn" onclick="exportToHTML()" title="Export MD > HTML" id="htmlBtn" style="display: none;">HTML</button>
             <button class="btn" onclick="showExpanderModal()" title="Text Expanders">Expanders</button>
             <button class="btn" onclick="exportExpanders()" title="Export Expanders">Export Exp.</button>
             <button class="btn" onclick="importExpanders()" title="Import Expanders">Import Exp.</button>
@@ -384,7 +455,8 @@
                     <div>Ctrl+S - Save</div>
                     <div>Ctrl+Shift+S - Save As</div>
                     <div>Ctrl+W - Close Tab</div>
-                    <div>Ctrl+P - Toggle .MD Preview</div>
+                    <div>Ctrl+P - Toggle Preview</div>
+                    <div>Ctrl+G - Grid Mode (CSV)</div>
                     <div>Ctrl+E - Add Expander</div>
                     <div>Ctrl+Shift+E - Export Exp.</div>
                     <div>Ctrl+Shift+I - Import Exp.</div>
@@ -398,7 +470,22 @@
             
             <div class="editor-container">
                 <div class="editor-wrapper">
+                    <div class="csv-controls" id="csvControls" style="display: none;">
+                        <button class="csv-add-row" onclick="editor.addCSVRow()">+ Add Row</button>
+                        <button class="csv-add-col" onclick="editor.addCSVColumn()">+ Add Column</button>
+                        <button class="btn" onclick="editor.deleteCSVRow()" style="font-size: 11px;">Delete Row</button>
+                        <button class="btn" onclick="editor.deleteCSVColumn()" style="font-size: 11px;">Delete Column</button>
+                        <span style="margin-left: auto; font-size: 11px; color: #888;">
+                            Use Tab/Shift+Tab to navigate • Press Enter to add row
+                        </span>
+                    </div>
                     <textarea class="editor" id="editor" placeholder="Start typing..."></textarea>
+                    <div class="csv-grid-container" id="csvGridContainer">
+                        <table class="csv-grid" id="csvGrid">
+                            <thead id="csvGridHead"></thead>
+                            <tbody id="csvGridBody"></tbody>
+                        </table>
+                    </div>
                 </div>
                 <div class="preview-pane" id="previewPane"></div>
             </div>
@@ -445,6 +532,10 @@
                 this.fileHandles = new Map();
                 this.expanders = new Map();
                 this.isPreviewMode = false;
+                this.isGridMode = false;
+                this.csvData = [];
+                this.selectedRow = -1;
+                this.selectedCol = -1;
                 this.nextFileId = 1;
                 this.currentEditingExpander = null;
                 
@@ -459,6 +550,12 @@
                 
                 if (this.files.size === 0) {
                     this.createNewFile();
+                } else {
+                    // Update toolbar for the active file
+                    const activeFile = this.files.get(this.activeFileId);
+                    if (activeFile) {
+                        this.updateToolbarButtons(activeFile);
+                    }
                 }
                 
                 this.renderTabs();
@@ -542,9 +639,9 @@
                         this.updatePreview();
                     }
 
-                    // Update CSV preview if it's a CSV file
-                    if (file.name.endsWith('.csv')) {
-                        this.updateCSVPreview();
+                    // Update CSV grid if active
+                    if (this.isGridMode && file.name.endsWith('.csv')) {
+                        this.parseCSVToGrid();
                     }
                 }
                 
@@ -654,6 +751,10 @@
                         case 'p':
                             e.preventDefault();
                             this.togglePreview();
+                            break;
+                        case 'g':
+                            e.preventDefault();
+                            this.toggleGridMode();
                             break;
                         case 'e':
                             e.preventDefault();
@@ -772,6 +873,12 @@
                 this.renderTabs();
                 this.updateStatusBar();
                 
+                // Update toolbar buttons for the new file
+                const file = this.files.get(fileId);
+                if (file) {
+                    this.updateToolbarButtons(file);
+                }
+                
                 return fileId;
             }
 
@@ -865,22 +972,67 @@
                 if (file) {
                     editor.value = file.content;
                     
-                    // Update preview based on file type
+                    // Show/hide buttons based on file type
+                    this.updateToolbarButtons(file);
+                    
+                    // Update preview/grid mode based on file type
                     if (file.name.endsWith('.md')) {
                         if (this.isPreviewMode) {
                             this.updatePreview();
                         }
+                        // Hide grid mode for markdown files
+                        this.hideGridMode();
                     } else if (file.name.endsWith('.csv')) {
-                        this.updateCSVPreview();
-                    } else {
-                        // Hide preview for non-markdown/csv files
+                        // Hide preview for CSV files
                         document.getElementById('previewPane').classList.remove('active');
+                        this.isPreviewMode = false;
+                        
+                        if (this.isGridMode) {
+                            this.showGridMode();
+                        }
+                    } else {
+                        // Hide both preview and grid for other files
+                        document.getElementById('previewPane').classList.remove('active');
+                        this.hideGridMode();
+                        this.isPreviewMode = false;
+                        this.isGridMode = false;
                     }
                 }
                 
                 this.renderTabs();
                 this.updateStatusBar();
                 editor.focus();
+            }
+
+            updateToolbarButtons(file) {
+                const previewBtn = document.getElementById('previewBtn');
+                const gridModeBtn = document.getElementById('gridModeBtn');
+                const pdfBtn = document.getElementById('pdfBtn');
+                const htmlBtn = document.getElementById('htmlBtn');
+                
+                if (file.name.endsWith('.md')) {
+                    // Show markdown-related buttons
+                    previewBtn.style.display = 'inline-block';
+                    pdfBtn.style.display = 'inline-block';
+                    htmlBtn.style.display = 'inline-block';
+                    
+                    // Hide CSV-related buttons
+                    gridModeBtn.style.display = 'none';
+                } else if (file.name.endsWith('.csv')) {
+                    // Show CSV-related buttons
+                    gridModeBtn.style.display = 'inline-block';
+                    
+                    // Hide markdown-related buttons
+                    previewBtn.style.display = 'none';
+                    pdfBtn.style.display = 'none';
+                    htmlBtn.style.display = 'none';
+                } else {
+                    // Hide all file-type specific buttons for other files
+                    previewBtn.style.display = 'none';
+                    gridModeBtn.style.display = 'none';
+                    pdfBtn.style.display = 'none';
+                    htmlBtn.style.display = 'none';
+                }
             }
 
             switchToTab(index) {
@@ -945,18 +1097,280 @@
                 if (!this.activeFileId) return;
                 
                 const file = this.files.get(this.activeFileId);
+                if (!file || !file.name.endsWith('.md')) {
+                    this.setStatus('Preview only available for Markdown files');
+                    return;
+                }
+                
                 const previewPane = document.getElementById('previewPane');
                 
                 this.isPreviewMode = !this.isPreviewMode;
                 
-                if (this.isPreviewMode && file.name.endsWith('.md')) {
+                if (this.isPreviewMode) {
                     previewPane.classList.add('active');
                     this.updatePreview();
-                } else if (this.isPreviewMode && file.name.endsWith('.csv')) {
-                    previewPane.classList.add('active');
-                    this.updateCSVPreview();
                 } else {
                     previewPane.classList.remove('active');
+                }
+            }
+            }
+
+            toggleGridMode() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                if (!file || !file.name.endsWith('.csv')) {
+                    this.setStatus('Grid mode only available for CSV files');
+                    return;
+                }
+                
+                this.isGridMode = !this.isGridMode;
+                
+                if (this.isGridMode) {
+                    this.showGridMode();
+                } else {
+                    this.hideGridMode();
+                }
+            }
+
+            showGridMode() {
+                const editorWrapper = document.querySelector('.editor-wrapper');
+                const csvControls = document.getElementById('csvControls');
+                const gridBtn = document.getElementById('gridModeBtn');
+                
+                editorWrapper.classList.add('grid-mode-active');
+                csvControls.style.display = 'flex';
+                gridBtn.textContent = 'Text';
+                gridBtn.title = 'Switch to Text Mode (Ctrl+G)';
+                
+                this.parseCSVToGrid();
+                document.getElementById('previewPane').classList.remove('active');
+            }
+
+            hideGridMode() {
+                const editorWrapper = document.querySelector('.editor-wrapper');
+                const csvControls = document.getElementById('csvControls');
+                const gridBtn = document.getElementById('gridModeBtn');
+                
+                editorWrapper.classList.remove('grid-mode-active');
+                csvControls.style.display = 'none';
+                gridBtn.textContent = 'Grid';
+                gridBtn.title = 'Grid Mode (Ctrl+G)';
+                
+                this.updateCSVFromGrid();
+            }
+
+            parseCSVToGrid() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                if (!file) return;
+                
+                const lines = file.content.split('\n').filter(line => line.trim());
+                if (lines.length === 0) {
+                    this.csvData = [['']];
+                } else {
+                    this.csvData = lines.map(line => this.parseCSVLine(line));
+                }
+                
+                // Ensure all rows have the same number of columns
+                const maxCols = Math.max(...this.csvData.map(row => row.length), 1);
+                this.csvData = this.csvData.map(row => {
+                    while (row.length < maxCols) row.push('');
+                    return row;
+                });
+                
+                this.renderCSVGrid();
+            }
+
+            renderCSVGrid() {
+                const head = document.getElementById('csvGridHead');
+                const body = document.getElementById('csvGridBody');
+                
+                head.innerHTML = '';
+                body.innerHTML = '';
+                
+                if (this.csvData.length === 0) return;
+                
+                const maxCols = this.csvData[0].length;
+                
+                // Create header
+                const headerRow = document.createElement('tr');
+                for (let col = 0; col < maxCols; col++) {
+                    const th = document.createElement('th');
+                    th.textContent = this.getColumnName(col);
+                    headerRow.appendChild(th);
+                }
+                head.appendChild(headerRow);
+                
+                // Create data rows
+                this.csvData.forEach((rowData, rowIndex) => {
+                    const tr = document.createElement('tr');
+                    
+                    rowData.forEach((cellData, colIndex) => {
+                        const td = document.createElement('td');
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.className = 'csv-grid-input';
+                        input.value = cellData;
+                        input.dataset.row = rowIndex;
+                        input.dataset.col = colIndex;
+                        
+                        input.addEventListener('input', (e) => {
+                            this.updateCSVCell(rowIndex, colIndex, e.target.value);
+                        });
+                        
+                        input.addEventListener('keydown', (e) => {
+                            this.handleGridKeydown(e, rowIndex, colIndex);
+                        });
+                        
+                        input.addEventListener('focus', () => {
+                            this.selectedRow = rowIndex;
+                            this.selectedCol = colIndex;
+                        });
+                        
+                        td.appendChild(input);
+                        tr.appendChild(td);
+                    });
+                    
+                    body.appendChild(tr);
+                });
+            }
+
+            getColumnName(index) {
+                let name = '';
+                while (index >= 0) {
+                    name = String.fromCharCode(65 + (index % 26)) + name;
+                    index = Math.floor(index / 26) - 1;
+                }
+                return name;
+            }
+
+            handleGridKeydown(e, row, col) {
+                switch (e.key) {
+                    case 'Tab':
+                        e.preventDefault();
+                        if (e.shiftKey) {
+                            this.navigateGrid(row, col - 1);
+                        } else {
+                            this.navigateGrid(row, col + 1);
+                        }
+                        break;
+                    case 'Enter':
+                        e.preventDefault();
+                        if (row === this.csvData.length - 1) {
+                            this.addCSVRow();
+                        }
+                        this.navigateGrid(row + 1, col);
+                        break;
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        this.navigateGrid(row - 1, col);
+                        break;
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        this.navigateGrid(row + 1, col);
+                        break;
+                    case 'ArrowLeft':
+                        if (e.target.selectionStart === 0) {
+                            e.preventDefault();
+                            this.navigateGrid(row, col - 1);
+                        }
+                        break;
+                    case 'ArrowRight':
+                        if (e.target.selectionStart === e.target.value.length) {
+                            e.preventDefault();
+                            this.navigateGrid(row, col + 1);
+                        }
+                        break;
+                }
+            }
+
+            navigateGrid(row, col) {
+                // Ensure valid bounds
+                row = Math.max(0, Math.min(row, this.csvData.length - 1));
+                col = Math.max(0, Math.min(col, this.csvData[0].length - 1));
+                
+                const input = document.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }
+
+            updateCSVCell(row, col, value) {
+                if (this.csvData[row]) {
+                    this.csvData[row][col] = value;
+                    this.updateCSVFromGrid();
+                }
+            }
+
+            updateCSVFromGrid() {
+                if (!this.activeFileId || !this.isGridMode) return;
+                
+                const csvContent = this.csvData
+                    .map(row => row.map(cell => this.escapeCSVCell(cell)).join(','))
+                    .join('\n');
+                
+                const file = this.files.get(this.activeFileId);
+                if (file) {
+                    file.content = csvContent;
+                    file.modified = true;
+                    document.getElementById('editor').value = csvContent;
+                    this.renderTabs();
+                }
+            }
+
+            escapeCSVCell(cell) {
+                if (cell.includes(',') || cell.includes('"') || cell.includes('\n')) {
+                    return '"' + cell.replace(/"/g, '""') + '"';
+                }
+                return cell;
+            }
+
+            addCSVRow() {
+                if (!this.csvData.length) return;
+                
+                const newRow = new Array(this.csvData[0].length).fill('');
+                this.csvData.push(newRow);
+                this.renderCSVGrid();
+                this.updateCSVFromGrid();
+                
+                // Focus on first cell of new row
+                setTimeout(() => {
+                    this.navigateGrid(this.csvData.length - 1, 0);
+                }, 50);
+            }
+
+            addCSVColumn() {
+                this.csvData.forEach(row => row.push(''));
+                this.renderCSVGrid();
+                this.updateCSVFromGrid();
+            }
+
+            deleteCSVRow() {
+                if (this.selectedRow >= 0 && this.csvData.length > 1) {
+                    this.csvData.splice(this.selectedRow, 1);
+                    this.selectedRow = Math.min(this.selectedRow, this.csvData.length - 1);
+                    this.renderCSVGrid();
+                    this.updateCSVFromGrid();
+                    
+                    setTimeout(() => {
+                        this.navigateGrid(this.selectedRow, this.selectedCol);
+                    }, 50);
+                }
+            }
+
+            deleteCSVColumn() {
+                if (this.selectedCol >= 0 && this.csvData[0] && this.csvData[0].length > 1) {
+                    this.csvData.forEach(row => row.splice(this.selectedCol, 1));
+                    this.selectedCol = Math.min(this.selectedCol, this.csvData[0].length - 1);
+                    this.renderCSVGrid();
+                    this.updateCSVFromGrid();
+                    
+                    setTimeout(() => {
+                        this.navigateGrid(this.selectedRow, this.selectedCol);
+                    }, 50);
                 }
             }
 
@@ -1055,18 +1469,18 @@
                 return div.innerHTML;
             }
 
-            async exportToPDF() {
+            exportToPDF() {
                 if (!this.activeFileId) return;
                 
                 const file = this.files.get(this.activeFileId);
+                if (!file.name.endsWith('.md')) {
+                    this.setStatus('PDF export only available for Markdown files');
+                    return;
+                }
                 
                 // Create a temporary window for PDF generation
                 const printWindow = window.open('', '_blank');
-                let content = file.content;
-                
-                if (file.name.endsWith('.md')) {
-                    content = marked.parse(content);
-                }
+                let content = marked.parse(file.content);
                 
                 printWindow.document.write(`
                     <!DOCTYPE html>
@@ -1086,7 +1500,7 @@
                         </style>
                     </head>
                     <body>
-                        ${file.name.endsWith('.md') ? content : `<pre>${this.escapeHtml(content)}</pre>`}
+                        ${content}
                     </body>
                     </html>
                 `);
@@ -1103,11 +1517,12 @@
                 if (!this.activeFileId) return;
                 
                 const file = this.files.get(this.activeFileId);
-                let content = file.content;
-                
-                if (file.name.endsWith('.md')) {
-                    content = marked.parse(content);
+                if (!file.name.endsWith('.md')) {
+                    this.setStatus('HTML export only available for Markdown files');
+                    return;
                 }
+                
+                const content = marked.parse(file.content);
                 
                 const htmlContent = `<!DOCTYPE html>
 <html lang="en">
@@ -1128,7 +1543,7 @@
     </style>
 </head>
 <body>
-    ${file.name.endsWith('.md') ? content : `<pre>${this.escapeHtml(content)}</pre>`}
+    ${content}
 </body>
 </html>`;
                 
@@ -1492,6 +1907,7 @@
         function saveFile() { editor.saveFile(); }
         function saveAsFile() { editor.saveAsFile(); }
         function togglePreview() { editor.togglePreview(); }
+        function toggleGridMode() { editor.toggleGridMode(); }
         function exportToPDF() { editor.exportToPDF(); }
         function exportToHTML() { editor.exportToHTML(); }
         function showExpanderModal() { editor.showExpanderModal(); }
