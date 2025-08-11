@@ -3,856 +3,1115 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bEdit</title>
+        <title>editr</title>
         <link
             rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>b</text></svg>"
+            href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDAwMDAwIi8+Cjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lPC90ZXh0Pgo8L3N2Zz4K"
+            type="image/svg+xml"
         />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
         <style>
             * {
                 margin: 0;
                 padding: 0;
                 box-sizing: border-box;
             }
-
             body {
-                font-family: "Courier New", monospace;
-                background: #f8f8f8;
-                height: 100vh;
-                position: relative;
-                transition: background 0.3s ease;
-            }
-
-            body.dark-mode {
-                background: #1a1a1a;
-            }
-
-            #editor {
-                width: 100%;
-                height: 100vh;
-                border: none;
-                outline: none;
-                padding: 20px;
-                font-family: "Courier New", monospace;
-                font-size: 14px;
-                line-height: 1.5;
-                background: white;
-                color: #333;
-                resize: none;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                transition:
-                    background 0.3s ease,
-                    color 0.3s ease,
-                    border 0.2s ease;
-            }
-
-            #editor.drag-over {
-                border: 3px dashed #007acc;
-                background: rgba(0, 122, 204, 0.1);
-            }
-
-            body.dark-mode #editor {
-                background: #2d2d2d;
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                    Oxygen, Ubuntu, Cantarell, sans-serif;
+                background: #1e1e1e;
                 color: #e0e0e0;
+                height: 100vh;
+                overflow: hidden;
             }
-
-            body.dark-mode #editor.drag-over {
-                border: 3px dashed #4a9eff;
-                background: rgba(74, 158, 255, 0.1);
-            }
-
-            #bufferBar {
-                display: none;
-            }
-
-            #shortcuts {
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                padding: 10px;
-                border-radius: 4px;
-                font-size: 12px;
-                opacity: 0;
-                transition: opacity 0.3s;
-                pointer-events: none;
-                z-index: 1000;
-            }
-
-            #shortcuts.show {
-                opacity: 1;
-            }
-
-            #hoverHint {
-                position: fixed;
-                top: 15px;
-                right: 15px;
-                width: 8px;
-                height: 8px;
-                background: rgba(0, 0, 0, 0.2);
-                border-radius: 50%;
-                transition: opacity 0.3s;
-                pointer-events: none;
-                z-index: 999;
-            }
-
-            body.dark-mode #hoverHint {
-                background: rgba(255, 255, 255, 0.3);
-            }
-
-            #hoverHint.hide {
-                opacity: 0;
-            }
-
-            #fileInput {
-                display: none;
-            }
-
-            #mobileControls {
-                position: fixed;
-                top: 10px;
-                right: 10px;
-                display: none;
-                gap: 8px;
-                z-index: 1000;
-            }
-
-            .mobile-btn {
-                width: 40px;
-                height: 40px;
-                background: rgba(0, 0, 0, 0.8);
-                color: white;
-                border: none;
-                border-radius: 4px;
-                cursor: pointer;
+            .header {
+                background: #2d2d30;
+                border-bottom: 1px solid #3e3e42;
+                padding: 8px 16px;
                 display: flex;
                 align-items: center;
-                justify-content: center;
-                font-size: 16px;
-                transition: background 0.2s;
+                gap: 12px;
             }
-
-            .mobile-btn:hover {
-                background: rgba(0, 0, 0, 0.9);
+            .logo {
+                font-weight: 600;
+                color: #2563eb;
             }
-
-            .mobile-btn:active {
-                transform: scale(0.95);
+            .toolbar {
+                display: flex;
+                gap: 8px;
+                align-items: center;
             }
-
-            @media (max-width: 768px) {
-                #mobileControls {
-                    display: flex;
-                }
-
-                #shortcuts {
-                    display: none;
-                }
-
-                #editor {
-                    height: 100vh;
-                }
+            .btn {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                padding: 6px 12px;
+                border-radius: 4px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            .main-container {
+                display: flex;
+                height: calc(100vh - 50px);
+            }
+            .content-area {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+            }
+            .editor-container {
+                flex: 1;
+                display: flex;
+            }
+            .editor-wrapper {
+                flex: 1;
+                position: relative;
+            }
+            .tabs-container {
+                background: #2d2d30;
+                border-bottom: 1px solid #3e3e42;
+                display: flex;
+                overflow-x: auto;
+                min-height: 36px;
+            }
+            .tab {
+                display: flex;
+                align-items: center;
+                padding: 8px 16px;
+                border-right: 1px solid #3e3e42;
+                cursor: pointer;
+                font-size: 13px;
+                white-space: nowrap;
+                background: #1e1e1e;
+                color: #cccccc;
+            }
+            .tab.active {
+                background: #1e1e1e;
+                color: #ffffff;
+                border-bottom: 2px solid #2563eb;
+            }
+            .editor {
+                width: 100%;
+                height: 100%;
+                border: none;
+                background: #1e1e1e;
+                color: #e0e0e0;
+                font-family: "Courier New", Monaco, "Lucida Console", monospace;
+                font-size: 14px;
+                padding: 16px;
+                resize: none;
+                outline: none;
+            }
+            .preview-pane {
+                width: 50%;
+                background: #ffffff;
+                color: #333;
+                overflow-y: auto;
+                padding: 16px;
+                border-left: 1px solid #3e3e42;
+                display: none;
+            }
+            .preview-pane.active {
+                display: block;
+            }
+            .csv-grid-container {
+                width: 100%;
+                height: 100%;
+                overflow: auto;
+                background: #1e1e1e;
+                display: none;
+                position: relative;
+            }
+            .grid-mode-active .editor {
+                display: none;
+            }
+            .grid-mode-active .csv-grid-container {
+                display: block;
+            }
+            .csv-grid {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 12px;
+            }
+            .csv-grid th,
+            .csv-grid td {
+                border: 1px solid #3e3e42;
+                padding: 0;
+                text-align: left;
+                position: relative;
+            }
+            .csv-grid th {
+                background: #2d2d30;
+                font-weight: 600;
+                padding: 4px 8px;
+            }
+            .csv-grid-input {
+                width: 100%;
+                height: 100%;
+                background: transparent;
+                border: none;
+                color: inherit;
+                font: inherit;
+                padding: 4px 8px;
+                outline: none;
+                min-height: 24px;
+            }
+            .csv-grid-input:focus {
+                background-color: #3c3c3c;
+            }
+            .csv-grid-controls {
+                position: absolute;
+                top: 0;
+                right: 0;
+                background: #2d2d30;
+                border: 1px solid #3e3e42;
+                border-radius: 4px;
+                padding: 8px;
+                display: none;
+                z-index: 100;
+            }
+            .csv-grid-controls.active {
+                display: block;
+            }
+            .csv-grid-controls button {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                padding: 4px 8px;
+                border-radius: 2px;
+                cursor: pointer;
+                font-size: 11px;
+                margin: 2px;
+            }
+            .csv-grid-controls button:hover {
+                background: #4a4a4a;
+            }
+            .grid-header-controls {
+                position: relative;
+            }
+            .header-menu-btn {
+                position: absolute;
+                right: 2px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                color: #888;
+                cursor: pointer;
+                font-size: 10px;
+                opacity: 0;
+            }
+            .csv-grid th:hover .header-menu-btn {
+                opacity: 1;
+            }
+            .status-bar {
+                background: #2d2d30;
+                border-top: 1px solid #3e3e42;
+                padding: 4px 16px;
+                font-size: 11px;
+                color: #cccccc;
+                display: flex;
+                justify-content: space-between;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                z-index: 1000;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.7);
+            }
+            .modal-content {
+                background: #2d2d30;
+                margin: 10% auto;
+                padding: 20px;
+                border: 1px solid #3e3e42;
+                border-radius: 6px;
+                width: 400px;
+                color: #e0e0e0;
+            }
+            .input-group {
+                margin-bottom: 12px;
+            }
+            .input-group label {
+                display: block;
+                margin-bottom: 4px;
+            }
+            .input-group input,
+            .input-group textarea {
+                width: 100%;
+                padding: 8px;
+                background: #1e1e1e;
+                border: 1px solid #555;
+                color: #e0e0e0;
+            }
+            .modal-buttons {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+                margin-top: 16px;
+            }
+            .expander-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 4px 8px;
+                background: #252526;
+            }
+            .delete-expander {
+                cursor: pointer;
             }
         </style>
     </head>
     <body>
-        <textarea id="editor" placeholder="..."></textarea>
-
-        <div id="hoverHint"></div>
-
-        <div id="shortcuts">
-            <div>..................................</div>
-            <div>bEdit : browser Editor</div>
-            <div>..................................</div>
-            <div id="currentBuffer">Buffer: 1/1 - bedit.txt</div>
-            <div id="wordCount">Words: 0 | Lines: 0</div>
-            <div>..................................</div>
-            <div>HELP</div>
-            <div>Ctrl/Cmd + N : New tab</div>
-            <div>bedit.org/abc : New note 'abc'</div>
-            <div>Ctrl/Cmd + O : Open file</div>
-            <div>Drag and drop to open file</div>
-            <div>Opening file adds it to new buffer</div>
-            <div>Ctrl/Cmd + 1~9 : Switch buffers</div>
-            <div>Ctrl/Cmd + ←/→ : Switch buffers</div>
-            <div>Ctrl/Cmd + S : Save file</div>
-            <div>Files auto save in browser</div>
-            <div>Ctrl/Cmd + W : Close buffer</div>
-            <div>Ctrl/Cmd + D : Dark/light mode</div>
-            <div>F11 : Full screen</div>
-            <div>..................................</div>
-            <div>Made by [Barney](www.barney.me)</div>
-            <div>..................................</div>
+        <div class="header">
+            <div class="logo">editr</div>
+            <div class="toolbar">
+                <button class="btn" id="newFileBtn">New</button>
+                <button class="btn" id="openFileBtn">Open</button>
+                <button class="btn" id="saveFileBtn">Save</button>
+                <button class="btn" id="saveAsFileBtn">Save As</button>
+                <button class="btn" id="previewBtn" style="display: none">
+                    Preview
+                </button>
+                <button class="btn" id="gridModeBtn" style="display: none">
+                    Grid
+                </button>
+                <button class="btn" id="pdfBtn" style="display: none">
+                    PDF
+                </button>
+                <button class="btn" id="htmlBtn" style="display: none">
+                    HTML
+                </button>
+                <button class="btn" id="settingsBtn">Settings</button>
+            </div>
         </div>
-
-        <div id="mobileControls">
-            <button class="mobile-btn" id="openBtn" title="Open file">
-                📁
-            </button>
-            <button class="mobile-btn" id="saveBtn" title="Save file">
-                💾
-            </button>
+        <div class="main-container">
+            <div class="content-area">
+                <div class="tabs-container" id="tabsContainer"></div>
+                <div class="editor-container" id="editorContainer">
+                    <div class="editor-wrapper" id="editorWrapper">
+                        <textarea class="editor" id="editor"></textarea>
+                        <div class="csv-grid-container" id="csvGridContainer">
+                            <div class="csv-grid-controls" id="csvGridControls">
+                                <button id="addRowBtn">Add Row</button>
+                                <button id="addColBtn">Add Column</button>
+                                <button id="deleteRowBtn">Delete Row</button>
+                                <button id="deleteColBtn">Delete Column</button>
+                            </div>
+                            <table class="csv-grid" id="csvGrid"></table>
+                        </div>
+                    </div>
+                    <div class="preview-pane" id="previewPane"></div>
+                </div>
+            </div>
         </div>
-
-        <input type="file" id="fileInput" accept=".txt,.md,.js,.html,.css" />
+        <div class="status-bar">
+            <span id="statusText">Ready</span>
+            <span id="cursorPosition">Ln 1, Col 1</span>
+        </div>
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <h3>Settings</h3>
+                <h4>Text Expanders</h4>
+                <div id="settingsExpandersList"></div>
+                <button class="btn" id="addExpanderBtn">Add Expander</button>
+                <div class="modal-buttons">
+                    <button class="btn" id="closeSettingsBtn">Close</button>
+                </div>
+            </div>
+        </div>
+        <div id="expanderModal" class="modal">
+            <div class="modal-content">
+                <h3>Add Text Expander</h3>
+                <div class="input-group">
+                    <label for="expanderTrigger">Trigger</label
+                    ><input type="text" id="expanderTrigger" />
+                </div>
+                <div class="input-group">
+                    <label for="expanderText">Replacement Text</label
+                    ><textarea id="expanderText"></textarea>
+                </div>
+                <h4>Dynamic Variables:</h4>
+                <code>{date}</code> <code>{time}</code> <code>{datetime}</code>
+                <code>{timestamp}</code>
+                <div class="modal-buttons">
+                    <button class="btn" id="cancelExpanderBtn">Cancel</button
+                    ><button class="btn" id="expanderSaveBtn">Add</button>
+                </div>
+            </div>
+        </div>
 
         <script>
-            // Wait for DOM to be fully loaded
-            document.addEventListener("DOMContentLoaded", function () {
-                // Get DOM elements
-                const editor = document.getElementById("editor");
-                const shortcuts = document.getElementById("shortcuts");
-                const fileInput = document.getElementById("fileInput");
-                const openBtn = document.getElementById("openBtn");
-                const saveBtn = document.getElementById("saveBtn");
-                const wordCount = document.getElementById("wordCount");
-                const currentBuffer = document.getElementById("currentBuffer");
-                const hoverHint = document.getElementById("hoverHint");
+            document.addEventListener("DOMContentLoaded", () => {
+                class TextEditor {
+                    constructor() {
+                        this.files = new Map();
+                        this.activeFileId = null;
+                        this.expanders = new Map();
+                        this.nextFileId = 1;
+                        this.isPreviewActive = false;
+                        this.isGridActive = false;
+                        this.currentGridRow = 0;
+                        this.currentGridCol = 0;
+                        this.isInitializingGrid = false;
+                        this.isSwitchingFile = false; // Prevents save prompt on open
 
-                let showTimeout;
-                let tabId = generateTabId();
+                        this.editorEl = document.getElementById("editor");
+                        this.tabsContainerEl =
+                            document.getElementById("tabsContainer");
+                        this.statusTextEl =
+                            document.getElementById("statusText");
+                        this.cursorPositionEl =
+                            document.getElementById("cursorPosition");
+                        this.settingsModal =
+                            document.getElementById("settingsModal");
+                        this.expanderModal =
+                            document.getElementById("expanderModal");
+                        this.previewPane =
+                            document.getElementById("previewPane");
+                        this.editorWrapper =
+                            document.getElementById("editorWrapper");
+                        this.csvGrid = document.getElementById("csvGrid");
+                        this.csvGridControls =
+                            document.getElementById("csvGridControls");
 
-                // Buffer management
-                let buffers = [];
-                let activeBufferIndex = 0;
+                        this.previewBtn = document.getElementById("previewBtn");
+                        this.gridModeBtn =
+                            document.getElementById("gridModeBtn");
+                        this.pdfBtn = document.getElementById("pdfBtn");
+                        this.htmlBtn = document.getElementById("htmlBtn");
 
-                // Generate unique tab ID
-                function generateTabId() {
-                    const path = window.location.pathname;
-                    const pathSegments = path
-                        .split("/")
-                        .filter((segment) => segment !== "");
-                    const tabFromPath = pathSegments[pathSegments.length - 1];
-                    if (tabFromPath && tabFromPath !== "index.html") {
-                        return tabFromPath;
-                    }
-                    return Math.random().toString(36).substr(2, 6);
-                }
-
-                // Helper function to get filename without extension for URL
-                function getFileNameForUrl(fileName) {
-                    // Remove extension and sanitize for URL
-                    const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
-                    return nameWithoutExt
-                        .toLowerCase()
-                        .replace(/[^a-z0-9]/g, "");
-                }
-
-                // Update URL based on current buffer
-                function updateUrlForCurrentBuffer() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (!buffer) return;
-
-                    let urlPath;
-                    if (buffer.name === "bedit.txt") {
-                        // For default buffer, use random ID
-                        urlPath = `/${tabId}`;
-                    } else {
-                        // For opened files, use filename
-                        const urlName = getFileNameForUrl(buffer.name);
-                        urlPath = `/${urlName}`;
+                        this.init();
                     }
 
-                    // Only update if the path is different
-                    if (window.location.pathname !== urlPath) {
-                        window.history.replaceState({}, "", urlPath);
-                    }
-                }
-
-                // Buffer class
-                class FileBuffer {
-                    constructor(
-                        name = "bedit.txt",
-                        content = "",
-                        fileHandle = null,
-                    ) {
-                        this.name = name;
-                        this.content = content;
-                        this.originalContent = content;
-                        this.fileHandle = fileHandle;
-                        this.id = Math.random().toString(36).substr(2, 9);
+                    init() {
+                        this.setupEventListeners();
+                        this.loadExpanders();
+                        this.createNewFile();
                     }
 
-                    get isModified() {
-                        return this.content !== this.originalContent;
-                    }
-
-                    markSaved() {
-                        this.originalContent = this.content;
-                    }
-                }
-
-                // Initialize with first buffer
-                function initializeBuffers() {
-                    const savedContent =
-                        localStorage.getItem(`bedit_${tabId}_editorContent`) ||
-                        "";
-                    buffers = [new FileBuffer("bedit.txt", savedContent)];
-                    buffers[0].originalContent = savedContent;
-                    activeBufferIndex = 0;
-                    updateBufferBar();
-                    loadActiveBuffer();
-                    updateUrlForCurrentBuffer();
-                }
-
-                // Storage key helper
-                function getStorageKey(key) {
-                    return `bedit_${tabId}_${key}`;
-                }
-
-                // Buffer management functions
-                function createNewBuffer(
-                    name = "bedit.txt",
-                    content = "",
-                    fileHandle = null,
-                ) {
-                    const buffer = new FileBuffer(name, content, fileHandle);
-                    buffers.push(buffer);
-                    activeBufferIndex = buffers.length - 1;
-                    updateBufferBar();
-                    loadActiveBuffer();
-                    updateUrlForCurrentBuffer(); // Update URL when new buffer is created
-                    return buffer;
-                }
-
-                function switchToBuffer(index) {
-                    if (index < 0 || index >= buffers.length) return;
-
-                    // Save current buffer content
-                    if (buffers[activeBufferIndex]) {
-                        buffers[activeBufferIndex].content = editor.value;
-                    }
-
-                    activeBufferIndex = index;
-                    loadActiveBuffer();
-                    updateBufferBar();
-                    updateUrlForCurrentBuffer(); // Update URL when switching buffers
-                }
-
-                function closeBuffer(index) {
-                    if (buffers.length === 1) return; // Don't close the last buffer
-
-                    const buffer = buffers[index];
-                    if (buffer.isModified) {
-                        if (
-                            !confirm(
-                                `"${buffer.name}" has unsaved changes. Close anyway?`,
-                            )
-                        ) {
-                            return;
-                        }
-                    }
-
-                    buffers.splice(index, 1);
-
-                    // Adjust active buffer index
-                    if (activeBufferIndex >= index && activeBufferIndex > 0) {
-                        activeBufferIndex--;
-                    } else if (activeBufferIndex >= buffers.length) {
-                        activeBufferIndex = buffers.length - 1;
-                    }
-
-                    updateBufferBar();
-                    loadActiveBuffer();
-                    updateUrlForCurrentBuffer(); // Update URL when buffer is closed
-                }
-
-                function loadActiveBuffer() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (buffer) {
-                        editor.value = buffer.content;
-                        updateWordCount();
-                        editor.focus();
-                    }
-                }
-
-                function updateBufferBar() {
-                    // Update current buffer indicator in shortcuts
-                    if (currentBuffer) {
-                        const buffer = buffers[activeBufferIndex];
-                        const modifiedText =
-                            buffer && buffer.isModified ? " (modified)" : "";
-                        currentBuffer.textContent = `Buffer: ${activeBufferIndex + 1}/${buffers.length} - ${buffer ? buffer.name : "unknown"}${modifiedText}`;
-                    }
-                }
-
-                // Dark mode functions
-                function loadDarkMode() {
-                    const isDarkMode =
-                        localStorage.getItem("darkMode") === "true";
-                    if (isDarkMode) {
-                        document.body.classList.add("dark-mode");
-                    }
-                }
-
-                function toggleDarkMode() {
-                    document.body.classList.toggle("dark-mode");
-                    const isDarkMode =
-                        document.body.classList.contains("dark-mode");
-                    localStorage.setItem("darkMode", isDarkMode);
-                }
-
-                // Update word count
-                function updateWordCount() {
-                    const text = editor.value;
-                    const words =
-                        text.trim() === ""
-                            ? 0
-                            : text.trim().split(/\s+/).length;
-                    const lines = text === "" ? 0 : text.split("\n").length;
-                    wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
-                }
-
-                // Update URL with tab ID (now handles both random and file-based URLs)
-                function updateUrlWithTabId() {
-                    const currentPath = window.location.pathname;
-                    const pathSegments = currentPath
-                        .split("/")
-                        .filter((segment) => segment !== "");
-                    const lastSegment = pathSegments[pathSegments.length - 1];
-
-                    // If no specific path or it's index.html, generate random URL
-                    if (
-                        !lastSegment ||
-                        lastSegment === "index.html" ||
-                        lastSegment.includes(".")
-                    ) {
-                        const basePath = pathSegments
-                            .filter((segment) => !segment.includes("."))
-                            .join("/");
-                        const newPath = basePath
-                            ? `/${basePath}/${tabId}`
-                            : `/${tabId}`;
-                        window.history.replaceState({}, "", newPath);
-                    }
-                }
-
-                // Save file function
-                async function saveFile() {
-                    const buffer = buffers[activeBufferIndex];
-                    if (!buffer) return;
-
-                    const content = editor.value;
-                    buffer.content = content;
-
-                    // Check if File System Access API is supported and we have a file handle
-                    if ("showSaveFilePicker" in window && buffer.fileHandle) {
-                        try {
-                            // Save directly to the existing file
-                            const writable =
-                                await buffer.fileHandle.createWritable();
-                            await writable.write(content);
-                            await writable.close();
-
-                            buffer.markSaved();
-                            updateBufferBar();
-                            showSaveIndicator("Saved!");
-                            return;
-                        } catch (err) {
-                            console.log(
-                                "Direct save failed, falling back to download:",
-                                err,
+                    setupEventListeners() {
+                        document
+                            .getElementById("newFileBtn")
+                            .addEventListener("click", () =>
+                                this.createNewFile(),
                             );
-                        }
-                    }
-
-                    // Check if File System Access API is supported for new files
-                    if ("showSaveFilePicker" in window && !buffer.fileHandle) {
-                        try {
-                            const options = {
-                                suggestedName: buffer.name,
-                                types: [
-                                    {
-                                        description: "Text files",
-                                        accept: {
-                                            "text/plain": [".txt"],
-                                            "text/markdown": [".md"],
-                                            "text/javascript": [".js"],
-                                            "text/html": [".html"],
-                                            "text/css": [".css"],
-                                            "application/json": [".json"],
-                                        },
-                                    },
-                                ],
-                            };
-
-                            buffer.fileHandle =
-                                await window.showSaveFilePicker(options);
-                            const writable =
-                                await buffer.fileHandle.createWritable();
-                            await writable.write(content);
-                            await writable.close();
-
-                            // Update buffer name to match saved file
-                            buffer.name = buffer.fileHandle.name;
-                            buffer.markSaved();
-                            updateBufferBar();
-                            updateUrlForCurrentBuffer(); // Update URL when file is saved with new name
-                            showSaveIndicator("Saved!");
-                            return;
-                        } catch (err) {
-                            if (err.name !== "AbortError") {
-                                console.log(
-                                    "Save picker failed, falling back to download:",
-                                    err,
-                                );
-                            }
-                        }
-                    }
-
-                    // Fallback: download method for unsupported browsers
-                    const blob = new Blob([content], { type: "text/plain" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = buffer.name;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                    buffer.markSaved();
-                    updateBufferBar();
-                    showSaveIndicator("Downloaded!");
-                }
-
-                // Show save success indicator
-                function showSaveIndicator(message) {
-                    let indicator = document.getElementById("saveIndicator");
-                    if (!indicator) {
-                        indicator = document.createElement("div");
-                        indicator.id = "saveIndicator";
-                        indicator.style.cssText = `
-                            position: fixed;
-                            top: 20px;
-                            left: 50%;
-                            transform: translateX(-50%);
-                            background: rgba(0, 150, 0, 0.9);
-                            color: white;
-                            padding: 8px 16px;
-                            border-radius: 4px;
-                            font-size: 14px;
-                            z-index: 2000;
-                            opacity: 0;
-                            transition: opacity 0.3s;
-                            pointer-events: none;
-                        `;
-                        document.body.appendChild(indicator);
-                    }
-
-                    indicator.textContent = message;
-                    indicator.style.opacity = "1";
-
-                    setTimeout(() => {
-                        indicator.style.opacity = "0";
-                    }, 2000);
-                }
-
-                // Open file function
-                async function openFile() {
-                    // Check if File System Access API is supported
-                    if ("showOpenFilePicker" in window) {
-                        try {
-                            const [handle] = await window.showOpenFilePicker({
-                                types: [
-                                    {
-                                        description: "Text files",
-                                        accept: {
-                                            "text/plain": [".txt"],
-                                            "text/markdown": [".md"],
-                                            "text/javascript": [".js"],
-                                            "text/html": [".html"],
-                                            "text/css": [".css"],
-                                            "application/json": [".json"],
-                                            "text/xml": [".xml"],
-                                            "text/csv": [".csv"],
-                                            "application/javascript": [".js"],
-                                            "text/typescript": [".ts"],
-                                            "text/jsx": [".jsx"],
-                                            "text/tsx": [".tsx"],
-                                        },
-                                    },
-                                ],
-                                multiple: false,
-                            });
-
-                            const file = await handle.getFile();
-                            const content = await file.text();
-
-                            createNewBuffer(file.name, content, handle);
-                            return;
-                        } catch (err) {
-                            if (err.name !== "AbortError") {
-                                console.log(
-                                    "File picker failed, falling back to input:",
-                                    err,
-                                );
-                            }
-                        }
-                    }
-
-                    // Fallback to traditional file input
-                    fileInput.click();
-                }
-
-                // New tab function
-                function newTab() {
-                    const newId = Math.random().toString(36).substr(2, 6);
-                    const newUrl = `${window.location.origin}/${newId}`;
-                    window.open(newUrl, "_blank");
-                }
-
-                // Toggle fullscreen
-                function toggleFullscreen() {
-                    if (!document.fullscreenElement) {
-                        document.documentElement
-                            .requestFullscreen()
-                            .catch((err) => {
-                                console.log(
-                                    `Error attempting to enable fullscreen: ${err.message}`,
-                                );
-                            });
-                    } else {
-                        document.exitFullscreen();
-                    }
-                }
-
-                // Event Listeners
-
-                // Editor input listener
-                editor.addEventListener("input", function () {
-                    const buffer = buffers[activeBufferIndex];
-                    if (buffer) {
-                        buffer.content = editor.value;
-                        updateBufferBar();
-                    }
-                    localStorage.setItem(
-                        getStorageKey("editorContent"),
-                        editor.value,
-                    );
-                    updateWordCount();
-                });
-
-                // File input listener (fallback)
-                fileInput.addEventListener("change", function (e) {
-                    const file = e.target.files[0];
-                    if (file) {
-                        loadFileContent(file);
-                    }
-                });
-
-                // Function to load file content
-                function loadFileContent(file) {
-                    const reader = new FileReader();
-                    reader.onload = function (e) {
-                        createNewBuffer(file.name, e.target.result, null);
-                    };
-                    reader.readAsText(file);
-                }
-
-                // Drag and drop functionality
-                editor.addEventListener("dragover", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    editor.classList.add("drag-over");
-                });
-
-                editor.addEventListener("dragleave", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    if (!editor.contains(e.relatedTarget)) {
-                        editor.classList.remove("drag-over");
-                    }
-                });
-
-                editor.addEventListener("drop", function (e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    editor.classList.remove("drag-over");
-
-                    const files = e.dataTransfer.files;
-                    if (files.length > 0) {
-                        const file = files[0];
-                        const allowedTypes = [
-                            "text/plain",
-                            "text/html",
-                            "text/css",
-                            "text/javascript",
-                            "application/javascript",
-                            "text/markdown",
-                            "application/json",
-                            "text/xml",
-                            "application/xml",
-                        ];
-
-                        const allowedExtensions = [
-                            ".txt",
-                            ".md",
-                            ".js",
-                            ".html",
-                            ".css",
-                            ".json",
-                            ".xml",
-                            ".csv",
-                            ".log",
-                            ".yml",
-                            ".yaml",
-                            ".php",
-                            ".py",
-                            ".java",
-                            ".cpp",
-                            ".c",
-                            ".h",
-                            ".rb",
-                            ".go",
-                            ".rs",
-                            ".swift",
-                            ".kt",
-                            ".ts",
-                            ".jsx",
-                            ".tsx",
-                            ".vue",
-                            ".svelte",
-                            ".scss",
-                            ".sass",
-                            ".less",
-                        ];
-
-                        const fileExtension =
-                            "." + file.name.split(".").pop().toLowerCase();
-                        const isAllowedType = allowedTypes.includes(file.type);
-                        const isAllowedExtension =
-                            allowedExtensions.includes(fileExtension);
-
-                        if (
-                            isAllowedType ||
-                            isAllowedExtension ||
-                            file.type === ""
-                        ) {
-                            loadFileContent(file);
-                        } else {
-                            alert(
-                                "Unsupported file type. Please use text-based files like .txt, .md, .js, .html, .css, etc.",
+                        document
+                            .getElementById("openFileBtn")
+                            .addEventListener("click", () => this.openFile());
+                        document
+                            .getElementById("saveFileBtn")
+                            .addEventListener("click", () => this.saveFile());
+                        document
+                            .getElementById("saveAsFileBtn")
+                            .addEventListener("click", () => this.saveAsFile());
+                        document
+                            .getElementById("settingsBtn")
+                            .addEventListener("click", () =>
+                                this.showSettingsModal(),
                             );
-                        }
-                    }
-                });
 
-                // Mobile button listeners
-                openBtn.addEventListener("click", async function () {
-                    await openFile();
-                });
-                saveBtn.addEventListener("click", async function () {
-                    await saveFile();
-                });
-
-                // Mouse hover for shortcuts
-                document.addEventListener("mousemove", function (e) {
-                    if (
-                        e.clientX > window.innerWidth - 100 &&
-                        e.clientY < 100
-                    ) {
-                        shortcuts.classList.add("show");
-                        hoverHint.classList.add("hide");
-                        clearTimeout(showTimeout);
-                    } else {
-                        showTimeout = setTimeout(function () {
-                            shortcuts.classList.remove("show");
-                            hoverHint.classList.remove("hide");
-                        }, 1000);
-                    }
-                });
-
-                // Keyboard shortcuts
-                document.addEventListener("keydown", function (e) {
-                    const isModifierKey = e.ctrlKey || e.metaKey;
-
-                    // Debug logging
-                    if (isModifierKey && e.key >= "1" && e.key <= "9") {
-                        console.log(
-                            "Buffer switch attempt:",
-                            e.key,
-                            "Active:",
-                            activeBufferIndex,
-                            "Total buffers:",
-                            buffers.length,
+                        this.previewBtn.addEventListener("click", () =>
+                            this.togglePreview(),
                         );
-                    }
+                        this.gridModeBtn.addEventListener("click", () =>
+                            this.toggleGridMode(),
+                        );
+                        this.pdfBtn.addEventListener("click", () =>
+                            this.exportToPDF(),
+                        );
+                        this.htmlBtn.addEventListener("click", () =>
+                            this.exportToHTML(),
+                        );
 
-                    if (isModifierKey) {
-                        // Handle number keys for buffer switching
-                        if (e.key >= "1" && e.key <= "9") {
-                            e.preventDefault();
-                            const bufferIndex = parseInt(e.key) - 1;
-                            console.log(
-                                "Switching to buffer index:",
-                                bufferIndex,
+                        // CSV Grid controls
+                        document
+                            .getElementById("addRowBtn")
+                            .addEventListener("click", () => this.addGridRow());
+                        document
+                            .getElementById("addColBtn")
+                            .addEventListener("click", () =>
+                                this.addGridColumn(),
                             );
-                            switchToBuffer(bufferIndex);
-                            return;
-                        }
+                        document
+                            .getElementById("deleteRowBtn")
+                            .addEventListener("click", () =>
+                                this.deleteGridRow(),
+                            );
+                        document
+                            .getElementById("deleteColBtn")
+                            .addEventListener("click", () =>
+                                this.deleteGridColumn(),
+                            );
 
-                        // Handle arrow keys for buffer navigation
-                        if (e.key === "ArrowLeft") {
-                            e.preventDefault();
-                            const prevIndex =
-                                activeBufferIndex > 0
-                                    ? activeBufferIndex - 1
-                                    : buffers.length - 1;
-                            switchToBuffer(prevIndex);
-                            return;
-                        }
+                        document
+                            .getElementById("closeSettingsBtn")
+                            .addEventListener("click", () =>
+                                this.closeSettingsModal(),
+                            );
+                        document
+                            .getElementById("addExpanderBtn")
+                            .addEventListener("click", () =>
+                                this.showExpanderModal(),
+                            );
+                        document
+                            .getElementById("cancelExpanderBtn")
+                            .addEventListener("click", () =>
+                                this.closeExpanderModal(),
+                            );
+                        document
+                            .getElementById("expanderSaveBtn")
+                            .addEventListener("click", () =>
+                                this.addExpander(),
+                            );
 
-                        if (e.key === "ArrowRight") {
-                            e.preventDefault();
-                            const nextIndex =
-                                activeBufferIndex < buffers.length - 1
-                                    ? activeBufferIndex + 1
-                                    : 0;
-                            switchToBuffer(nextIndex);
-                            return;
-                        }
+                        this.editorEl.addEventListener("input", () =>
+                            this.handleEditorInput(),
+                        );
+                        this.editorEl.addEventListener("keyup", () =>
+                            this.updateStatusBar(),
+                        );
+                        this.editorEl.addEventListener("click", () =>
+                            this.updateStatusBar(),
+                        );
 
-                        switch (e.key.toLowerCase()) {
-                            case "s":
+                        // Show/hide grid controls on right-click
+                        document.addEventListener("contextmenu", (e) => {
+                            if (
+                                this.isGridActive &&
+                                e.target.closest(".csv-grid-container")
+                            ) {
                                 e.preventDefault();
-                                saveFile();
-                                break;
-                            case "d":
-                                e.preventDefault();
-                                toggleDarkMode();
-                                break;
-                            case "o":
-                                e.preventDefault();
-                                openFile();
-                                break;
-                            case "n":
-                                e.preventDefault();
-                                newTab();
-                                break;
-                            case "w":
-                                e.preventDefault();
-                                closeBuffer(activeBufferIndex);
-                                break;
-                        }
-                    } else if (e.key === "F11") {
-                        e.preventDefault();
-                        toggleFullscreen();
+                                this.showGridControls(e.clientX, e.clientY);
+                            } else {
+                                this.hideGridControls();
+                            }
+                        });
+
+                        document.addEventListener("click", (e) => {
+                            if (!e.target.closest(".csv-grid-controls")) {
+                                this.hideGridControls();
+                            }
+                        });
+
+                        // Event delegation for deleting expanders
+                        document
+                            .getElementById("settingsExpandersList")
+                            .addEventListener("click", (e) => {
+                                if (
+                                    e.target.classList.contains(
+                                        "delete-expander",
+                                    )
+                                ) {
+                                    const trigger = e.target.dataset.trigger;
+                                    if (trigger) {
+                                        this.expanders.delete(trigger);
+                                        this.saveExpanders();
+                                        this.updateSettingsExpandersList();
+                                    }
+                                }
+                            });
                     }
-                });
 
-                // Initialize everything
-                updateUrlWithTabId();
-                initializeBuffers();
-                loadDarkMode();
-                editor.focus();
+                    togglePreview() {
+                        this.isPreviewActive = !this.isPreviewActive;
+                        this.previewPane.classList.toggle(
+                            "active",
+                            this.isPreviewActive,
+                        );
+                        if (this.isPreviewActive) this.updatePreview();
+                    }
+
+                    updatePreview() {
+                        const file = this.files.get(this.activeFileId);
+                        if (file && this.isPreviewActive)
+                            this.previewPane.innerHTML = marked.parse(
+                                file.content,
+                            );
+                    }
+
+                    toggleGridMode() {
+                        this.isGridActive = !this.isGridActive;
+                        this.editorWrapper.classList.toggle(
+                            "grid-mode-active",
+                            this.isGridActive,
+                        );
+                        if (this.isGridActive) {
+                            this.isInitializingGrid = true;
+                            this.renderCsvGrid();
+                            this.isInitializingGrid = false;
+                        }
+                    }
+
+                    renderCsvGrid() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const data = lines.map((line) => line.split(","));
+
+                        if (data.length === 0) {
+                            data.push(["Column 1", "Column 2", "Column 3"]);
+                            data.push(["", "", ""]);
+                        }
+
+                        let tableHTML = "<thead><tr>";
+                        data[0].forEach((header, index) => {
+                            tableHTML += `<th class="grid-header-controls">${header}<button class="header-menu-btn" data-col="${index}">⋮</button></th>`;
+                        });
+                        tableHTML += "</tr></thead><tbody>";
+
+                        data.slice(1).forEach((row, rowIndex) => {
+                            tableHTML += "<tr>";
+                            row.forEach((cell, colIndex) => {
+                                tableHTML += `<td><input type="text" class="csv-grid-input" value="${cell}" data-row="${rowIndex}" data-col="${colIndex}"></td>`;
+                            });
+                            tableHTML += "</tr>";
+                        });
+                        this.csvGrid.innerHTML = tableHTML + "</tbody>";
+
+                        this.setupGridNavigation();
+                    }
+
+                    setupGridNavigation() {
+                        const inputs =
+                            this.csvGrid.querySelectorAll(".csv-grid-input");
+
+                        inputs.forEach((input) => {
+                            input.addEventListener("input", (e) => {
+                                if (!this.isInitializingGrid) {
+                                    this.updateCsvFromGrid(e);
+                                }
+                            });
+                            input.addEventListener("focus", (e) => {
+                                this.currentGridRow = parseInt(
+                                    e.target.dataset.row,
+                                );
+                                this.currentGridCol = parseInt(
+                                    e.target.dataset.col,
+                                );
+                            });
+
+                            input.addEventListener("keydown", (e) => {
+                                const row = parseInt(e.target.dataset.row);
+                                const col = parseInt(e.target.dataset.col);
+
+                                switch (e.key) {
+                                    case "ArrowUp":
+                                        e.preventDefault();
+                                        this.navigateGrid(row - 1, col);
+                                        break;
+                                    case "ArrowDown":
+                                    case "Enter":
+                                        e.preventDefault();
+                                        this.navigateGrid(row + 1, col);
+                                        break;
+                                    case "ArrowLeft":
+                                        if (e.target.selectionStart === 0) {
+                                            e.preventDefault();
+                                            this.navigateGrid(row, col - 1);
+                                        }
+                                        break;
+                                    case "ArrowRight":
+                                    case "Tab":
+                                        if (
+                                            e.key === "ArrowRight" &&
+                                            e.target.selectionEnd ===
+                                                e.target.value.length
+                                        ) {
+                                            e.preventDefault();
+                                            this.navigateGrid(row, col + 1);
+                                        } else if (e.key === "Tab") {
+                                            e.preventDefault();
+                                            this.navigateGrid(row, col + 1);
+                                        }
+                                        break;
+                                    case "Delete":
+                                        if (e.ctrlKey || e.metaKey) {
+                                            e.preventDefault();
+                                            if (e.shiftKey) {
+                                                this.deleteGridColumn(col);
+                                            } else {
+                                                this.deleteGridRow(row);
+                                            }
+                                        }
+                                        break;
+                                    case "Insert":
+                                        e.preventDefault();
+                                        if (e.shiftKey) {
+                                            this.addGridColumn(col);
+                                        } else {
+                                            this.addGridRow(row + 1);
+                                        }
+                                        break;
+                                }
+                            });
+                        });
+                    }
+
+                    navigateGrid(targetRow, targetCol) {
+                        const input = this.csvGrid.querySelector(
+                            `[data-row="${targetRow}"][data-col="${targetCol}"]`,
+                        );
+                        if (input) {
+                            input.focus();
+                            this.currentGridRow = targetRow;
+                            this.currentGridCol = targetCol;
+                        }
+                    }
+
+                    showGridControls(x, y) {
+                        this.csvGridControls.style.left = x + "px";
+                        this.csvGridControls.style.top = y + "px";
+                        this.csvGridControls.classList.add("active");
+                    }
+
+                    hideGridControls() {
+                        this.csvGridControls.classList.remove("active");
+                    }
+
+                    addGridRow(atIndex = null) {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const data = lines.map((line) => line.split(","));
+
+                        const insertIndex =
+                            atIndex !== null ? atIndex + 1 : data.length;
+                        const newRow = new Array(data[0].length).fill("");
+                        data.splice(insertIndex, 0, newRow);
+
+                        file.content = data
+                            .map((row) => row.join(","))
+                            .join("\n");
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderCsvGrid();
+                        this.renderTabs();
+                    }
+
+                    addGridColumn(atIndex = null) {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const data = lines.map((line) => line.split(","));
+
+                        const insertIndex =
+                            atIndex !== null ? atIndex + 1 : data[0].length;
+                        data.forEach((row, rowIndex) => {
+                            row.splice(
+                                insertIndex,
+                                0,
+                                rowIndex === 0 ? "New Column" : "",
+                            );
+                        });
+
+                        file.content = data
+                            .map((row) => row.join(","))
+                            .join("\n");
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderCsvGrid();
+                        this.renderTabs();
+                    }
+
+                    deleteGridRow(rowIndex = null) {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const data = lines.map((line) => line.split(","));
+
+                        if (data.length <= 2) return; // Keep at least header + 1 row
+
+                        const deleteIndex =
+                            rowIndex !== null
+                                ? rowIndex + 1
+                                : this.currentGridRow + 1;
+                        data.splice(deleteIndex, 1);
+
+                        file.content = data
+                            .map((row) => row.join(","))
+                            .join("\n");
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderCsvGrid();
+                        this.renderTabs();
+                        this.hideGridControls();
+                    }
+
+                    deleteGridColumn(colIndex = null) {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const data = lines.map((line) => line.split(","));
+
+                        if (data[0].length <= 1) return; // Keep at least 1 column
+
+                        const deleteIndex =
+                            colIndex !== null ? colIndex : this.currentGridCol;
+                        data.forEach((row) => {
+                            row.splice(deleteIndex, 1);
+                        });
+
+                        file.content = data
+                            .map((row) => row.join(","))
+                            .join("\n");
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderCsvGrid();
+                        this.renderTabs();
+                        this.hideGridControls();
+                    }
+
+                    updateCsvFromGrid() {
+                        const inputs =
+                            this.csvGrid.querySelectorAll(".csv-grid-input");
+                        const headers = Array.from(
+                            this.csvGrid.querySelectorAll("th"),
+                        ).map((th) => th.textContent.replace("⋮", ""));
+
+                        let newContent = headers.join(",") + "\n";
+
+                        const rows = Array.from(
+                            this.csvGrid.querySelectorAll("tbody tr"),
+                        );
+                        rows.forEach((row) => {
+                            const cells = Array.from(
+                                row.querySelectorAll(".csv-grid-input"),
+                            ).map((input) => input.value);
+                            newContent += cells.join(",") + "\n";
+                        });
+
+                        const file = this.files.get(this.activeFileId);
+                        if (file) {
+                            file.content = newContent.trim();
+                            file.modified = true;
+                            this.editorEl.value = file.content;
+                            this.renderTabs();
+                        }
+                    }
+
+                    updateToolbarButtons(file) {
+                        const isMarkdown = file.name.endsWith(".md");
+                        const isCsv = file.name.endsWith(".csv");
+                        this.previewBtn.style.display = isMarkdown
+                            ? "inline-block"
+                            : "none";
+                        this.pdfBtn.style.display = isMarkdown
+                            ? "inline-block"
+                            : "none";
+                        this.htmlBtn.style.display = isMarkdown
+                            ? "inline-block"
+                            : "none";
+                        this.gridModeBtn.style.display = isCsv
+                            ? "inline-block"
+                            : "none";
+                    }
+
+                    switchToFile(fileId) {
+                        this.isSwitchingFile = true;
+                        this.activeFileId = fileId;
+                        const file = this.files.get(fileId);
+                        if (file) {
+                            this.editorEl.value = file.content;
+                            this.updateToolbarButtons(file);
+                            this.isPreviewActive = false;
+                            this.isGridActive = false;
+                            this.previewPane.classList.remove("active");
+                            this.editorWrapper.classList.remove(
+                                "grid-mode-active",
+                            );
+                        }
+                        this.renderTabs();
+                        this.updateStatusBar();
+                        this.isSwitchingFile = false;
+                    }
+
+                    createNewFile() {
+                        const fileId = `file_${this.nextFileId++}`;
+                        const file = {
+                            id: fileId,
+                            name: `untitled-${this.files.size + 1}.txt`,
+                            content: "",
+                            modified: false,
+                        };
+                        this.files.set(fileId, file);
+                        this.switchToFile(fileId);
+                    }
+
+                    openFile() {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".txt,.md,.csv,.js,.html,.css,.json";
+                        input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const newFile = {
+                                    id: `file_${this.nextFileId++}`,
+                                    name: file.name,
+                                    content: e.target.result,
+                                    modified: false,
+                                };
+                                this.files.set(newFile.id, newFile);
+                                this.switchToFile(newFile.id);
+                            };
+                            reader.readAsText(file);
+                        };
+                        input.click();
+                    }
+
+                    handleEditorInput() {
+                        if (this.isSwitchingFile) return;
+                        const file = this.files.get(this.activeFileId);
+                        if (file) {
+                            file.content = this.editorEl.value;
+                            file.modified = true;
+                            this.renderTabs();
+                            this.checkTextExpanders();
+                            if (this.isPreviewActive) this.updatePreview();
+                            if (this.isGridActive && !this.isInitializingGrid) {
+                                this.isInitializingGrid = true;
+                                this.renderCsvGrid();
+                                this.isInitializingGrid = false;
+                            }
+                        }
+                        this.updateStatusBar();
+                    }
+
+                    checkTextExpanders() {
+                        const cursorPos = this.editorEl.selectionStart;
+                        const textBeforeCursor = this.editorEl.value.substring(
+                            0,
+                            cursorPos,
+                        );
+                        for (const [trigger, replacement] of this.expanders) {
+                            if (textBeforeCursor.endsWith(trigger)) {
+                                const expandedText =
+                                    this.processExpansion(replacement);
+                                this.editorEl.value =
+                                    this.editorEl.value.substring(
+                                        0,
+                                        cursorPos - trigger.length,
+                                    ) +
+                                    expandedText +
+                                    this.editorEl.value.substring(cursorPos);
+                                this.editorEl.setSelectionRange(
+                                    cursorPos -
+                                        trigger.length +
+                                        expandedText.length,
+                                    cursorPos -
+                                        trigger.length +
+                                        expandedText.length,
+                                );
+                                this.handleEditorInput();
+                                break;
+                            }
+                        }
+                    }
+
+                    processExpansion(text) {
+                        const now = new Date();
+                        return text
+                            .replace(/\{date\}/g, now.toLocaleDateString())
+                            .replace(/\{time\}/g, now.toLocaleTimeString())
+                            .replace(/\{datetime\}/g, now.toLocaleString())
+                            .replace(/\{timestamp\}/g, Date.now().toString());
+                    }
+
+                    saveFile() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+                        const blob = new Blob([file.content], {
+                            type: "text/plain",
+                        });
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = file.name;
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                        file.modified = false;
+                        this.renderTabs();
+                    }
+
+                    saveAsFile() {
+                        this.saveFile();
+                    }
+
+                    renderTabs() {
+                        this.tabsContainerEl.innerHTML = "";
+                        this.files.forEach((file) => {
+                            const tab = document.createElement("div");
+                            tab.className = `tab ${file.id === this.activeFileId ? "active" : ""}`;
+                            tab.textContent =
+                                file.name + (file.modified ? "*" : "");
+                            tab.addEventListener("click", () =>
+                                this.switchToFile(file.id),
+                            );
+                            this.tabsContainerEl.appendChild(tab);
+                        });
+                    }
+
+                    updateStatusBar() {
+                        const file = this.files.get(this.activeFileId);
+                        this.statusTextEl.textContent = file
+                            ? file.name
+                            : "Ready";
+                        const pos = this.editorEl.selectionStart;
+                        const text = this.editorEl.value.substring(0, pos);
+                        const lines = text.split("\n");
+                        this.cursorPositionEl.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+                    }
+
+                    exportToPDF() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file || !file.name.endsWith(".md")) return;
+                        const printWindow = window.open("", "_blank");
+                        printWindow.document.write(
+                            "<html><head><title>Print</title></head><body>" +
+                                marked.parse(file.content) +
+                                "</body></html>",
+                        );
+                        printWindow.document.close();
+                        printWindow.focus();
+                        printWindow.print();
+                        printWindow.close();
+                    }
+
+                    exportToHTML() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file || !file.name.endsWith(".md")) return;
+                        const htmlContent =
+                            "<!DOCTYPE html><html><head><title>" +
+                            file.name +
+                            "</title></head><body>" +
+                            marked.parse(file.content) +
+                            "</body></html>";
+                        const blob = new Blob([htmlContent], {
+                            type: "text/html",
+                        });
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = file.name.replace(/\.md$/, ".html");
+                        a.click();
+                        URL.revokeObjectURL(a.href);
+                    }
+
+                    showSettingsModal() {
+                        this.updateSettingsExpandersList();
+                        this.settingsModal.style.display = "block";
+                    }
+                    closeSettingsModal() {
+                        this.settingsModal.style.display = "none";
+                    }
+                    showExpanderModal() {
+                        this.expanderModal.style.display = "block";
+                    }
+                    closeExpanderModal() {
+                        document.getElementById("expanderTrigger").value = "";
+                        document.getElementById("expanderText").value = "";
+                        this.expanderModal.style.display = "none";
+                    }
+
+                    addExpander() {
+                        const trigger = document
+                            .getElementById("expanderTrigger")
+                            .value.trim();
+                        const text =
+                            document.getElementById("expanderText").value;
+                        if (trigger && text) {
+                            this.expanders.set(trigger, text);
+                            this.saveExpanders();
+                            this.updateSettingsExpandersList();
+                            this.closeExpanderModal();
+                        }
+                    }
+
+                    updateSettingsExpandersList() {
+                        const listEl = document.getElementById(
+                            "settingsExpandersList",
+                        );
+                        listEl.innerHTML = ""; // Clear the list first
+
+                        if (this.expanders.size === 0) {
+                            listEl.textContent =
+                                "No text expanders have been added yet.";
+                            return;
+                        }
+
+                        this.expanders.forEach((text, trigger) => {
+                            const item = document.createElement("div");
+                            item.className = "expander-item";
+
+                            const triggerSpan = document.createElement("span");
+                            const triggerBold = document.createElement("b");
+                            triggerBold.textContent = trigger;
+                            triggerSpan.appendChild(triggerBold);
+
+                            const deleteSpan = document.createElement("span");
+                            deleteSpan.className = "delete-expander";
+                            deleteSpan.textContent = "Delete";
+                            deleteSpan.dataset.trigger = trigger;
+
+                            item.appendChild(triggerSpan);
+                            item.appendChild(deleteSpan);
+                            listEl.appendChild(item);
+                        });
+                    }
+
+                    saveExpanders() {
+                        try {
+                            localStorage.setItem(
+                                "editr_expanders",
+                                JSON.stringify(
+                                    Array.from(this.expanders.entries()),
+                                ),
+                            );
+                        } catch (e) {
+                            console.error(
+                                "Failed to save expanders to localStorage:",
+                                e,
+                            );
+                        }
+                    }
+
+                    loadExpanders() {
+                        try {
+                            const data =
+                                localStorage.getItem("editr_expanders");
+                            if (data) {
+                                this.expanders = new Map(JSON.parse(data));
+                            }
+                        } catch (e) {
+                            console.error(
+                                "Failed to load expanders from localStorage:",
+                                e,
+                            );
+                            this.expanders = new Map();
+                        }
+                    }
+                }
+                new TextEditor();
             });
         </script>
-        <!-- Cloudflare Pages Analytics -->
-        <script
-            defer
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            data-cf-beacon='{"token": "4ff91f0f1de749c2a405a85ac2d12d29"}'
-        ></script>
-        <!-- Cloudflare Pages Analytics -->
     </body>
 </html>
