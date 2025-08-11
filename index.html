@@ -1,297 +1,1504 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-    <head>
-            <meta charset="utf-8" />
-            <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-            <meta name="theme-color" content="#000000" />
-            <meta name="description" content="editr - browser text editor">
-            <meta name="apple-mobile-web-app-capable" content="yes">
-            <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-            <meta name="apple-mobile-web-app-title" content="editr">
-            <title>editr</title>
-            <link rel="manifest" href="manifest.json" />
-            <link rel="stylesheet" href="style.css">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editr</title>
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVkaXRyIiwKICAic2hvcnRfbmFtZSI6ICJFZGl0ciIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2UvcG5nO2Jhc2U2NCxpVkJPUncwS0dnb0FBQUFOU1VoRVVnQUFBQmdBQUFBUUNBWUFBQUFmOC85aEFBQUFCSE5DU1ZRSUNBZ0lmQWhrZUFBQUFBbFFURlJGNy8vLy9CZ0FBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQUFBQSIsCiAgICAgICJzaXplcyI6ICIyNHgyNCIsCiAgICAgICJ0eXBlIjogImltYWdlL3BuZyIKICAgIH0KICBdCn0=">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
-            <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg width='32' height='32' viewBox='0 0 32 32' xmlns='http://www.w3.org/2000/svg'%3E%3Crect width='32' height='32' fill='%23000000'/%3E%3Ctext x='16' y='22' font-family='Arial, sans-serif' font-size='20' font-weight='normal' text-anchor='middle' fill='%23ffffff'%3Ee%3C/text%3E%3C/svg%3E">
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            height: 100vh;
+            overflow: hidden;
+        }
 
-            <link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAAAAlwSFlzAAAAdgAAAHYBTnsmCAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBlLm9yZ5vuPBoAAAFYSURBVFiFtZe9SwJhGMafV1MUEIRE0BAE0dAQDQ0N0dAQDQ0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BANDdHQEA0N0dAQDQ3R0BAND
+        .header {
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
 
-            <script src="marked.js"></script>
-            <script src="html2canvas.js"></script>
-            <script src="jspdf.js"></script>
-        </head>
-    <body>
-        <div class="snow-container">
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
-            <div class="snowflake"></div>
+        .logo {
+            font-weight: 600;
+            color: #2563eb;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .btn {
+            background: #3c3c3c;
+            border: 1px solid #555;
+            color: #e0e0e0;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+
+        .btn:hover {
+            background: #4a4a4a;
+            border-color: #666;
+        }
+
+        .btn:active {
+            transform: translateY(1px);
+        }
+
+        .main-container {
+            display: flex;
+            height: calc(100vh - 50px);
+        }
+
+        .sidebar {
+            width: 250px;
+            background: #252526;
+            border-right: 1px solid #3e3e42;
+            padding: 12px;
+            overflow-y: auto;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            font-size: 11px;
+            font-weight: 600;
+            color: #cccccc;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .expander-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 8px;
+            margin: 2px 0;
+            background: #2d2d30;
+            border-radius: 3px;
+            font-size: 12px;
+        }
+
+        .expander-trigger {
+            color: #569cd6;
+            font-family: 'Courier New', monospace;
+        }
+
+        .expander-actions {
+            display: flex;
+            gap: 4px;
+        }
+
+        .edit-expander, .delete-expander {
+            color: #cccccc;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 2px;
+            font-size: 11px;
+        }
+
+        .edit-expander:hover {
+            background: #569cd6;
+            color: white;
+        }
+
+        .delete-expander:hover {
+            background: #f48771;
+            color: white;
+        }
+
+        .content-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs-container {
+            background: #2d2d30;
+            border-bottom: 1px solid #3e3e42;
+            display: flex;
+            overflow-x: auto;
+            min-height: 36px;
+        }
+
+        .tab {
+            display: flex;
+            align-items: center;
+            padding: 8px 16px;
+            border-right: 1px solid #3e3e42;
+            cursor: pointer;
+            font-size: 13px;
+            white-space: nowrap;
+            position: relative;
+            background: #1e1e1e;
+            color: #cccccc;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: #1e1e1e;
+            color: #ffffff;
+            border-bottom: 2px solid #2563eb;
+        }
+
+        .tab:hover:not(.active) {
+            background: #2a2a2b;
+        }
+
+        .tab-close {
+            margin-left: 8px;
+            color: #888;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 2px;
+        }
+
+        .tab-close:hover {
+            background: #f48771;
+            color: white;
+        }
+
+        .tab.modified::after {
+            content: '•';
+            color: #f48771;
+            margin-left: 4px;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: flex;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .editor {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: #1e1e1e;
+            color: #e0e0e0;
+            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            padding: 16px;
+            resize: none;
+            outline: none;
+        }
+
+        .preview-pane {
+            width: 50%;
+            background: #ffffff;
+            color: #333;
+            overflow-y: auto;
+            padding: 16px;
+            border-left: 1px solid #3e3e42;
+            display: none;
+        }
+
+        .preview-pane.active {
+            display: block;
+        }
+
+        .csv-grid {
+            width: 100%;
+            border-collapse: collapse;
+            background: #1e1e1e;
+            color: #e0e0e0;
+        }
+
+        .csv-grid th,
+        .csv-grid td {
+            border: 1px solid #3e3e42;
+            padding: 8px;
+            text-align: left;
+            font-size: 12px;
+        }
+
+        .csv-grid th {
+            background: #2d2d30;
+            font-weight: 600;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+
+        .csv-grid tr:nth-child(even) {
+            background: #252526;
+        }
+
+        .status-bar {
+            background: #2d2d30;
+            border-top: 1px solid #3e3e42;
+            padding: 4px 16px;
+            font-size: 11px;
+            color: #cccccc;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+        }
+
+        .modal-content {
+            background: #2d2d30;
+            margin: 10% auto;
+            padding: 20px;
+            border: 1px solid #3e3e42;
+            border-radius: 6px;
+            width: 400px;
+            color: #e0e0e0;
+        }
+
+        .modal h3 {
+            margin-bottom: 16px;
+            color: #ffffff;
+        }
+
+        .modal h4 {
+            margin-bottom: 12px;
+            color: #cccccc;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: #cccccc;
+        }
+
+        .input-group input, .input-group textarea {
+            width: 100%;
+            padding: 8px;
+            background: #1e1e1e;
+            border: 1px solid #555;
+            border-radius: 3px;
+            color: #e0e0e0;
+            font-family: inherit;
+        }
+
+        .input-group textarea {
+            height: 60px;
+            resize: vertical;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+            margin-top: 16px;
+        }
+
+        .shortcut-hint {
+            font-size: 10px;
+            color: #888;
+            margin-left: 8px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                display: none;
+            }
+            
+            .main-container {
+                flex-direction: column;
+            }
+            
+            .editor-container {
+                flex-direction: column;
+            }
+            
+            .preview-pane {
+                width: 100%;
+                height: 50%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Editr</div>
+        <div class="toolbar">
+            <button class="btn" onclick="createNewFile()" title="New File (Ctrl+N)">New</button>
+            <button class="btn" onclick="openFile()" title="Open (Ctrl+O)">Open</button>
+            <button class="btn" onclick="saveFile()" title="Save (Ctrl+S)">Save</button>
+            <button class="btn" onclick="saveAsFile()" title="Save As (Ctrl+Shift+S)">Save As</button>
+            <button class="btn" onclick="togglePreview()" title="Preview (Ctrl+P)">Preview</button>
+            <button class="btn" onclick="exportToPDF()" title="Export PDF">PDF</button>
+            <button class="btn" onclick="exportToHTML()" title="Export HTML">HTML</button>
+            <button class="btn" onclick="showExpanderModal()" title="Text Expanders">Expanders</button>
+            <button class="btn" onclick="exportExpanders()" title="Export Expanders">Export Exp.</button>
+            <button class="btn" onclick="importExpanders()" title="Import Expanders">Import Exp.</button>
         </div>
-        <nav>
-            <span id="controls">
-                <button id="openNewTab" title="New (CTRL + N)"><strong>&#128196;</strong> <span class="button-text">New</span></button>
-                <button id="open" title="Open (CTRL + O)"><strong>&#128194;</strong> <span class="button-text">Open</span></button>
-                <span id="filename-container">
-                    <input id="filename-1" placeholder="editr.txt" title="Filename" />
-                    <input id="filename-2" placeholder="editr.txt" title="Filename" style="display: none;" />
-                </span>
-                <button id="save" title="Save (CTRL + S)"><strong>&#128190;</strong> <span class="button-text">Save</span></button>
-                <button id="preview-btn" title="Preview Markdown (CTRL + M)" style="display: none;"><strong>M↓</strong> <span class="button-text">Markdown</span></button>
-                <button id="export-html-btn" title="Export as HTML (CTRL + ;)" style="display: none;"><strong>HTML</strong></button>
-                <button id="export-pdf-btn" title="Export as PDF (CTRL + ')" style="display: none;"><strong>PDF</strong></button>
-                <button id="email-btn" title="Email (CTRL + E)"><strong>📧</strong> <span class="button-text">Email</span></button>
-                <button id="find-replace-button" title="Find (CTRL + F)"><strong>&#128269;</strong> <span class="button-text">Find</span></button>
-                <button id="open-link-btn" title="(CTRL + K) Open web link" style="display: none;"><strong>&#128279;</strong> <span class="button-text">Link</span></button>
-                <button id="undo" disabled title="Undo (CTRL + Z)"><strong>&#x21A9;</strong> <span class="button-text">Undo</span></button>
-                <button id="split-view-btn" title="Split View (CTRL + I)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
-                        <path d="M1.5 1.5A1.5 1.5 0 0 1 3 0h10a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 13 16H3a1.5 1.5 0 0 1-1.5-1.5V1.5zM3 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V1.5a.5.5 0 0 0-.5-.5H3z"/>
-                        <path d="M4 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm4.5 6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/>
-                    </svg>
-                  <span class="button-text">Split</span>
-                </button>
-                 <button id="csv-mode-btn" title="CSV Grid View (CTRL + .)">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top;">
-                        <path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13zM1.5 1a.5.5 0 0 0-.5.5V5h4V1H1.5zM5 6H1v4h4V6zm0 5H1v3.5a.5.5 0 0 0 .5.5H5v-4zm1 0v4h4v-4H6zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11h-4zm0-1h4V6h-4v4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11v4zm-1 0V1H6v4h4z"/>
-                    </svg>
-                    <span class="button-text">CSV</span>
-                </button>
-                <span id="stats">
-                    <span class="stat-item" title="Current line number">
-                        <span class="stat-label">&#8595;</span>
-                        <span id="line-position">1</span>
-                    </span>
-                    <span class="stat-item" title="Current character position">
-                        <span class="stat-label">&#8594;</span>
-                        <span id="char-position">1</span>
-                    </span>
-                    <span class="stat-item" title="Total word count">
-                        <span class="stat-label">=</span>
-                        <span id="word-count">0</span>
-                    </span>
-                </span>
-                <button id="install-app" title="Install" style="display: none;"><strong>&#x2B07;</strong> <span class="button-text">PWA</span></button>
-                <button id="editr-btn" title="editr help & settings (CTRL + /)">
-                    <span class="editr-text-full"><strong>e</strong>ditr</span>
-                    <span class="editr-text-short"><strong>e</strong></span>
-                </button>
-            </span>
-        </nav>
-        <div id="tab-bar-container">
-            <div id="tab-bar"></div>
-            <button id="add-tab-btn" title="New Tab (CTRL + N)">+</button>
-        </div>
-        <div id="editor-container">
-            <div class="editor-pane" id="editor-pane-1">
-                <div id="active-line-1" class="active-line"></div>
-                <div id="highlight-layer-1" class="highlight-layer"></div>
-                <textarea
-                    id="textbox-1"
-                    class="textbox"
-                    autofocus
-                    placeholder="Welcome to editr. Start typing to begin. Click 'editr' or 'e' for help and settings."
-                    spellcheck="false"
-                ></textarea>
-                <div id="csv-grid-container"></div>
-            </div>
-            <div class="editor-pane" id="editor-pane-2" style="display: none;">
-                <div id="preview-pane-2"></div>
-                <div id="active-line-2" class="active-line"></div>
-                <div id="highlight-layer-2" class="highlight-layer"></div>
-                <textarea
-                    id="textbox-2"
-                    class="textbox"
-                    placeholder="Open a second file or start typing."
-                    spellcheck="false"
-                ></textarea>
-            </div>
-        </div>
-        <input type="file" id="open-input-1" style="display: none" />
-        <input type="file" id="open-input-2" style="display: none" />
-        <div id="popup-overlay"></div>
-        <div id="find-replace-popup" class="popup">
-            <button class="close-btn">×</button>
-            <h2>Find & Replace</h2>
-            <div>
-                <div class="find-replace-input-group">
-                    <input type="text" id="find-text" placeholder="Find" />
-                    <div class="find-options">
-                        <label title="Case-sensitive">
-                            <input type="checkbox" id="case-sensitive-checkbox" /> Aa
-                        </label>
-                        <label title="Use regular expressions">
-                            <input type="checkbox" id="regex-checkbox" /> .*
-                        </label>
-                    </div>
-                </div>
-                <div class="find-replace-input-group">
-                    <input type="text" id="replace-text" placeholder="Replace" />
-                </div>
-                <div id="find-replace-buttons">
-                    <span id="find-count"></span>
-                    <button id="find-btn">Find</button>
-                    <button id="replace-btn">Replace</button>
-                    <button id="replace-all-btn">Replace All</button>
+    </div>
+
+    <div class="main-container">
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">Text Expanders</div>
+                <div id="expandersList"></div>
+                <button class="btn" onclick="showExpanderModal()" style="width: 100%; margin-top: 8px;">Add Expander</button>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                    <button class="btn" onclick="exportExpanders()" style="flex: 1; font-size: 10px;" title="Export expanders to file">Export</button>
+                    <button class="btn" onclick="importExpanders()" style="flex: 1; font-size: 10px;" title="Import expanders from file">Import</button>
                 </div>
             </div>
-        </div>
-        <div id="password-popup" class="popup">
-            <button class="close-btn">×</button>
-            <h2>Protected Note</h2>
-            <p>Enter a password to unlock an existing note or create a new one.</p>
-            <div>
-                <div class="find-replace-input-group">
-                    <input type="password" id="password-input" placeholder="Password" style="width:100%;" />
-                </div>
-                <div id="password-buttons" style="display: flex; justify-content: flex-end; margin-top: 10px;">
-                    <button id="password-submit-btn">OK</button>
-                </div>
-            </div>
-        </div>
-        <div id="settings-popup" class="popup">
-            <button class="close-btn">×</button>
-            <h2>editr Settings</h2>
-            <div class="b-modal-layout">
-                <div class="b-modal-column-left">
-                    <p>
-                        Open editr.cc in web browser and start writing. Changes are automatically saved in your browser. ("Save" a copy of your file before clearing your browser cache.)<br />
-                        editr can be used offline after the first use. Reopen editr.cc in your browser to continue working on your
-                        file.<br />
-                        Files can be opened from your device using the "Open" button or by dragging and dropping in to editr. To save a file outside of your Downloads folder enable the "Ask where to save each file before downloading" setting in your browser.<br />
-                        editr PWA can edit and save local files directly once installed.<br />
-                    </p>
-                        <b>CTRL + N</b> (<span class="shortcut-symbol" id="help-new-btn">&#128196;</span> New) to create a blank file in a new buffer.<br />
-                        <b>CTRL + O</b> (<span class="shortcut-symbol" id="help-open-btn">&#128194;</span> Open) to open a file from your computer into current buffer.<br />
-                        <b>CTRL + S</b> (<span class="shortcut-symbol" id="help-save-btn">&#128190;</span> Save) to save current buffer to your computer (CTRL + SHFT + S to Save As).<br />
-                        <b>CTRL + E</b> (<span class="shortcut-symbol" id="help-email-btn">📧</span> Email) to open the content in your default email client.<br />
-                        <b>CTRL + I</b> (<span class="shortcut-symbol" id="help-split-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M1.5 1.5A1.5 1.5 0 0 1 3 0h10a1.5 1.5 0 0 1 1.5 1.5v13A1.5 1.5 0 0 1 13 16H3a1.5 1.5 0 0 1-1.5-1.5V1.5zM3 1a.5.5 0 0 0-.5.5v13a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V1.5a.5.5 0 0 0-.5-.5H3z"/><path d="M4 11.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm4.5 6a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5zm0-3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 0 1h-1a.5.5 0 0 1-.5-.5z"/></svg></span> Split) to toggle split view.<br />
-                        <b>CTRL + M</b> (<span class="shortcut-symbol" id="help-preview-btn">M↓</span>) to toggle <a href="https://www.markdownguide.org/cheat-sheet/">Markdown</a> preview.<br />
-                        <b>CTRL + .</b> (<span class="shortcut-symbol" id="help-csv-btn"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16" style="vertical-align: text-top; display: inline-block;"><path d="M0 1.5A1.5 1.5 0 0 1 1.5 0h13A1.5 1.5 0 0 1 16 1.5v13a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13zM1.5 1a.5.5 0 0 0-.5.5V5h4V1H1.5zM5 6H1v4h4V6zm0 5H1v3.5a.5.5 0 0 0 .5.5H5v-4zm1 0v4h4v-4H6zm5 0v4h3.5a.5.5 0 0 0 .5-.5V11h-4zm0-1h4V6h-4v4zm0-5h4V1.5a.5.5 0 0 0-.5-.5H11v4zm-1 0V1H6v4h4z"/></svg></span> CSV) to toggle CSV grid.<br />
-                        <b>CTRL + ;</b> to save as .html when in Markdown preview.<br />
-                        <b>CTRL + '</b> to save as .pdf when in Markdown preview.<br />
-                        <b>CTRL + 1-9</b> (<span class="shortcut-symbol">📁</span>) to switch between file buffers (up to 9 files).<br />
-                        <b>CTRL + ←/→</b> to move through buffers.<br />
-                        <b>CTRL + G</b> (<span class="shortcut-symbol" id="help-blackjack-btn">🃏</span> Blackjack) to play a game of Blackjack.<br />
-                        <b>CTRL + F</b> (<span class="shortcut-symbol" id="help-find-btn">&#128269;</span> Find) to <a href="https://regex101.com/">find</a> and replace text.<br />
-                        <b>CTRL + K</b> (<span class="shortcut-symbol" id="help-link-btn">&#128279;</span> Link) to open a web link on current line in a new tab.<br />
-                        <b>CTRL + /</b> (<span class="shortcut-symbol" id="help-settings-btn"><b>e</b></span> Settings) to open the editr help and settings window.<br />
-                        <b>CTRL + =</b> (<span class="shortcut-symbol" id="help-lock-btn">🔒</span> Lock) to lock the current note with a password, or unlock an existing one.<br />
-                        <b>CTRL + Z</b> (<span class="shortcut-symbol" id="help-undo-btn">&#x21A9;</span> Undo) to undo the last change and CTRL + Y to redo it.<br />
-                        <b><span class="shortcut-symbol" id="help-pwa-btn">&#x2B07;</span> PWA</b> installs editr as an offline Progressive Web App.<br />
-                        <b>&#8595;</b> displays the current line number.<br />
-                        <b>&#8594;</b> displays the current character position.<br />
-                        <b>=</b> displays the current word count.<br />
-                        <b>[1-9]</b> shows the current buffer number in brackets next to filename.<br />
-                    </p>
-                    <p>
-                        editr.cc does not (and cannot):<br />
-                        <ul>
-                        <li>access your content,</li>
-                        <li>criticize your writing or coding,</li>
-                        <li>track any activity on your computer,</li>
-                        <li>judge your music choices,</li>
-                        <li>identify who you are,</li>
-                        <li>sell your data.</li>
-                        </ul>
-                    </p>
-                    <p>
-                        editr was created by <a href="https://barney.me">Barney</a>. If you want to support editr.cc buy me a
-                        <a href="https://buymeacoffee.com/barneymatthews">coffee</a>.<br />
-                        Read just some of the ways you can use
-                        <a href="https://editr.cc/plaintext.txt">plaintext</a>.<br />
-                    </p>
-                </div>
-                <div class="b-modal-column-right">
-                    <div id="settings-actions">
-                        <button id="import-settings-btn">Import Settings</button>
-                        <button id="export-settings-btn">Export Settings</button>
-                    </div>
-                    <div class="settings-section">
-                        <div class="setting-item">
-                            <label for="tabbed-view-check">Tabbed View</label>
-                            <input type="checkbox" id="tabbed-view-check" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="default-word-wrap">Word Wrap</label>
-                            <input type="checkbox" id="default-word-wrap" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="default-auto-indent">Auto Indent</label>
-                            <input type="checkbox" id="default-auto-indent" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="default-turbo-boost">Turbo Boost</label>
-                            <input type="checkbox" id="default-turbo-boost" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="enable-spell-checker">Spell Checker</label>
-                            <input type="checkbox" id="enable-spell-checker" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="auto-close-brackets">Autoclose brackets</label>
-                            <input type="checkbox" id="auto-close-brackets" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="focus-mode-check" title="Enter fullscreen for a distraction-free experience.">Focus Mode</label>
-                            <input type="checkbox" id="focus-mode-check" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="show-email-btn-check">Email Button</label>
-                            <input type="checkbox" id="show-email-btn-check" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="show-split-btn-check">Split/Markdown View</label>
-                            <input type="checkbox" id="show-split-btn-check" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="enable-csv-mode">Enable CSV Grid</label>
-                            <input type="checkbox" id="enable-csv-mode" />
-                        </div>
-                        <div class="setting-item">
-                            <label for="default-theme">Theme</label>
-                            <select id="default-theme">
-                                <option value="light">Light</option>
-                                <option value="dark">Dark</option>
-                                <option value="snow">Snow</option>
-                            </select>
-                        </div>
-                        <div class="setting-item">
-                            <label for="date-format-select">Date</label>
-                            <select id="date-format-select">
-                                <option value="MM/DD/YY">MM/DD/YY</option>
-                                <option value="DD-MMM-YYYY">DD-MMM-YYYY</option>
-                                <option value="YYYY-MMM-DD">YYYY-MMM-DD</option>
-                                <option value="YYMMYY">YYMMYY</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="settings-section" id="text-expansion-section">
-                        <div id="text-expansion-content"></div>
-                    </div>
+            <div class="sidebar-section">
+                <div class="sidebar-title">Keyboard Shortcuts</div>
+                <div style="font-size: 11px; color: #888; line-height: 1.4;">
+                    <div>Ctrl+N - New File</div>
+                    <div>Ctrl+O - Open File</div>
+                    <div>Ctrl+S - Save</div>
+                    <div>Ctrl+Shift+S - Save As</div>
+                    <div>Ctrl+W - Close Tab</div>
+                    <div>Ctrl+P - Toggle Preview</div>
+                    <div>Ctrl+E - Add Expander</div>
+                    <div>Ctrl+Shift+E - Export Exp.</div>
+                    <div>Ctrl+Shift+I - Import Exp.</div>
+                    <div>Ctrl+1-9 - Switch Tab</div>
                 </div>
             </div>
-            <input type="file" id="import-settings-input" accept=".json" style="display: none;" />
         </div>
 
-        <div id="blackjack-popup" class="popup">
-            <button class="close-btn">×</button>
-            <h2>Blackjack</h2>
-            <div id="blackjack-output" class="game-output-area"></div>
-            <div id="blackjack-input-area">
-                <p style="text-align: center; font-family: monospace; padding-top: 10px;">
-                    Press [D] to Deal, [H] to Hit, [S] to Stand
-                </p>
+        <div class="content-area">
+            <div class="tabs-container" id="tabsContainer"></div>
+            
+            <div class="editor-container">
+                <div class="editor-wrapper">
+                    <textarea class="editor" id="editor" placeholder="Start typing..."></textarea>
+                </div>
+                <div class="preview-pane" id="previewPane"></div>
             </div>
         </div>
+    </div>
 
-        <script src="script.js"></script>
-    </body>
+    <div class="status-bar">
+        <span id="statusText">Ready</span>
+        <span id="cursorPosition">Ln 1, Col 1</span>
+    </div>
+
+    <!-- Text Expander Modal -->
+    <div id="expanderModal" class="modal">
+        <div class="modal-content">
+            <h3 id="expanderModalTitle">Add Text Expander</h3>
+            <div class="input-group">
+                <label for="expanderTrigger">Trigger</label>
+                <input type="text" id="expanderTrigger" placeholder="e.g., :date" maxlength="20">
+            </div>
+            <div class="input-group">
+                <label for="expanderText">Replacement Text</label>
+                <textarea id="expanderText" placeholder="Text to insert when triggered"></textarea>
+            </div>
+            <h4>Dynamic Variables:</h4>
+            <div style="font-size: 11px; color: #888; margin-bottom: 16px; line-height: 1.4;">
+                <div><code>{date}</code> - Current date</div>
+                <div><code>{time}</code> - Current time</div>
+                <div><code>{datetime}</code> - Current date and time</div>
+                <div><code>{timestamp}</code> - Unix timestamp</div>
+            </div>
+            <div class="modal-buttons">
+                <button class="btn" onclick="closeExpanderModal()">Cancel</button>
+                <button class="btn" id="expanderSaveBtn" onclick="addExpander()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
+    <script>
+        class TextEditor {
+            constructor() {
+                this.files = new Map();
+                this.activeFileId = null;
+                this.fileHandles = new Map();
+                this.expanders = new Map();
+                this.isPreviewMode = false;
+                this.nextFileId = 1;
+                this.currentEditingExpander = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.loadFromStorage();
+                this.setupEventListeners();
+                this.loadExpanders();
+                this.updateExpandersList();
+                
+                if (this.files.size === 0) {
+                    this.createNewFile();
+                }
+                
+                this.renderTabs();
+                this.updateStatusBar();
+
+                // Register service worker for offline functionality
+                if ('serviceWorker' in navigator) {
+                    this.registerServiceWorker();
+                }
+            }
+
+            registerServiceWorker() {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('Service Worker registered successfully:', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('Service Worker registration failed:', error);
+                    });
+            }
+
+            setupEventListeners() {
+                const editor = document.getElementById('editor');
+                
+                editor.addEventListener('input', () => {
+                    this.handleEditorInput();
+                });
+
+                editor.addEventListener('keydown', (e) => {
+                    this.handleKeydown(e);
+                });
+
+                // Cursor position tracking
+                editor.addEventListener('selectionchange', () => {
+                    this.updateStatusBar();
+                });
+
+                editor.addEventListener('click', () => {
+                    this.updateStatusBar();
+                });
+
+                editor.addEventListener('keyup', () => {
+                    this.updateStatusBar();
+                });
+
+                // Global keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    this.handleGlobalKeydown(e);
+                });
+
+                // Auto-save every 2 seconds
+                setInterval(() => {
+                    this.autoSave();
+                }, 2000);
+
+                // Modal click outside to close
+                document.getElementById('expanderModal').addEventListener('click', (e) => {
+                    if (e.target === e.currentTarget) {
+                        this.closeExpanderModal();
+                    }
+                });
+            }
+
+            handleEditorInput() {
+                if (!this.activeFileId) return;
+                
+                const editor = document.getElementById('editor');
+                const content = editor.value;
+                const file = this.files.get(this.activeFileId);
+                
+                if (file) {
+                    file.content = content;
+                    file.modified = true;
+                    this.renderTabs();
+                    
+                    // Check for text expanders
+                    this.checkTextExpanders(editor);
+                    
+                    // Update preview if active
+                    if (this.isPreviewMode && file.name.endsWith('.md')) {
+                        this.updatePreview();
+                    }
+
+                    // Update CSV preview if it's a CSV file
+                    if (file.name.endsWith('.csv')) {
+                        this.updateCSVPreview();
+                    }
+                }
+                
+                this.updateStatusBar();
+            }
+
+            checkTextExpanders(editor) {
+                const cursorPos = editor.selectionStart;
+                const text = editor.value;
+                const textBeforeCursor = text.substring(0, cursorPos);
+                
+                for (const [trigger, replacement] of this.expanders) {
+                    if (textBeforeCursor.endsWith(trigger)) {
+                        const newText = text.substring(0, cursorPos - trigger.length) + 
+                                      this.processExpansion(replacement) + 
+                                      text.substring(cursorPos);
+                        
+                        editor.value = newText;
+                        const newCursorPos = cursorPos - trigger.length + this.processExpansion(replacement).length;
+                        editor.setSelectionRange(newCursorPos, newCursorPos);
+                        
+                        // Update file content
+                        if (this.activeFileId) {
+                            this.files.get(this.activeFileId).content = newText;
+                        }
+                        
+                        break;
+                    }
+                }
+            }
+
+            processExpansion(text) {
+                // Process dynamic expansions
+                const now = new Date();
+                return text
+                    .replace(/\{date\}/g, now.toLocaleDateString())
+                    .replace(/\{time\}/g, now.toLocaleTimeString())
+                    .replace(/\{datetime\}/g, now.toLocaleString())
+                    .replace(/\{timestamp\}/g, now.getTime().toString());
+            }
+
+            handleKeydown(e) {
+                // Tab key for indentation
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    const editor = e.target;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    
+                    if (e.shiftKey) {
+                        // Remove indentation
+                        const lines = editor.value.split('\n');
+                        const startLine = editor.value.substring(0, start).split('\n').length - 1;
+                        const endLine = editor.value.substring(0, end).split('\n').length - 1;
+                        
+                        let newValue = '';
+                        let offsetAdjustment = 0;
+                        
+                        lines.forEach((line, index) => {
+                            if (index >= startLine && index <= endLine && line.startsWith('    ')) {
+                                newValue += line.substring(4);
+                                if (index === startLine) offsetAdjustment = -4;
+                            } else if (index >= startLine && index <= endLine && line.startsWith('\t')) {
+                                newValue += line.substring(1);
+                                if (index === startLine) offsetAdjustment = -1;
+                            } else {
+                                newValue += line;
+                            }
+                            if (index < lines.length - 1) newValue += '\n';
+                        });
+                        
+                        editor.value = newValue;
+                        editor.setSelectionRange(start + offsetAdjustment, end + offsetAdjustment);
+                    } else {
+                        // Add indentation
+                        editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
+                        editor.setSelectionRange(start + 4, start + 4);
+                    }
+                    
+                    this.handleEditorInput();
+                }
+            }
+
+            handleGlobalKeydown(e) {
+                if (e.ctrlKey || e.metaKey) {
+                    switch(e.key) {
+                        case 'n':
+                            e.preventDefault();
+                            this.createNewFile();
+                            break;
+                        case 'o':
+                            e.preventDefault();
+                            this.openFile();
+                            break;
+                        case 's':
+                            e.preventDefault();
+                            if (e.shiftKey) {
+                                this.saveAsFile();
+                            } else {
+                                this.saveFile();
+                            }
+                            break;
+                        case 'w':
+                            e.preventDefault();
+                            this.closeActiveTab();
+                            break;
+                        case 'p':
+                            e.preventDefault();
+                            this.togglePreview();
+                            break;
+                        case 'e':
+                            e.preventDefault();
+                            if (e.shiftKey) {
+                                this.exportExpanders();
+                            } else {
+                                this.showExpanderModal();
+                            }
+                            break;
+                        case 'i':
+                            if (e.shiftKey) {
+                                e.preventDefault();
+                                this.importExpanders();
+                            }
+                            break;
+                        case '1':
+                        case '2':
+                        case '3':
+                        case '4':
+                        case '5':
+                        case '6':
+                        case '7':
+                        case '8':
+                        case '9':
+                            e.preventDefault();
+                            this.switchToTab(parseInt(e.key) - 1);
+                            break;
+                    }
+                }
+            }
+
+            createNewFile() {
+                const fileId = `file_${this.nextFileId++}`;
+                const fileName = `untitled-${this.files.size + 1}.txt`;
+                
+                this.files.set(fileId, {
+                    id: fileId,
+                    name: fileName,
+                    content: '',
+                    modified: false,
+                    isLinkedToDevice: false,
+                    originalPath: null
+                });
+                
+                this.switchToFile(fileId);
+                this.renderTabs();
+                this.updateStatusBar();
+            }
+
+            async openFile() {
+                if (!('showOpenFilePicker' in window)) {
+                    // Fallback for browsers without File System API
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.txt,.md,.csv,.js,.html,.css,.json';
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                this.createFileFromContent(file.name, e.target.result);
+                            };
+                            reader.readAsText(file);
+                        }
+                    };
+                    input.click();
+                    return;
+                }
+
+                try {
+                    const [fileHandle] = await window.showOpenFilePicker({
+                        types: [{
+                            description: 'Text files',
+                            accept: {
+                                'text/*': ['.txt', '.md', '.csv', '.js', '.html', '.css', '.json']
+                            }
+                        }]
+                    });
+                    
+                    const file = await fileHandle.getFile();
+                    const content = await file.text();
+                    const fileId = this.createFileFromContent(file.name, content);
+                    
+                    // Store the file handle immediately so we can save back to the original file
+                    this.fileHandles.set(fileId, fileHandle);
+                    
+                    // Mark the file as linked to the original device file
+                    const fileData = this.files.get(fileId);
+                    if (fileData) {
+                        fileData.isLinkedToDevice = true;
+                        fileData.originalPath = file.name;
+                    }
+                    
+                    this.setStatus(`Opened ${file.name} - changes will save to original file`);
+                    
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error opening file:', error);
+                    }
+                }
+            }
+
+            createFileFromContent(fileName, content) {
+                const fileId = `file_${this.nextFileId++}`;
+                
+                this.files.set(fileId, {
+                    id: fileId,
+                    name: fileName,
+                    content: content,
+                    modified: false,
+                    isLinkedToDevice: false,
+                    originalPath: null
+                });
+                
+                this.switchToFile(fileId);
+                this.renderTabs();
+                this.updateStatusBar();
+                
+                return fileId;
+            }
+
+            async saveFile() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                const fileHandle = this.fileHandles.get(this.activeFileId);
+                
+                if (fileHandle) {
+                    try {
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(file.content);
+                        await writable.close();
+                        
+                        file.modified = false;
+                        this.renderTabs();
+                        
+                        if (file.isLinkedToDevice) {
+                            this.setStatus(`Saved changes to ${file.originalPath || file.name}`);
+                        } else {
+                            this.setStatus('File saved successfully');
+                        }
+                    } catch (error) {
+                        console.error('Error saving file:', error);
+                        this.setStatus('Error saving file');
+                    }
+                } else {
+                    this.saveAsFile();
+                }
+            }
+
+            async saveAsFile() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                
+                if (!('showSaveFilePicker' in window)) {
+                    // Fallback download
+                    const blob = new Blob([file.content], { type: 'text/plain' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = file.name;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    return;
+                }
+
+                try {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: file.name,
+                        types: [{
+                            description: 'Text files',
+                            accept: {
+                                'text/plain': ['.txt'],
+                                'text/markdown': ['.md'],
+                                'text/csv': ['.csv'],
+                                'application/javascript': ['.js'],
+                                'text/html': ['.html'],
+                                'text/css': ['.css'],
+                                'application/json': ['.json']
+                            }
+                        }]
+                    });
+                    
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(file.content);
+                    await writable.close();
+                    
+                    this.fileHandles.set(this.activeFileId, fileHandle);
+                    file.name = fileHandle.name;
+                    file.modified = false;
+                    file.isLinkedToDevice = true;
+                    file.originalPath = fileHandle.name;
+                    this.renderTabs();
+                    this.setStatus(`File saved as ${fileHandle.name} - future saves will update this file`);
+                    
+                } catch (error) {
+                    if (error.name !== 'AbortError') {
+                        console.error('Error saving file:', error);
+                    }
+                }
+            }
+
+            switchToFile(fileId) {
+                this.activeFileId = fileId;
+                const file = this.files.get(fileId);
+                const editor = document.getElementById('editor');
+                
+                if (file) {
+                    editor.value = file.content;
+                    
+                    // Update preview based on file type
+                    if (file.name.endsWith('.md')) {
+                        if (this.isPreviewMode) {
+                            this.updatePreview();
+                        }
+                    } else if (file.name.endsWith('.csv')) {
+                        this.updateCSVPreview();
+                    } else {
+                        // Hide preview for non-markdown/csv files
+                        document.getElementById('previewPane').classList.remove('active');
+                    }
+                }
+                
+                this.renderTabs();
+                this.updateStatusBar();
+                editor.focus();
+            }
+
+            switchToTab(index) {
+                const fileIds = Array.from(this.files.keys());
+                if (index >= 0 && index < fileIds.length) {
+                    this.switchToFile(fileIds[index]);
+                }
+            }
+
+            closeTab(fileId) {
+                this.files.delete(fileId);
+                this.fileHandles.delete(fileId);
+                
+                if (this.activeFileId === fileId) {
+                    const remainingFiles = Array.from(this.files.keys());
+                    if (remainingFiles.length > 0) {
+                        this.switchToFile(remainingFiles[0]);
+                    } else {
+                        this.activeFileId = null;
+                        document.getElementById('editor').value = '';
+                    }
+                }
+                
+                this.renderTabs();
+                this.updateStatusBar();
+                
+                if (this.files.size === 0) {
+                    this.createNewFile();
+                }
+            }
+
+            closeActiveTab() {
+                if (this.activeFileId) {
+                    this.closeTab(this.activeFileId);
+                }
+            }
+
+            renderTabs() {
+                const container = document.getElementById('tabsContainer');
+                container.innerHTML = '';
+                
+                Array.from(this.files.values()).forEach(file => {
+                    const tab = document.createElement('div');
+                    tab.className = `tab ${file.id === this.activeFileId ? 'active' : ''} ${file.modified ? 'modified' : ''}`;
+                    
+                    tab.innerHTML = `
+                        <span class="tab-name">${file.name}</span>
+                        <span class="tab-close" onclick="editor.closeTab('${file.id}')">&times;</span>
+                    `;
+                    
+                    tab.addEventListener('click', (e) => {
+                        if (!e.target.classList.contains('tab-close')) {
+                            this.switchToFile(file.id);
+                        }
+                    });
+                    
+                    container.appendChild(tab);
+                });
+            }
+
+            togglePreview() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                const previewPane = document.getElementById('previewPane');
+                
+                this.isPreviewMode = !this.isPreviewMode;
+                
+                if (this.isPreviewMode && file.name.endsWith('.md')) {
+                    previewPane.classList.add('active');
+                    this.updatePreview();
+                } else if (this.isPreviewMode && file.name.endsWith('.csv')) {
+                    previewPane.classList.add('active');
+                    this.updateCSVPreview();
+                } else {
+                    previewPane.classList.remove('active');
+                }
+            }
+
+            updatePreview() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                const previewPane = document.getElementById('previewPane');
+                
+                if (file && file.name.endsWith('.md')) {
+                    const html = marked.parse(file.content);
+                    previewPane.innerHTML = `
+                        <style>
+                            .preview-pane h1, .preview-pane h2, .preview-pane h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+                            .preview-pane p { margin-bottom: 1em; }
+                            .preview-pane code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+                            .preview-pane pre { background: #f4f4f4; padding: 1em; border-radius: 5px; overflow-x: auto; }
+                            .preview-pane blockquote { border-left: 4px solid #ddd; padding-left: 1em; margin: 1em 0; }
+                            .preview-pane table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+                            .preview-pane th, .preview-pane td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            .preview-pane th { background-color: #f2f2f2; }
+                        </style>
+                        ${html}
+                    `;
+                }
+            }
+
+            updateCSVPreview() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                const previewPane = document.getElementById('previewPane');
+                
+                if (file && file.name.endsWith('.csv')) {
+                    const lines = file.content.split('\n').filter(line => line.trim());
+                    if (lines.length === 0) {
+                        previewPane.innerHTML = '<p>Empty CSV file</p>';
+                        return;
+                    }
+                    
+                    const headers = this.parseCSVLine(lines[0]);
+                    const rows = lines.slice(1).map(line => this.parseCSVLine(line));
+                    
+                    let tableHTML = '<table class="csv-grid"><thead><tr>';
+                    headers.forEach(header => {
+                        tableHTML += `<th>${this.escapeHtml(header)}</th>`;
+                    });
+                    tableHTML += '</tr></thead><tbody>';
+                    
+                    rows.forEach(row => {
+                        tableHTML += '<tr>';
+                        headers.forEach((_, index) => {
+                            const cellValue = row[index] || '';
+                            tableHTML += `<td>${this.escapeHtml(cellValue)}</td>`;
+                        });
+                        tableHTML += '</tr>';
+                    });
+                    
+                    tableHTML += '</tbody></table>';
+                    previewPane.innerHTML = tableHTML;
+                    previewPane.style.background = '#1e1e1e';
+                    previewPane.style.color = '#e0e0e0';
+                }
+            }
+
+            parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    
+                    if (char === '"') {
+                        if (inQuotes && line[i + 1] === '"') {
+                            current += '"';
+                            i++; // skip next quote
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        result.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                
+                result.push(current.trim());
+                return result;
+            }
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+
+            async exportToPDF() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                
+                // Create a temporary window for PDF generation
+                const printWindow = window.open('', '_blank');
+                let content = file.content;
+                
+                if (file.name.endsWith('.md')) {
+                    content = marked.parse(content);
+                }
+                
+                printWindow.document.write(`
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>${file.name}</title>
+                        <style>
+                            body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; }
+                            h1, h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+                            p { margin-bottom: 1em; }
+                            code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+                            pre { background: #f4f4f4; padding: 1em; border-radius: 5px; overflow-x: auto; }
+                            blockquote { border-left: 4px solid #ddd; padding-left: 1em; margin: 1em 0; }
+                            table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f2f2f2; }
+                        </style>
+                    </head>
+                    <body>
+                        ${file.name.endsWith('.md') ? content : `<pre>${this.escapeHtml(content)}</pre>`}
+                    </body>
+                    </html>
+                `);
+                
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    printWindow.close();
+                }, 500);
+            }
+
+            exportToHTML() {
+                if (!this.activeFileId) return;
+                
+                const file = this.files.get(this.activeFileId);
+                let content = file.content;
+                
+                if (file.name.endsWith('.md')) {
+                    content = marked.parse(content);
+                }
+                
+                const htmlContent = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${file.name}</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; max-width: 800px; margin: 0 auto; padding: 20px; }
+        h1, h2, h3 { margin-top: 1.5em; margin-bottom: 0.5em; }
+        p { margin-bottom: 1em; }
+        code { background: #f4f4f4; padding: 2px 4px; border-radius: 3px; }
+        pre { background: #f4f4f4; padding: 1em; border-radius: 5px; overflow-x: auto; }
+        blockquote { border-left: 4px solid #ddd; padding-left: 1em; margin: 1em 0; }
+        table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
+</head>
+<body>
+    ${file.name.endsWith('.md') ? content : `<pre>${this.escapeHtml(content)}</pre>`}
+</body>
+</html>`;
+                
+                const blob = new Blob([htmlContent], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = file.name.replace(/\.[^/.]+$/, '') + '.html';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            showExpanderModal() {
+                this.currentEditingExpander = null;
+                document.getElementById('expanderModalTitle').textContent = 'Add Text Expander';
+                document.getElementById('expanderSaveBtn').textContent = 'Add';
+                document.getElementById('expanderSaveBtn').onclick = () => this.addExpander();
+                document.getElementById('expanderModal').style.display = 'block';
+                document.getElementById('expanderTrigger').focus();
+            }
+
+            showEditExpanderModal(trigger) {
+                this.currentEditingExpander = trigger;
+                const text = this.expanders.get(trigger);
+                
+                document.getElementById('expanderModalTitle').textContent = 'Edit Text Expander';
+                document.getElementById('expanderSaveBtn').textContent = 'Update';
+                document.getElementById('expanderSaveBtn').onclick = () => this.updateExpander();
+                document.getElementById('expanderTrigger').value = trigger;
+                document.getElementById('expanderText').value = text;
+                document.getElementById('expanderModal').style.display = 'block';
+                document.getElementById('expanderTrigger').focus();
+            }
+
+            closeExpanderModal() {
+                document.getElementById('expanderModal').style.display = 'none';
+                document.getElementById('expanderTrigger').value = '';
+                document.getElementById('expanderText').value = '';
+                this.currentEditingExpander = null;
+            }
+
+            addExpander() {
+                const trigger = document.getElementById('expanderTrigger').value.trim();
+                const text = document.getElementById('expanderText').value;
+                
+                if (!trigger || !text) {
+                    alert('Please fill in both trigger and text fields');
+                    return;
+                }
+                
+                if (this.expanders.has(trigger)) {
+                    alert('A text expander with this trigger already exists. Use edit to modify it.');
+                    return;
+                }
+                
+                this.expanders.set(trigger, text);
+                this.saveExpanders();
+                this.updateExpandersList();
+                this.closeExpanderModal();
+                this.setStatus(`Text expander added: ${trigger}`);
+            }
+
+            updateExpander() {
+                const newTrigger = document.getElementById('expanderTrigger').value.trim();
+                const newText = document.getElementById('expanderText').value;
+                
+                if (!newTrigger || !newText) {
+                    alert('Please fill in both trigger and text fields');
+                    return;
+                }
+                
+                if (newTrigger !== this.currentEditingExpander && this.expanders.has(newTrigger)) {
+                    alert('A text expander with this trigger already exists. Please choose a different trigger.');
+                    return;
+                }
+                
+                // Remove old expander if trigger changed
+                if (newTrigger !== this.currentEditingExpander) {
+                    this.expanders.delete(this.currentEditingExpander);
+                }
+                
+                // Add/update with new values
+                this.expanders.set(newTrigger, newText);
+                this.saveExpanders();
+                this.updateExpandersList();
+                this.closeExpanderModal();
+                this.setStatus(`Text expander updated: ${newTrigger}`);
+            }
+
+            exportExpanders() {
+                if (this.expanders.size === 0) {
+                    alert('No text expanders to export');
+                    return;
+                }
+
+                // Create export format with clear structure
+                let exportContent = '# Editr Text Expanders Export\n';
+                exportContent += '# Format: TRIGGER|REPLACEMENT_TEXT\n';
+                exportContent += '# Lines starting with # are comments and will be ignored\n';
+                exportContent += '# Empty lines will be ignored\n\n';
+
+                Array.from(this.expanders.entries()).forEach(([trigger, text]) => {
+                    // Escape pipe characters in the text by replacing them with \|
+                    const escapedText = text.replace(/\|/g, '\\|').replace(/\n/g, '\\n');
+                    exportContent += `${trigger}|${escapedText}\n`;
+                });
+
+                // Create and download file
+                const blob = new Blob([exportContent], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `editr-expanders-${new Date().toISOString().split('T')[0]}.txt`;
+                a.click();
+                URL.revokeObjectURL(url);
+
+                this.setStatus(`Exported ${this.expanders.size} text expanders`);
+            }
+
+            async importExpanders() {
+                // Create file input for import
+                const input = document.createElement('input');
+                input.type = 'file';
+                input.accept = '.txt';
+                input.onchange = async (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    try {
+                        const content = await file.text();
+                        this.parseAndImportExpanders(content);
+                    } catch (error) {
+                        console.error('Error reading file:', error);
+                        alert('Error reading file. Please try again.');
+                    }
+                };
+                input.click();
+            }
+
+            parseAndImportExpanders(content) {
+                const lines = content.split('\n');
+                let importedCount = 0;
+                let skippedCount = 0;
+                let errorCount = 0;
+
+                lines.forEach((line, index) => {
+                    line = line.trim();
+                    
+                    // Skip empty lines and comments
+                    if (!line || line.startsWith('#')) {
+                        return;
+                    }
+
+                    // Find the first unescaped pipe character
+                    let pipeIndex = -1;
+                    for (let i = 0; i < line.length; i++) {
+                        if (line[i] === '|' && (i === 0 || line[i-1] !== '\\')) {
+                            pipeIndex = i;
+                            break;
+                        }
+                    }
+
+                    if (pipeIndex === -1) {
+                        console.warn(`Line ${index + 1}: Invalid format, missing separator`);
+                        errorCount++;
+                        return;
+                    }
+
+                    const trigger = line.substring(0, pipeIndex).trim();
+                    let text = line.substring(pipeIndex + 1).trim();
+
+                    // Unescape pipe characters and newlines
+                    text = text.replace(/\\n/g, '\n').replace(/\\\|/g, '|');
+
+                    if (!trigger) {
+                        console.warn(`Line ${index + 1}: Empty trigger`);
+                        errorCount++;
+                        return;
+                    }
+
+                    // Check if expander already exists
+                    if (this.expanders.has(trigger)) {
+                        console.warn(`Line ${index + 1}: Trigger "${trigger}" already exists, skipping`);
+                        skippedCount++;
+                        return;
+                    }
+
+                    // Add the expander
+                    this.expanders.set(trigger, text);
+                    importedCount++;
+                });
+
+                // Save and update UI
+                this.saveExpanders();
+                this.updateExpandersList();
+
+                // Show import results
+                let message = `Import complete: ${importedCount} added`;
+                if (skippedCount > 0) {
+                    message += `, ${skippedCount} skipped (duplicates)`;
+                }
+                if (errorCount > 0) {
+                    message += `, ${errorCount} errors`;
+                }
+
+                this.setStatus(message);
+
+                if (errorCount > 0) {
+                    alert(`${message}\n\nCheck console for details about errors.`);
+                }
+            }
+
+            deleteExpander(trigger) {
+                if (confirm(`Delete expander "${trigger}"?`)) {
+                    this.expanders.delete(trigger);
+                    this.saveExpanders();
+                    this.updateExpandersList();
+                    this.setStatus(`Text expander deleted: ${trigger}`);
+                }
+            }
+
+            updateExpandersList() {
+                const container = document.getElementById('expandersList');
+                container.innerHTML = '';
+                
+                Array.from(this.expanders.entries()).forEach(([trigger, text]) => {
+                    const item = document.createElement('div');
+                    item.className = 'expander-item';
+                    item.innerHTML = `
+                        <div>
+                            <div class="expander-trigger">${this.escapeHtml(trigger)}</div>
+                            <div style="font-size: 10px; color: #888; margin-top: 2px;">${this.escapeHtml(text.substring(0, 30))}${text.length > 30 ? '...' : ''}</div>
+                        </div>
+                        <div class="expander-actions">
+                            <span class="edit-expander" onclick="editor.showEditExpanderModal('${trigger}')" title="Edit">✎</span>
+                            <span class="delete-expander" onclick="editor.deleteExpander('${trigger}')" title="Delete">×</span>
+                        </div>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            loadExpanders() {
+                try {
+                    const saved = localStorage.getItem('editr_expanders');
+                    if (saved) {
+                        const expandersArray = JSON.parse(saved);
+                        this.expanders = new Map(expandersArray);
+                    }
+                } catch (error) {
+                    console.error('Error loading expanders:', error);
+                }
+                
+                // Add default expanders if none exist
+                if (this.expanders.size === 0) {
+                    this.expanders.set(':date', '{date}');
+                    this.expanders.set(':time', '{time}');
+                    this.expanders.set(':datetime', '{datetime}');
+                    this.expanders.set(':sig', 'Best regards,\nYour Name');
+                    this.saveExpanders();
+                }
+            }
+
+            saveExpanders() {
+                try {
+                    const expandersArray = Array.from(this.expanders.entries());
+                    localStorage.setItem('editr_expanders', JSON.stringify(expandersArray));
+                } catch (error) {
+                    console.error('Error saving expanders:', error);
+                }
+            }
+
+            autoSave() {
+                this.saveToStorage();
+            }
+
+            saveToStorage() {
+                try {
+                    const data = {
+                        files: Array.from(this.files.entries()).map(([id, file]) => [
+                            id, 
+                            {
+                                ...file,
+                                // Don't save file handles or device links to localStorage
+                                isLinkedToDevice: false,
+                                originalPath: null
+                            }
+                        ]),
+                        activeFileId: this.activeFileId,
+                        nextFileId: this.nextFileId
+                    };
+                    localStorage.setItem('editr_data', JSON.stringify(data));
+                } catch (error) {
+                    console.error('Error saving to storage:', error);
+                }
+            }
+
+            loadFromStorage() {
+                try {
+                    const saved = localStorage.getItem('editr_data');
+                    if (saved) {
+                        const data = JSON.parse(saved);
+                        this.files = new Map(data.files || []);
+                        this.activeFileId = data.activeFileId;
+                        this.nextFileId = data.nextFileId || 1;
+                    }
+                } catch (error) {
+                    console.error('Error loading from storage:', error);
+                }
+            }
+
+            updateStatusBar() {
+                const editor = document.getElementById('editor');
+                const statusText = document.getElementById('statusText');
+                const cursorPosition = document.getElementById('cursorPosition');
+                
+                if (this.activeFileId) {
+                    const file = this.files.get(this.activeFileId);
+                    let statusMessage = file.name;
+                    
+                    if (file.modified) {
+                        statusMessage += ' (modified)';
+                    }
+                    
+                    if (file.isLinkedToDevice) {
+                        statusMessage += ' 📁'; // File folder emoji to indicate linked to device
+                    }
+                    
+                    statusText.textContent = statusMessage;
+                } else {
+                    statusText.textContent = 'Ready';
+                }
+                
+                // Calculate cursor position
+                const content = editor.value;
+                const cursorPos = editor.selectionStart;
+                const lines = content.substring(0, cursorPos).split('\n');
+                const line = lines.length;
+                const col = lines[lines.length - 1].length + 1;
+                
+                cursorPosition.textContent = `Ln ${line}, Col ${col}`;
+            }
+
+            setStatus(message) {
+                document.getElementById('statusText').textContent = message;
+                setTimeout(() => {
+                    this.updateStatusBar();
+                }, 2000);
+            }
+        }
+
+        // Global functions for HTML onclick handlers
+        let editor;
+
+        window.addEventListener('DOMContentLoaded', () => {
+            editor = new TextEditor();
+        });
+
+        function createNewFile() { editor.createNewFile(); }
+        function openFile() { editor.openFile(); }
+        function saveFile() { editor.saveFile(); }
+        function saveAsFile() { editor.saveAsFile(); }
+        function togglePreview() { editor.togglePreview(); }
+        function exportToPDF() { editor.exportToPDF(); }
+        function exportToHTML() { editor.exportToHTML(); }
+        function showExpanderModal() { editor.showExpanderModal(); }
+        function closeExpanderModal() { editor.closeExpanderModal(); }
+        function addExpander() { editor.addExpander(); }
+        function exportExpanders() { editor.exportExpanders(); }
+        function importExpanders() { editor.importExpanders(); }
+    </script>
+</body>
 </html>
