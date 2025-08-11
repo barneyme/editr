@@ -280,6 +280,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     // Store locally
     storeLocally(elements.textbox1);
+
+    // If in markdown preview mode, update the preview pane as content has changed
+    if (elements.editorContainer.classList.contains("preview-active")) {
+      updatePreview();
+    }
   }
 
   // Render the tab bar UI
