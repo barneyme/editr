@@ -3,1359 +3,516 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editr</title>
+    <title>editr</title>
     <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDAwMDAwIi8+Cjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lPC90ZXh0Pgo8L3N2Zz4K" type="image/svg+xml">
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIkVkaXRyIiwKICAic2hvcnRfbmFtZSI6ICJFZGl0ciIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAidGhlbWVfY29sb3IiOiAiIzI1NjNlYiIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiI2ZmZmZmZiIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU16SWlJR2hsYVdkb2REMGlNekpwSUhacFpYZENiM2c5SWpBZ01DQXpNaUF6TWlJZ1ptbHNiRDBpYm05dVpTSWdlRzFzYm5NOUltaDBkSEE2THk5M2QzY3Vkek11YjNKbkx6SXdNREF2YzNabklqNEtQSEpsWTNRZ2QybGtkR2c5SWpNeUlpQm9aV2xuYUhROUlqTXlJaUJtYVd4c1BTSWpNREF3TURBd0lpOCtDbkowWlhoMElIZzlJakUySWlCNVBTSXlNaUlnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzTENBemMyRnVjeTF6WlhKcFpuSWlJR1p2Ym5RdGMybDZaVDBpTVRnaUlHWnZiblF0ZDJWcFoyaDBQU0kwTUNBd0lpQm1hV3hzUFNJalpqWm1abVptWmlJZ2RHVjRkQzFoYm1Ob2IzSTlJbTFwWkdSc1pTSStaVHd2ZEdWNGRENEtQQzl6ZG1jKyIsCiAgICAgICJzaXplcyI6ICIzMngzMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9LAogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU5UUWlJR2hsYVdkb2REMGlOVFJwSUhacFpYZENiM2c5SWpBZ01DQTFOQ0ExTkNJZ1ptbHNiRDBpYm05dVpTSWdlRzFzYm5NOUltaDBkSEE2THk5M2QzY3Vkek11YjNKbkx6SXdNREF2YzNabklqNEtQSEpsWTNRZ2QybGtkR2c5SWpVMElpQm9aV2xuYUhROUlqVTBJaUJtYVd4c1BTSWpNREF3TURBd0lpOCtDbkowWlhoMElIZzlJakk1SWlCNVBTSXpPU0lnWm05dWRDMW1ZVzFwYkhrOUlrRnlhV0ZzTENBemMyRnVjeTF6WlhKcFpuSWlJR1p2Ym5RdGMybDZaVDBpTXpRaUlHWnZiblF0ZDJWcFoyaDBQU0kwTUNBd0lpQm1hV3hzUFNJalpqWm1abVptWmlJZ2RHVjRkQzFoYm1Ob2IzSTlJbTFwWkdSc1pTSStaVHd2ZEdWNGRENEtQQzl6ZG1jKyIsCiAgICAgICJzaXplcyI6ICI1NHg1NCIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9CiAgXQp9">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-            background: #1e1e1e;
-            color: #e0e0e0;
-            height: 100vh;
-            overflow: hidden;
-        }
-
-        .header {
-            background: #2d2d30;
-            border-bottom: 1px solid #3e3e42;
-            padding: 8px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .logo {
-            font-weight: 600;
-            color: #2563eb;
-        }
-
-        .toolbar {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .btn {
-            background: #3c3c3c;
-            border: 1px solid #555;
-            color: #e0e0e0;
-            padding: 6px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-
-        .btn:hover {
-            background: #4a4a4a;
-            border-color: #666;
-        }
-
-        .btn:active {
-            transform: translateY(1px);
-        }
-
-        .main-container {
-            display: flex;
-            height: calc(100vh - 50px);
-        }
-
-        .sidebar {
-            width: 250px;
-            background: #252526;
-            border-right: 1px solid #3e3e42;
-            padding: 12px;
-            overflow-y: auto;
-        }
-
-        .sidebar-section {
-            margin-bottom: 20px;
-        }
-
-        .sidebar-title {
-            font-size: 11px;
-            font-weight: 600;
-            color: #cccccc;
-            text-transform: uppercase;
-            margin-bottom: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        .expander-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 8px;
-            margin: 2px 0;
-            background: #2d2d30;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-
-        .expander-trigger {
-            color: #569cd6;
-            font-family: 'Courier New', monospace;
-        }
-
-        .expander-actions {
-            display: flex;
-            gap: 4px;
-        }
-
-        .edit-expander, .delete-expander {
-            color: #cccccc;
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 2px;
-            font-size: 11px;
-        }
-
-        .edit-expander:hover {
-            background: #569cd6;
-            color: white;
-        }
-
-        .delete-expander:hover {
-            background: #f48771;
-            color: white;
-        }
-
-        .content-area {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .tabs-container {
-            background: #2d2d30;
-            border-bottom: 1px solid #3e3e42;
-            display: flex;
-            overflow-x: auto;
-            min-height: 36px;
-        }
-
-        .tab {
-            display: flex;
-            align-items: center;
-            padding: 8px 16px;
-            border-right: 1px solid #3e3e42;
-            cursor: pointer;
-            font-size: 13px;
-            white-space: nowrap;
-            position: relative;
-            background: #1e1e1e;
-            color: #cccccc;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: #1e1e1e;
-            color: #ffffff;
-            border-bottom: 2px solid #2563eb;
-        }
-
-        .tab:hover:not(.active) {
-            background: #2a2a2b;
-        }
-
-        .tab-close {
-            margin-left: 8px;
-            color: #888;
-            cursor: pointer;
-            padding: 2px 4px;
-            border-radius: 2px;
-        }
-
-        .tab-close:hover {
-            background: #f48771;
-            color: white;
-        }
-
-        .tab.modified::after {
-            content: '•';
-            color: #f48771;
-            margin-left: 4px;
-        }
-
-        .editor-container {
-            flex: 1;
-            display: flex;
-        }
-
-        .editor-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .editor {
-            width: 100%;
-            height: 100%;
-            border: none;
-            background: #1e1e1e;
-            color: #e0e0e0;
-            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            padding: 16px;
-            resize: none;
-            outline: none;
-        }
-
-        .preview-pane {
-            width: 50%;
-            background: #ffffff;
-            color: #333;
-            overflow-y: auto;
-            padding: 16px;
-            border-left: 1px solid #3e3e42;
-            display: none;
-        }
-
-        .preview-pane.active {
-            display: block;
-        }
-
-        .csv-grid {
-            width: 100%;
-            border-collapse: collapse;
-            background: #1e1e1e;
-            color: #e0e0e0;
-            font-family: 'Courier New', Monaco, 'Lucida Console', monospace;
-            font-size: 12px;
-        }
-
-        .csv-grid th,
-        .csv-grid td {
-            border: 1px solid #3e3e42;
-            padding: 4px 8px;
-            text-align: left;
-            position: relative;
-            min-width: 80px;
-            max-width: 200px;
-        }
-
-        .csv-grid th {
-            background: #2d2d30;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            text-align: center;
-        }
-
-        .csv-grid tr:nth-child(even) {
-            background: #252526;
-        }
-
-        .csv-grid tr:hover {
-            background: #2a2a2b;
-        }
-
-        .csv-grid-input {
-            background: transparent;
-            border: none;
-            color: inherit;
-            font: inherit;
-            width: 100%;
-            padding: 0;
-            outline: none;
-        }
-
-        .csv-grid-input:focus {
-            background: #3c3c3c;
-            border: 1px solid #569cd6;
-            border-radius: 2px;
-            padding: 2px;
-        }
-
-        .csv-grid-container {
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background: #1e1e1e;
-        }
-
-        .csv-add-row, .csv-add-col {
-            background: #3c3c3c;
-            border: 1px solid #555;
-            color: #e0e0e0;
-            padding: 4px 8px;
-            margin: 2px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
-        .csv-add-row:hover, .csv-add-col:hover {
-            background: #4a4a4a;
-        }
-
-        .csv-controls {
-            background: #2d2d30;
-            border-bottom: 1px solid #3e3e42;
-            padding: 8px 16px;
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-
-        .grid-mode-active .editor {
-            display: none;
-        }
-
-        .grid-mode-active .csv-grid-container {
-            display: block;
-        }
-
-        .csv-grid-container {
-            display: none;
-        }
-
-        .status-bar {
-            background: #2d2d30;
-            border-top: 1px solid #3e3e42;
-            padding: 4px 16px;
-            font-size: 11px;
-            color: #cccccc;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.7);
-        }
-
-        .modal-content {
-            background: #2d2d30;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #3e3e42;
-            border-radius: 6px;
-            width: 400px;
-            color: #e0e0e0;
-        }
-
-        .modal h3 {
-            margin-bottom: 16px;
-            color: #ffffff;
-        }
-
-        .modal h4 {
-            margin-bottom: 12px;
-            color: #cccccc;
-            font-size: 14px;
-        }
-
-        .input-group {
-            margin-bottom: 12px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 12px;
-            color: #cccccc;
-        }
-
-        .input-group input, .input-group textarea {
-            width: 100%;
-            padding: 8px;
-            background: #1e1e1e;
-            border: 1px solid #555;
-            border-radius: 3px;
-            color: #e0e0e0;
-            font-family: inherit;
-        }
-
-        .input-group textarea {
-            height: 60px;
-            resize: vertical;
-        }
-
-        .modal-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: flex-end;
-            margin-top: 16px;
-        }
-
-        .shortcut-hint {
-            font-size: 10px;
-            color: #888;
-            margin-left: 8px;
-        }
-
-        @media (max-width: 768px) {
-            .sidebar {
-                display: none;
-            }
-            
-            .main-container {
-                flex-direction: column;
-            }
-            
-            .editor-container {
-                flex-direction: column;
-            }
-            
-            .preview-pane {
-                width: 100%;
-                height: 50%;
-            }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; background: #1e1e1e; color: #e0e0e0; height: 100vh; overflow: hidden; }
+        .header { background: #2d2d30; border-bottom: 1px solid #3e3e42; padding: 8px 16px; display: flex; align-items: center; gap: 12px; }
+        .logo { font-weight: 600; color: #2563eb; }
+        .toolbar { display: flex; gap: 8px; align-items: center; }
+        .btn { background: #3c3c3c; border: 1px solid #555; color: #e0e0e0; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-size: 12px; }
+        .main-container { display: flex; height: calc(100vh - 50px); }
+        .content-area { flex: 1; display: flex; flex-direction: column; }
+        .editor-container { flex: 1; display: flex; }
+        .editor-wrapper { flex: 1; position: relative; }
+        .tabs-container { background: #2d2d30; border-bottom: 1px solid #3e3e42; display: flex; overflow-x: auto; min-height: 36px; }
+        .tab { display: flex; align-items: center; padding: 8px 16px; border-right: 1px solid #3e3e42; cursor: pointer; font-size: 13px; white-space: nowrap; background: #1e1e1e; color: #cccccc; }
+        .tab.active { background: #1e1e1e; color: #ffffff; border-bottom: 2px solid #2563eb; }
+        .editor { width: 100%; height: 100%; border: none; background: #1e1e1e; color: #e0e0e0; font-family: 'Courier New', Monaco, 'Lucida Console', monospace; font-size: 14px; padding: 16px; resize: none; outline: none; }
+        .preview-pane { width: 50%; background: #ffffff; color: #333; overflow-y: auto; padding: 16px; border-left: 1px solid #3e3e42; display: none; }
+        .preview-pane.active { display: block; }
+        .csv-grid-container { width: 100%; height: 100%; overflow: auto; background: #1e1e1e; display: none; }
+        .grid-mode-active .editor { display: none; }
+        .grid-mode-active .csv-grid-container { display: block; }
+        .csv-grid { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .csv-grid th, .csv-grid td { border: 1px solid #3e3e42; padding: 0; text-align: left; }
+        .csv-grid th { background: #2d2d30; font-weight: 600; padding: 4px 8px; }
+        .csv-grid-input { width: 100%; height: 100%; background: transparent; border: none; color: inherit; font: inherit; padding: 4px 8px; outline: none; }
+        .csv-grid-input:focus { background-color: #3c3c3c; }
+        .status-bar { background: #2d2d30; border-top: 1px solid #3e3e42; padding: 4px 16px; font-size: 11px; color: #cccccc; display: flex; justify-content: space-between; }
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.7); }
+        .modal-content { background: #2d2d30; margin: 10% auto; padding: 20px; border: 1px solid #3e3e42; border-radius: 6px; width: 400px; color: #e0e0e0; }
+        .input-group { margin-bottom: 12px; }
+        .input-group label { display: block; margin-bottom: 4px; }
+        .input-group input, .input-group textarea { width: 100%; padding: 8px; background: #1e1e1e; border: 1px solid #555; color: #e0e0e0; }
+        .modal-buttons { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .text-modal-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .expander-item { display: flex; justify-content: space-between; align-items: center; padding: 4px 8px; background: #252526; }
+        .expander-item span { white-space: pre; overflow: hidden; text-overflow: ellipsis; }
+        .delete-expander { cursor: pointer; flex-shrink: 0; margin-left: 10px; }
     </style>
 </head>
 <body>
     <div class="header">
-        <div class="logo">Editr</div>
+        <div class="logo">editr</div>
         <div class="toolbar">
-            <button class="btn" id="new-btn" title="New File (Ctrl+N)">New</button>
-            <button class="btn" id="open-btn" title="Open (Ctrl+O)">Open</button>
-            <button class="btn" id="save-btn" title="Save (Ctrl+S)">Save</button>
-            <button class="btn" id="save-as-btn" title="Save As (Ctrl+Shift+S)">Save As</button>
-            <button class="btn" id="preview-btn" title="Preview (Ctrl+P)" style="display: none;">Preview</button>
-            <button class="btn" id="grid-mode-btn" title="Grid Mode (Ctrl+G)" style="display: none;">Grid</button>
-            <button class="btn" id="pdf-btn" title="Export PDF" style="display: none;">PDF</button>
-            <button class="btn" id="html-btn" title="Export HTML" style="display: none;">HTML</button>
-            <button class="btn" id="show-expander-modal-btn" title="Text Expanders">Expanders</button>
-            <button class="btn" id="export-expanders-btn" title="Export Expanders">Export Exp.</button>
-            <button class="btn" id="import-expanders-btn" title="Import Expanders">Import Exp.</button>
+            <button class="btn" id="newFileBtn">New</button>
+            <button class="btn" id="openFileBtn">Open</button>
+            <button class="btn" id="saveFileBtn">Save</button>
+            <button class="btn" id="saveAsFileBtn">Save As</button>
+            <button class="btn" id="previewBtn" style="display: none;">Preview</button>
+            <button class="btn" id="gridModeBtn" style="display: none;">Grid</button>
+            <button class="btn" id="pdfBtn" style="display: none;">PDF</button>
+            <button class="btn" id="htmlBtn" style="display: none;">HTML</button>
+            <button class="btn" id="textBtn">Text</button>
         </div>
     </div>
-
     <div class="main-container">
-        <div class="sidebar">
-            <div class="sidebar-section">
-                <div class="sidebar-title">Text Expanders</div>
-                <div id="expandersList"></div>
-                <button class="btn" id="add-expander-sidebar-btn" style="width: 100%; margin-top: 8px;">Add Expander</button>
-                <div style="display: flex; gap: 4px; margin-top: 4px;">
-                    <button class="btn" id="export-expanders-sidebar-btn" style="flex: 1; font-size: 10px;" title="Export expanders to file">Export</button>
-                    <button class="btn" id="import-expanders-sidebar-btn" style="flex: 1; font-size: 10px;" title="Import expanders from file">Import</button>
-                </div>
-            </div>
-            <div class="sidebar-section">
-                <div class="sidebar-title">Keyboard Shortcuts</div>
-                <div style="font-size: 11px; color: #888; line-height: 1.4;">
-                    <div>Ctrl+N - New File</div>
-                    <div>Ctrl+O - Open File</div>
-                    <div>Ctrl+S - Save</div>
-                    <div>Ctrl+Shift+S - Save As</div>
-                    <div>Ctrl+W - Close Tab</div>
-                    <div>Ctrl+P - Toggle Preview</div>
-                    <div>Ctrl+G - Grid Mode (CSV)</div>
-                    <div>Ctrl+E - Add Expander</div>
-                    <div>Ctrl+Shift+E - Export Exp.</div>
-                    <div>Ctrl+Shift+I - Import Exp.</div>
-                    <div>Ctrl+1-9 - Switch Tab</div>
-                </div>
-            </div>
-        </div>
-
         <div class="content-area">
             <div class="tabs-container" id="tabsContainer"></div>
-            
-            <div class="editor-container">
-                <div class="editor-wrapper">
-                    <div class="csv-controls" id="csvControls" style="display: none;">
-                        <button class="csv-add-row" id="csv-add-row-btn">+ Add Row</button>
-                        <button class="csv-add-col" id="csv-add-col-btn">+ Add Column</button>
-                        <button class="btn" id="csv-delete-row-btn" style="font-size: 11px;">Delete Row</button>
-                        <button class="btn" id="csv-delete-col-btn" style="font-size: 11px;">Delete Column</button>
-                        <span style="margin-left: auto; font-size: 11px; color: #888;">
-                            Use Tab/Shift+Tab to navigate • Press Enter to add row
-                        </span>
-                    </div>
-                    <textarea class="editor" id="editor" placeholder="Start typing..."></textarea>
+            <div class="editor-container" id="editorContainer">
+                <div class="editor-wrapper" id="editorWrapper">
+                    <textarea class="editor" id="editor"></textarea>
                     <div class="csv-grid-container" id="csvGridContainer">
-                        <table class="csv-grid" id="csvGrid">
-                            <thead id="csvGridHead"></thead>
-                            <tbody id="csvGridBody"></tbody>
-                        </table>
+                        <table class="csv-grid" id="csvGrid"></table>
                     </div>
                 </div>
                 <div class="preview-pane" id="previewPane"></div>
             </div>
         </div>
     </div>
-
     <div class="status-bar">
         <span id="statusText">Ready</span>
         <span id="cursorPosition">Ln 1, Col 1</span>
     </div>
-
+    <div id="textModal" class="modal">
+        <div class="modal-content">
+            <h3>Text Expansions</h3>
+            <div id="expandersList" style="max-height: 200px; overflow-y: auto;"></div>
+            <div class="text-modal-actions">
+                <button class="btn" id="addExpanderBtn">Add</button>
+                <button class="btn" id="exportExpandersBtn">Export</button>
+                <button class="btn" id="importExpandersBtn">Import</button>
+            </div>
+            <div class="modal-buttons"><button class="btn" id="closeTextModalBtn">Close</button></div>
+        </div>
+    </div>
     <div id="expanderModal" class="modal">
         <div class="modal-content">
-            <h3 id="expanderModalTitle">Add Text Expander</h3>
-            <div class="input-group">
-                <label for="expanderTrigger">Trigger</label>
-                <input type="text" id="expanderTrigger" placeholder="e.g., :date" maxlength="20">
-            </div>
-            <div class="input-group">
-                <label for="expanderText">Replacement Text</label>
-                <textarea id="expanderText" placeholder="Text to insert when triggered"></textarea>
-            </div>
-            <h4>Dynamic Variables:</h4>
-            <div style="font-size: 11px; color: #888; margin-bottom: 16px; line-height: 1.4;">
-                <div><code>{date}</code> - Current date</div>
-                <div><code>{time}</code> - Current time</div>
-                <div><code>{datetime}</code> - Current date and time</div>
-                <div><code>{timestamp}</code> - Unix timestamp</div>
-            </div>
-            <div class="modal-buttons">
-                <button class="btn" id="expander-cancel-btn">Cancel</button>
-                <button class="btn" id="expander-save-btn">Add</button>
-            </div>
+            <h3>Add Text Expansion</h3>
+            <div class="input-group"><label for="expanderTrigger">Trigger</label><input type="text" id="expanderTrigger"></div>
+            <div class="input-group"><label for="expanderText">Replacement Text</label><textarea id="expanderText"></textarea></div>
+            <h4>Dynamic Variables:</h4><code>{date}</code> <code>{time}</code> <code>{datetime}</code> <code>{timestamp}</code>
+            <div class="modal-buttons"><button class="btn" id="cancelExpanderBtn">Cancel</button><button class="btn" id="expanderSaveBtn">Add</button></div>
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/4.3.0/marked.min.js"></script>
     <script>
-        class TextEditor {
-            constructor() {
-                this.files = new Map();
-                this.activeFileId = null;
-                this.fileHandles = new Map();
-                this.expanders = new Map();
-                this.isPreviewMode = false;
-                this.isGridMode = false;
-                this.csvData = [];
-                this.selectedRow = -1;
-                this.selectedCol = -1;
-                this.nextFileId = 1;
-                this.currentEditingExpander = null;
-                
-                this.init();
-            }
+        document.addEventListener('DOMContentLoaded', () => {
+            class TextEditor {
+                constructor() {
+                    this.files = new Map();
+                    this.fileHandles = new Map();
+                    this.activeFileId = null;
+                    this.expanders = new Map();
+                    this.nextFileId = 1;
+                    this.isPreviewActive = false;
+                    this.isGridActive = false;
 
-            init() {
-                this.loadFromStorage();
-                this.setupEventListeners();
-                this.loadExpanders();
-                this.updateExpandersList();
-                
-                if (this.files.size === 0) {
+                    this.editorEl = document.getElementById('editor');
+                    this.tabsContainerEl = document.getElementById('tabsContainer');
+                    this.statusTextEl = document.getElementById('statusText');
+                    this.cursorPositionEl = document.getElementById('cursorPosition');
+                    this.textModal = document.getElementById('textModal');
+                    this.expanderModal = document.getElementById('expanderModal');
+                    this.previewPane = document.getElementById('previewPane');
+                    this.editorWrapper = document.getElementById('editorWrapper');
+                    this.csvGrid = document.getElementById('csvGrid');
+
+                    this.previewBtn = document.getElementById('previewBtn');
+                    this.gridModeBtn = document.getElementById('gridModeBtn');
+                    this.pdfBtn = document.getElementById('pdfBtn');
+                    this.htmlBtn = document.getElementById('htmlBtn');
+
+                    this.init();
+                }
+
+                init() {
+                    this.setupEventListeners();
+                    this.loadExpanders();
                     this.createNewFile();
-                } else {
-                    const activeFile = this.files.get(this.activeFileId);
-                    if (activeFile) {
-                        this.updateToolbarButtons(activeFile);
-                    }
+                }
+
+                setupEventListeners() {
+                    document.getElementById('newFileBtn').addEventListener('click', () => this.createNewFile());
+                    document.getElementById('openFileBtn').addEventListener('click', () => this.openFile());
+                    document.getElementById('saveFileBtn').addEventListener('click', () => this.saveFile());
+                    document.getElementById('saveAsFileBtn').addEventListener('click', () => this.saveAsFile());
+                    document.getElementById('textBtn').addEventListener('click', () => this.showTextModal());
+                    
+                    this.previewBtn.addEventListener('click', () => this.togglePreview());
+                    this.gridModeBtn.addEventListener('click', () => this.toggleGridMode());
+                    this.pdfBtn.addEventListener('click', () => this.exportToPDF());
+                    this.htmlBtn.addEventListener('click', () => this.exportToHTML());
+                    
+                    document.getElementById('closeTextModalBtn').addEventListener('click', () => this.closeTextModal());
+                    document.getElementById('addExpanderBtn').addEventListener('click', () => this.showExpanderModal());
+                    document.getElementById('exportExpandersBtn').addEventListener('click', () => this.exportExpanders());
+                    document.getElementById('importExpandersBtn').addEventListener('click', () => this.importExpanders());
+                    document.getElementById('cancelExpanderBtn').addEventListener('click', () => this.closeExpanderModal());
+                    document.getElementById('expanderSaveBtn').addEventListener('click', () => this.addExpander());
+                    
+                    this.editorEl.addEventListener('input', () => this.handleEditorInput());
+                    this.editorEl.addEventListener('keyup', () => this.updateStatusBar());
+                    this.editorEl.addEventListener('click', () => this.updateStatusBar());
+                }
+
+                togglePreview() {
+                    this.isPreviewActive = !this.isPreviewActive;
+                    this.previewPane.classList.toggle('active', this.isPreviewActive);
+                    if (this.isPreviewActive) this.updatePreview();
+                }
+
+                updatePreview() {
+                    const file = this.files.get(this.activeFileId);
+                    if (file && this.isPreviewActive) this.previewPane.innerHTML = marked.parse(file.content);
+                }
+
+                toggleGridMode() {
+                    this.isGridActive = !this.isGridActive;
+                    this.editorWrapper.classList.toggle('grid-mode-active', this.isGridActive);
+                    if (this.isGridActive) this.renderCsvGrid();
                 }
                 
-                this.renderTabs();
-                this.updateStatusBar();
+                renderCsvGrid() {
+                    const file = this.files.get(this.activeFileId);
+                    if (!file) return;
 
-                if ('serviceWorker' in navigator) {
-                    this.registerServiceWorker();
-                }
-            }
+                    const lines = file.content.split('\n');
+                    const data = lines.map(line => line.split(','));
 
-            registerServiceWorker() {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('Service Worker registered successfully:', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('Service Worker registration failed:', error);
+                    let tableHTML = '<thead><tr>';
+                    data[0].forEach(header => tableHTML += `<th>${header}</th>`);
+                    tableHTML += '</tr></thead><tbody>';
+
+                    data.slice(1).forEach((row, rowIndex) => {
+                        tableHTML += '<tr>';
+                        row.forEach((cell, colIndex) => {
+                            tableHTML += `<td><input type="text" class="csv-grid-input" value="${cell}" data-row="${rowIndex + 1}" data-col="${colIndex}"></td>`;
+                        });
+                        tableHTML += '</tr>';
                     });
-            }
+                    this.csvGrid.innerHTML = tableHTML + '</tbody>';
 
-            setupEventListeners() {
-                const editorEl = document.getElementById('editor');
-                
-                // Editor listeners
-                editorEl.addEventListener('input', () => this.handleEditorInput());
-                editorEl.addEventListener('keydown', (e) => this.handleKeydown(e));
-                editorEl.addEventListener('selectionchange', () => this.updateStatusBar());
-                editorEl.addEventListener('click', () => this.updateStatusBar());
-                editorEl.addEventListener('keyup', () => this.updateStatusBar());
-
-                // Global keydown
-                document.addEventListener('keydown', (e) => this.handleGlobalKeydown(e));
-
-                // Auto-save interval
-                setInterval(() => this.autoSave(), 2000);
-
-                // Main Toolbar Buttons
-                document.getElementById('new-btn').addEventListener('click', () => this.createNewFile());
-                document.getElementById('open-btn').addEventListener('click', () => this.openFile());
-                document.getElementById('save-btn').addEventListener('click', () => this.saveFile());
-                document.getElementById('save-as-btn').addEventListener('click', () => this.saveAsFile());
-                document.getElementById('preview-btn').addEventListener('click', () => this.togglePreview());
-                document.getElementById('grid-mode-btn').addEventListener('click', () => this.toggleGridMode());
-                document.getElementById('pdf-btn').addEventListener('click', () => this.exportToPDF());
-                document.getElementById('html-btn').addEventListener('click', () => this.exportToHTML());
-                document.getElementById('show-expander-modal-btn').addEventListener('click', () => this.showExpanderModal());
-                document.getElementById('export-expanders-btn').addEventListener('click', () => this.exportExpanders());
-                document.getElementById('import-expanders-btn').addEventListener('click', () => this.importExpanders());
-
-                // Sidebar Buttons
-                document.getElementById('add-expander-sidebar-btn').addEventListener('click', () => this.showExpanderModal());
-                document.getElementById('export-expanders-sidebar-btn').addEventListener('click', () => this.exportExpanders());
-                document.getElementById('import-expanders-sidebar-btn').addEventListener('click', () => this.importExpanders());
-
-                // CSV Control Buttons
-                document.getElementById('csv-add-row-btn').addEventListener('click', () => this.addCSVRow());
-                document.getElementById('csv-add-col-btn').addEventListener('click', () => this.addCSVColumn());
-                document.getElementById('csv-delete-row-btn').addEventListener('click', () => this.deleteCSVRow());
-                document.getElementById('csv-delete-col-btn').addEventListener('click', () => this.deleteCSVColumn());
-
-                // Modal
-                const expanderModal = document.getElementById('expanderModal');
-                expanderModal.addEventListener('click', (e) => {
-                    if (e.target === e.currentTarget) {
-                        this.closeExpanderModal();
-                    }
-                });
-                document.getElementById('expander-cancel-btn').addEventListener('click', () => this.closeExpanderModal());
-                document.getElementById('expander-save-btn').addEventListener('click', () => this.handleExpanderSave());
-            }
-
-            handleEditorInput() {
-                if (!this.activeFileId) return;
-                
-                const editorEl = document.getElementById('editor');
-                const content = editorEl.value;
-                const file = this.files.get(this.activeFileId);
-                
-                if (file) {
-                    file.content = content;
-                    file.modified = true;
-                    this.renderTabs();
-                    
-                    this.checkTextExpanders(editorEl);
-                    
-                    if (this.isPreviewMode && file.name.endsWith('.md')) {
-                        this.updatePreview();
-                    }
-
-                    if (this.isGridMode && file.name.endsWith('.csv')) {
-                        this.parseCSVToGrid();
-                    }
+                    this.csvGrid.querySelectorAll('.csv-grid-input').forEach(input => {
+                        input.addEventListener('input', () => this.updateCsvFromGrid());
+                        input.addEventListener('keydown', (e) => this.handleGridKeydown(e));
+                    });
                 }
-                
-                this.updateStatusBar();
-            }
 
-            checkTextExpanders(editor) {
-                const cursorPos = editor.selectionStart;
-                const text = editor.value;
-                const textBeforeCursor = text.substring(0, cursorPos);
-                
-                for (const [trigger, replacement] of this.expanders) {
-                    if (textBeforeCursor.endsWith(trigger)) {
-                        const processedReplacement = this.processExpansion(replacement);
-                        const newText = text.substring(0, cursorPos - trigger.length) + 
-                                      processedReplacement + 
-                                      text.substring(cursorPos);
-                        
-                        editor.value = newText;
-                        const newCursorPos = cursorPos - trigger.length + processedReplacement.length;
-                        editor.setSelectionRange(newCursorPos, newCursorPos);
-                        
-                        if (this.activeFileId) {
-                            this.files.get(this.activeFileId).content = newText;
-                        }
-                        
-                        break;
-                    }
-                }
-            }
-
-            processExpansion(text) {
-                const now = new Date();
-                return text
-                    .replace(/\{date\}/g, now.toLocaleDateString())
-                    .replace(/\{time\}/g, now.toLocaleTimeString())
-                    .replace(/\{datetime\}/g, now.toLocaleString())
-                    .replace(/\{timestamp\}/g, now.getTime().toString());
-            }
-
-            handleKeydown(e) {
-                if (e.key === 'Tab') {
+                handleGridKeydown(e) {
+                    const { key, target } = e;
+                    if (!['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(key)) return;
+                    
                     e.preventDefault();
-                    const editor = e.target;
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
                     
-                    // Simple indent/outdent logic
-                    if (e.shiftKey) {
-                        // This part can be more complex, for now, we just remove a tab/spaces
-                        if (editor.value.substring(start - 4, start) === '    ') {
-                            editor.value = editor.value.substring(0, start - 4) + editor.value.substring(start);
-                            editor.setSelectionRange(start - 4, start - 4);
+                    let row = parseInt(target.dataset.row, 10);
+                    let col = parseInt(target.dataset.col, 10);
+
+                    switch (key) {
+                        case 'ArrowUp': row--; break;
+                        case 'ArrowDown': row++; break;
+                        case 'ArrowLeft': col--; break;
+                        case 'ArrowRight': col++; break;
+                    }
+
+                    const nextCell = this.csvGrid.querySelector(`[data-row="${row}"][data-col="${col}"]`);
+                    if (nextCell) {
+                        nextCell.focus();
+                        nextCell.select();
+                    }
+                }
+
+                updateCsvFromGrid() {
+                    const headers = Array.from(this.csvGrid.querySelectorAll('th')).map(th => th.textContent);
+                    const rows = Array.from(this.csvGrid.querySelectorAll('tbody tr'));
+                    let newContent = headers.join(',') + '\n';
+                    
+                    rows.forEach(row => {
+                        const cells = Array.from(row.querySelectorAll('.csv-grid-input')).map(input => input.value);
+                        newContent += cells.join(',') + '\n';
+                    });
+
+                    const file = this.files.get(this.activeFileId);
+                    if (file) {
+                        file.content = newContent.trim();
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderTabs();
+                    }
+                }
+
+                updateToolbarButtons(file) {
+                    const isMarkdown = file.name.endsWith('.md');
+                    const isCsv = file.name.endsWith('.csv');
+                    this.previewBtn.style.display = isMarkdown ? 'inline-block' : 'none';
+                    this.pdfBtn.style.display = isMarkdown ? 'inline-block' : 'none';
+                    this.htmlBtn.style.display = isMarkdown ? 'inline-block' : 'none';
+                    this.gridModeBtn.style.display = isCsv ? 'inline-block' : 'none';
+                }
+
+                switchToFile(fileId) {
+                    this.activeFileId = fileId;
+                    const file = this.files.get(fileId);
+                    if (file) {
+                        this.editorEl.value = file.content;
+                        this.updateToolbarButtons(file);
+                        this.isPreviewActive = false;
+                        this.isGridActive = false;
+                        this.previewPane.classList.remove('active');
+                        this.editorWrapper.classList.remove('grid-mode-active');
+                    }
+                    this.renderTabs();
+                    this.updateStatusBar();
+                }
+                
+                createNewFile() {
+                    const fileId = `file_${this.nextFileId++}`;
+                    const file = { id: fileId, name: `untitled-${this.files.size + 1}.txt`, content: '', modified: false, isLinked: false };
+                    this.files.set(fileId, file);
+                    this.switchToFile(fileId);
+                }
+
+                async openFile() {
+                    try {
+                        const [handle] = await window.showOpenFilePicker();
+                        const fileData = await handle.getFile();
+                        const content = await fileData.text();
+                        
+                        const newFile = { id: `file_${this.nextFileId++}`, name: fileData.name, content: content, modified: false, isLinked: true };
+                        this.files.set(newFile.id, newFile);
+                        this.fileHandles.set(newFile.id, handle);
+                        this.switchToFile(newFile.id);
+                    } catch (err) {
+                        if (err.name !== 'AbortError') console.error('File open failed.', err);
+                    }
+                }
+
+                async saveFile() {
+                    const file = this.files.get(this.activeFileId);
+                    const handle = this.fileHandles.get(this.activeFileId);
+
+                    if (handle) {
+                        try {
+                            const writable = await handle.createWritable();
+                            await writable.write(file.content);
+                            await writable.close();
+                            file.modified = false;
+                            this.renderTabs();
+                            this.setStatus(`${file.name} saved.`);
+                        } catch (err) {
+                            console.error('Error saving file:', err);
+                            this.setStatus(`Error saving ${file.name}.`);
                         }
                     } else {
-                        editor.value = editor.value.substring(0, start) + '    ' + editor.value.substring(end);
-                        editor.setSelectionRange(start + 4, start + 4);
-                    }
-                    
-                    this.handleEditorInput();
-                }
-            }
-
-            handleGlobalKeydown(e) {
-                if (e.ctrlKey || e.metaKey) {
-                    switch(e.key) {
-                        case 'n': e.preventDefault(); this.createNewFile(); break;
-                        case 'o': e.preventDefault(); this.openFile(); break;
-                        case 's': e.preventDefault(); e.shiftKey ? this.saveAsFile() : this.saveFile(); break;
-                        case 'w': e.preventDefault(); this.closeActiveTab(); break;
-                        case 'p': e.preventDefault(); this.togglePreview(); break;
-                        case 'g': e.preventDefault(); this.toggleGridMode(); break;
-                        case 'e': e.preventDefault(); e.shiftKey ? this.exportExpanders() : this.showExpanderModal(); break;
-                        case 'i': if (e.shiftKey) { e.preventDefault(); this.importExpanders(); } break;
-                        case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                            e.preventDefault();
-                            this.switchToTab(parseInt(e.key) - 1);
-                            break;
+                        this.saveAsFile();
                     }
                 }
-            }
-            
-            createNewFile() {
-                const fileId = `file_${this.nextFileId++}`;
-                const fileName = `untitled-${this.files.size + 1}.txt`;
                 
-                this.files.set(fileId, {
-                    id: fileId,
-                    name: fileName,
-                    content: '',
-                    modified: false,
-                    isLinkedToDevice: false,
-                    originalPath: null
-                });
-                
-                this.switchToFile(fileId);
-                this.renderTabs();
-                this.updateStatusBar();
-                
-                const file = this.files.get(fileId);
-                if (file) {
-                    this.updateToolbarButtons(file);
-                }
-            }
-
-            async openFile() {
-                if (!('showOpenFilePicker' in window)) {
-                    const input = document.createElement('input');
-                    input.type = 'file';
-                    input.onchange = (e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                            const reader = new FileReader();
-                            reader.onload = (e) => this.createFileFromContent(file.name, e.target.result);
-                            reader.readAsText(file);
-                        }
-                    };
-                    input.click();
-                    return;
-                }
-
-                try {
-                    const [fileHandle] = await window.showOpenFilePicker({
-                        types: [{ description: 'Text files', accept: { 'text/*': ['.txt', '.md', '.csv', '.js', '.html', '.css', '.json'] }}]
-                    });
-                    
-                    const file = await fileHandle.getFile();
-                    const content = await file.text();
-                    const fileId = this.createFileFromContent(file.name, content);
-                    
-                    this.fileHandles.set(fileId, fileHandle);
-                    const fileData = this.files.get(fileId);
-                    if (fileData) {
-                        fileData.isLinkedToDevice = true;
-                        fileData.originalPath = file.name;
-                    }
-                    this.setStatus(`Opened ${file.name}`);
-                } catch (error) {
-                    if (error.name !== 'AbortError') console.error('Error opening file:', error);
-                }
-            }
-
-            createFileFromContent(fileName, content) {
-                const fileId = `file_${this.nextFileId++}`;
-                this.files.set(fileId, { id: fileId, name: fileName, content, modified: false, isLinkedToDevice: false, originalPath: null });
-                this.switchToFile(fileId);
-                this.renderTabs();
-                this.updateStatusBar();
-                const file = this.files.get(fileId);
-                if (file) this.updateToolbarButtons(file);
-                return fileId;
-            }
-
-            async saveFile() {
-                if (!this.activeFileId) return;
-                
-                const file = this.files.get(this.activeFileId);
-                const fileHandle = this.fileHandles.get(this.activeFileId);
-                
-                if (fileHandle) {
-                    try {
-                        const writable = await fileHandle.createWritable();
-                        await writable.write(file.content);
-                        await writable.close();
-                        
-                        file.modified = false;
-                        this.renderTabs();
-                        this.setStatus(`Saved ${file.originalPath || file.name}`);
-                    } catch (error) {
-                        console.error('Error saving file:', error);
-                        this.setStatus('Error saving file');
-                    }
-                } else {
-                    this.saveAsFile();
-                }
-            }
-
-            async saveAsFile() {
-                if (!this.activeFileId) return;
-                const file = this.files.get(this.activeFileId);
-                
-                if (!('showSaveFilePicker' in window)) {
+                saveAsFile() {
+                    const file = this.files.get(this.activeFileId);
+                    if (!file) return;
                     const blob = new Blob([file.content], { type: 'text/plain' });
                     const a = document.createElement('a');
                     a.href = URL.createObjectURL(blob);
                     a.download = file.name;
                     a.click();
                     URL.revokeObjectURL(a.href);
-                    return;
-                }
-
-                try {
-                    const fileHandle = await window.showSaveFilePicker({
-                        suggestedName: file.name,
-                        types: [{ description: 'Text files', accept: { 'text/plain': ['.txt'], 'text/markdown': ['.md'], 'text/csv': ['.csv'] }}]
-                    });
-                    
-                    const writable = await fileHandle.createWritable();
-                    await writable.write(file.content);
-                    await writable.close();
-                    
-                    this.fileHandles.set(this.activeFileId, fileHandle);
-                    file.name = fileHandle.name;
                     file.modified = false;
-                    file.isLinkedToDevice = true;
-                    file.originalPath = fileHandle.name;
-                    this.renderTabs();
-                    this.setStatus(`Saved as ${fileHandle.name}`);
-                } catch (error) {
-                    if (error.name !== 'AbortError') console.error('Error saving file:', error);
-                }
-            }
-
-            switchToFile(fileId) {
-                this.activeFileId = fileId;
-                const file = this.files.get(fileId);
-                const editor = document.getElementById('editor');
-                
-                if (file) {
-                    editor.value = file.content;
-                    this.updateToolbarButtons(file);
-                    
-                    this.isPreviewMode = file.name.endsWith('.md') && this.isPreviewMode;
-                    this.isGridMode = file.name.endsWith('.csv') && this.isGridMode;
-
-                    document.getElementById('previewPane').classList.toggle('active', this.isPreviewMode);
-                    if (this.isPreviewMode) this.updatePreview();
-
-                    if (this.isGridMode) this.showGridMode();
-                    else this.hideGridMode();
-                }
-                
-                this.renderTabs();
-                this.updateStatusBar();
-                editor.focus();
-            }
-
-            updateToolbarButtons(file) {
-                const isMd = file.name.endsWith('.md');
-                const isCsv = file.name.endsWith('.csv');
-                
-                document.getElementById('preview-btn').style.display = isMd ? 'inline-block' : 'none';
-                document.getElementById('pdf-btn').style.display = isMd ? 'inline-block' : 'none';
-                document.getElementById('html-btn').style.display = isMd ? 'inline-block' : 'none';
-                document.getElementById('grid-mode-btn').style.display = isCsv ? 'inline-block' : 'none';
-            }
-            
-            switchToTab(index) {
-                const fileIds = Array.from(this.files.keys());
-                if (index >= 0 && index < fileIds.length) {
-                    this.switchToFile(fileIds[index]);
-                }
-            }
-
-            closeTab(fileIdToClose) {
-                this.files.delete(fileIdToClose);
-                this.fileHandles.delete(fileIdToClose);
-                
-                if (this.activeFileId === fileIdToClose) {
-                    const remainingFiles = Array.from(this.files.keys());
-                    if (remainingFiles.length > 0) {
-                        this.switchToFile(remainingFiles[0]);
-                    } else {
-                        this.activeFileId = null;
-                        document.getElementById('editor').value = '';
-                        this.createNewFile();
-                    }
-                }
-                
-                this.renderTabs();
-                this.updateStatusBar();
-            }
-
-            closeActiveTab() {
-                if (this.activeFileId) this.closeTab(this.activeFileId);
-            }
-
-            renderTabs() {
-                const container = document.getElementById('tabsContainer');
-                container.innerHTML = '';
-                
-                this.files.forEach(file => {
-                    const tab = document.createElement('div');
-                    tab.className = `tab ${file.id === this.activeFileId ? 'active' : ''} ${file.modified ? 'modified' : ''}`;
-                    tab.innerHTML = `<span class="tab-name">${file.name}</span><span class="tab-close">&times;</span>`;
-                    
-                    tab.addEventListener('click', (e) => {
-                        if (e.target.classList.contains('tab-close')) {
-                            this.closeTab(file.id);
-                        } else {
-                            this.switchToFile(file.id);
-                        }
-                    });
-                    container.appendChild(tab);
-                });
-            }
-
-            togglePreview() {
-                if (!this.activeFileId || !this.files.get(this.activeFileId).name.endsWith('.md')) {
-                    this.setStatus('Preview only for Markdown files');
-                    return;
-                }
-                this.isPreviewMode = !this.isPreviewMode;
-                document.getElementById('previewPane').classList.toggle('active', this.isPreviewMode);
-                if (this.isPreviewMode) this.updatePreview();
-            }
-
-            toggleGridMode() {
-                if (!this.activeFileId || !this.files.get(this.activeFileId).name.endsWith('.csv')) {
-                    this.setStatus('Grid mode only for CSV files');
-                    return;
-                }
-                this.isGridMode = !this.isGridMode;
-                this.isGridMode ? this.showGridMode() : this.hideGridMode();
-            }
-
-            showGridMode() {
-                document.querySelector('.editor-wrapper').classList.add('grid-mode-active');
-                document.getElementById('csvControls').style.display = 'flex';
-                document.getElementById('grid-mode-btn').textContent = 'Text';
-                this.parseCSVToGrid();
-                document.getElementById('previewPane').classList.remove('active');
-            }
-
-            hideGridMode() {
-                document.querySelector('.editor-wrapper').classList.remove('grid-mode-active');
-                document.getElementById('csvControls').style.display = 'none';
-                document.getElementById('grid-mode-btn').textContent = 'Grid';
-                this.updateCSVFromGrid();
-            }
-
-            parseCSVToGrid() {
-                const file = this.files.get(this.activeFileId);
-                if (!file) return;
-                
-                const lines = file.content.split('\n').filter(line => line.trim());
-                this.csvData = lines.length ? lines.map(line => this.parseCSVLine(line)) : [['']];
-                
-                const maxCols = Math.max(...this.csvData.map(row => row.length), 1);
-                this.csvData.forEach(row => { while (row.length < maxCols) row.push(''); });
-                
-                this.renderCSVGrid();
-            }
-
-            renderCSVGrid() {
-                const head = document.getElementById('csvGridHead');
-                const body = document.getElementById('csvGridBody');
-                head.innerHTML = '';
-                body.innerHTML = '';
-                if (this.csvData.length === 0) return;
-
-                const headerRow = document.createElement('tr');
-                for (let col = 0; col < this.csvData[0].length; col++) {
-                    const th = document.createElement('th');
-                    th.textContent = this.getColumnName(col);
-                    headerRow.appendChild(th);
-                }
-                head.appendChild(headerRow);
-
-                this.csvData.forEach((rowData, rowIndex) => {
-                    const tr = document.createElement('tr');
-                    rowData.forEach((cellData, colIndex) => {
-                        const td = document.createElement('td');
-                        const input = document.createElement('input');
-                        input.type = 'text';
-                        input.className = 'csv-grid-input';
-                        input.value = cellData;
-                        input.dataset.row = rowIndex;
-                        input.dataset.col = colIndex;
-                        input.addEventListener('input', (e) => this.updateCSVCell(rowIndex, colIndex, e.target.value));
-                        input.addEventListener('keydown', (e) => this.handleGridKeydown(e, rowIndex, colIndex));
-                        input.addEventListener('focus', () => { this.selectedRow = rowIndex; this.selectedCol = colIndex; });
-                        td.appendChild(input);
-                        tr.appendChild(td);
-                    });
-                    body.appendChild(tr);
-                });
-            }
-
-            getColumnName = (index) => {
-                let name = '';
-                while (index >= 0) { name = String.fromCharCode(65 + (index % 26)) + name; index = Math.floor(index / 26) - 1; }
-                return name;
-            }
-
-            handleGridKeydown(e, row, col) {
-                switch (e.key) {
-                    case 'Tab': e.preventDefault(); this.navigateGrid(row, col + (e.shiftKey ? -1 : 1)); break;
-                    case 'Enter': e.preventDefault(); if (row === this.csvData.length - 1) this.addCSVRow(); this.navigateGrid(row + 1, col); break;
-                    case 'ArrowUp': e.preventDefault(); this.navigateGrid(row - 1, col); break;
-                    case 'ArrowDown': e.preventDefault(); this.navigateGrid(row + 1, col); break;
-                    case 'ArrowLeft': if (e.target.selectionStart === 0) { e.preventDefault(); this.navigateGrid(row, col - 1); } break;
-                    case 'ArrowRight': if (e.target.selectionStart === e.target.value.length) { e.preventDefault(); this.navigateGrid(row, col + 1); } break;
-                }
-            }
-
-            navigateGrid(row, col) {
-                row = Math.max(0, Math.min(row, this.csvData.length - 1));
-                col = Math.max(0, Math.min(col, this.csvData[0].length - 1));
-                const input = document.querySelector(`.csv-grid-input[data-row="${row}"][data-col="${col}"]`);
-                if (input) { input.focus(); input.select(); }
-            }
-
-            updateCSVCell(row, col, value) {
-                if (this.csvData[row]) {
-                    this.csvData[row][col] = value;
-                    this.updateCSVFromGrid();
-                }
-            }
-
-            updateCSVFromGrid() {
-                if (!this.activeFileId || !this.isGridMode) return;
-                const csvContent = this.csvData.map(row => row.map(cell => this.escapeCSVCell(cell)).join(',')).join('\n');
-                const file = this.files.get(this.activeFileId);
-                if (file) {
-                    file.content = csvContent;
-                    file.modified = true;
-                    document.getElementById('editor').value = csvContent;
                     this.renderTabs();
                 }
-            }
-
-            escapeCSVCell = (cell) => (/[",\n]/.test(cell)) ? `"${cell.replace(/"/g, '""')}"` : cell;
-
-            addCSVRow() {
-                if (!this.csvData.length) return;
-                this.csvData.push(new Array(this.csvData[0].length).fill(''));
-                this.renderCSVGrid();
-                this.updateCSVFromGrid();
-                setTimeout(() => this.navigateGrid(this.csvData.length - 1, 0), 50);
-            }
-
-            addCSVColumn() {
-                this.csvData.forEach(row => row.push(''));
-                this.renderCSVGrid();
-                this.updateCSVFromGrid();
-            }
-
-            deleteCSVRow() {
-                if (this.selectedRow >= 0 && this.csvData.length > 1) {
-                    this.csvData.splice(this.selectedRow, 1);
-                    this.selectedRow = Math.min(this.selectedRow, this.csvData.length - 1);
-                    this.renderCSVGrid();
-                    this.updateCSVFromGrid();
-                    setTimeout(() => this.navigateGrid(this.selectedRow, this.selectedCol), 50);
-                }
-            }
-
-            deleteCSVColumn() {
-                if (this.selectedCol >= 0 && this.csvData[0] && this.csvData[0].length > 1) {
-                    this.csvData.forEach(row => row.splice(this.selectedCol, 1));
-                    this.selectedCol = Math.min(this.selectedCol, this.csvData[0].length - 1);
-                    this.renderCSVGrid();
-                    this.updateCSVFromGrid();
-                    setTimeout(() => this.navigateGrid(this.selectedRow, this.selectedCol), 50);
-                }
-            }
-            
-            updatePreview() {
-                const file = this.files.get(this.activeFileId);
-                if (file && file.name.endsWith('.md')) {
-                    document.getElementById('previewPane').innerHTML = marked.parse(file.content);
-                }
-            }
-            
-            parseCSVLine(line) {
-                const result = [];
-                let current = '';
-                let inQuotes = false;
-                for (let i = 0; i < line.length; i++) {
-                    const char = line[i];
-                    if (char === '"' && line[i + 1] === '"') { current += '"'; i++; } 
-                    else if (char === '"') { inQuotes = !inQuotes; }
-                    else if (char === ',' && !inQuotes) { result.push(current.trim()); current = ''; }
-                    else { current += char; }
-                }
-                result.push(current.trim());
-                return result;
-            }
-
-            escapeHtml = (text) => { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
-
-            exportToPDF() {
-                const file = this.files.get(this.activeFileId);
-                if (!file || !file.name.endsWith('.md')) { this.setStatus('PDF export only for Markdown'); return; }
-                const printWindow = window.open('', '_blank');
-                printWindow.document.write(`<!DOCTYPE html><html><head><title>${file.name}</title><style>body{font-family:sans-serif;line-height:1.6;margin:40px;}table{border-collapse:collapse;width:100%}th,td{border:1px solid #ddd;padding:8px}</style></head><body>${marked.parse(file.content)}</body></html>`);
-                printWindow.document.close();
-                setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
-            }
-
-            exportToHTML() {
-                const file = this.files.get(this.activeFileId);
-                if (!file || !file.name.endsWith('.md')) { this.setStatus('HTML export only for Markdown'); return; }
-                const htmlContent = `<!DOCTYPE html><html><head><title>${file.name}</title></head><body>${marked.parse(file.content)}</body></html>`;
-                const blob = new Blob([htmlContent], { type: 'text/html' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = file.name.replace(/\.[^/.]+$/, '') + '.html';
-                a.click();
-                URL.revokeObjectURL(a.href);
-            }
-
-            showExpanderModal() {
-                this.currentEditingExpander = null;
-                document.getElementById('expanderModalTitle').textContent = 'Add Text Expander';
-                document.getElementById('expander-save-btn').textContent = 'Add';
-                document.getElementById('expanderModal').style.display = 'block';
-                document.getElementById('expanderTrigger').focus();
-            }
-
-            showEditExpanderModal(trigger) {
-                this.currentEditingExpander = trigger;
-                document.getElementById('expanderModalTitle').textContent = 'Edit Text Expander';
-                document.getElementById('expander-save-btn').textContent = 'Update';
-                document.getElementById('expanderTrigger').value = trigger;
-                document.getElementById('expanderText').value = this.expanders.get(trigger);
-                document.getElementById('expanderModal').style.display = 'block';
-                document.getElementById('expanderTrigger').focus();
-            }
-
-            closeExpanderModal() {
-                document.getElementById('expanderModal').style.display = 'none';
-                document.getElementById('expanderTrigger').value = '';
-                document.getElementById('expanderText').value = '';
-                this.currentEditingExpander = null;
-            }
-
-            handleExpanderSave() {
-                if (this.currentEditingExpander) {
-                    this.updateExpander();
-                } else {
-                    this.addExpander();
-                }
-            }
-
-            addExpander() {
-                const trigger = document.getElementById('expanderTrigger').value.trim();
-                const text = document.getElementById('expanderText').value;
-                if (!trigger || !text) { alert('Please fill in both trigger and text fields'); return; }
-                if (this.expanders.has(trigger)) { alert('Trigger already exists.'); return; }
                 
-                this.expanders.set(trigger, text);
-                this.saveExpanders();
-                this.updateExpandersList();
-                this.closeExpanderModal();
-                this.setStatus(`Expander added: ${trigger}`);
-            }
-
-            updateExpander() {
-                const newTrigger = document.getElementById('expanderTrigger').value.trim();
-                const newText = document.getElementById('expanderText').value;
-                if (!newTrigger || !newText) { alert('Please fill in both trigger and text fields'); return; }
-                if (newTrigger !== this.currentEditingExpander && this.expanders.has(newTrigger)) {
-                    alert('A text expander with this trigger already exists.'); return;
-                }
-                
-                if (newTrigger !== this.currentEditingExpander) this.expanders.delete(this.currentEditingExpander);
-                this.expanders.set(newTrigger, newText);
-                this.saveExpanders();
-                this.updateExpandersList();
-                this.closeExpanderModal();
-                this.setStatus(`Expander updated: ${newTrigger}`);
-            }
-
-            exportExpanders() {
-                if (this.expanders.size === 0) { alert('No text expanders to export'); return; }
-                let exportContent = '# Editr Text Expanders Export\n';
-                this.expanders.forEach((text, trigger) => {
-                    exportContent += `${trigger}|${text.replace(/\|/g, '\\|').replace(/\n/g, '\\n')}\n`;
-                });
-                const blob = new Blob([exportContent], { type: 'text/plain' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `editr-expanders-${new Date().toISOString().split('T')[0]}.txt`;
-                a.click();
-                URL.revokeObjectURL(a.href);
-                this.setStatus(`Exported ${this.expanders.size} expanders`);
-            }
-
-            async importExpanders() {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = '.txt';
-                input.onchange = async (e) => {
-                    if (!e.target.files[0]) return;
-                    try {
-                        this.parseAndImportExpanders(await e.target.files[0].text());
-                    } catch (error) { alert('Error reading file.'); console.error(error); }
-                };
-                input.click();
-            }
-
-            parseAndImportExpanders(content) {
-                let count = 0;
-                content.split('\n').forEach(line => {
-                    line = line.trim();
-                    if (!line || line.startsWith('#')) return;
-                    const parts = line.split(/(?<!\\)\|/); // Split on pipe unless escaped
-                    if (parts.length >= 2) {
-                        const trigger = parts[0].trim();
-                        const text = parts.slice(1).join('|').replace(/\\n/g, '\n').replace(/\\\|/g, '|');
-                        if (trigger && !this.expanders.has(trigger)) {
-                            this.expanders.set(trigger, text);
-                            count++;
-                        }
-                    }
-                });
-                this.saveExpanders();
-                this.updateExpandersList();
-                this.setStatus(`Import complete: ${count} added`);
-            }
-            
-            deleteExpander(trigger) {
-                if (confirm(`Delete expander "${trigger}"?`)) {
-                    this.expanders.delete(trigger);
-                    this.saveExpanders();
-                    this.updateExpandersList();
-                    this.setStatus(`Expander deleted: ${trigger}`);
-                }
-            }
-
-            updateExpandersList() {
-                const container = document.getElementById('expandersList');
-                container.innerHTML = '';
-                this.expanders.forEach((text, trigger) => {
-                    const item = document.createElement('div');
-                    item.className = 'expander-item';
-                    item.innerHTML = `
-                        <div>
-                            <div class="expander-trigger">${this.escapeHtml(trigger)}</div>
-                            <div style="font-size: 10px; color: #888;">${this.escapeHtml(text.substring(0, 30))}${text.length > 30 ? '...' : ''}</div>
-                        </div>
-                        <div class="expander-actions">
-                            <span class="edit-expander" title="Edit">✎</span>
-                            <span class="delete-expander" title="Delete">×</span>
-                        </div>`;
-                    item.querySelector('.edit-expander').addEventListener('click', () => this.showEditExpanderModal(trigger));
-                    item.querySelector('.delete-expander').addEventListener('click', () => this.deleteExpander(trigger));
-                    container.appendChild(item);
-                });
-            }
-
-            loadExpanders() {
-                try {
-                    const saved = localStorage.getItem('editr_expanders');
-                    if (saved) this.expanders = new Map(JSON.parse(saved));
-                } catch (error) { console.error('Error loading expanders:', error); }
-                
-                if (this.expanders.size === 0) {
-                    this.expanders.set(':date', '{date}');
-                    this.expanders.set(':sig', 'Best regards,\n');
-                    this.saveExpanders();
-                }
-            }
-
-            saveExpanders() {
-                try {
-                    localStorage.setItem('editr_expanders', JSON.stringify(Array.from(this.expanders.entries())));
-                } catch (error) { console.error('Error saving expanders:', error); }
-            }
-
-            autoSave() { this.saveToStorage(); }
-
-            saveToStorage() {
-                try {
-                    const data = {
-                        files: Array.from(this.files.entries()),
-                        activeFileId: this.activeFileId,
-                        nextFileId: this.nextFileId
-                    };
-                    localStorage.setItem('editr_data', JSON.stringify(data));
-                } catch (error) { console.error('Error saving to storage:', error); }
-            }
-
-            loadFromStorage() {
-                try {
-                    const saved = localStorage.getItem('editr_data');
-                    if (saved) {
-                        const data = JSON.parse(saved);
-                        this.files = new Map(data.files || []);
-                        this.activeFileId = data.activeFileId;
-                        this.nextFileId = data.nextFileId || 1;
-                    }
-                } catch (error) { console.error('Error loading from storage:', error); }
-            }
-
-            updateStatusBar() {
-                const editor = document.getElementById('editor');
-                const statusText = document.getElementById('statusText');
-                const cursorPosition = document.getElementById('cursorPosition');
-                
-                if (this.activeFileId) {
+                handleEditorInput() {
                     const file = this.files.get(this.activeFileId);
-                    statusText.textContent = `${file.name}${file.modified ? ' (modified)' : ''}${file.isLinkedToDevice ? ' 📁' : ''}`;
-                } else {
-                    statusText.textContent = 'Ready';
+                    if (file) {
+                        file.content = this.editorEl.value;
+                        file.modified = true;
+                        this.renderTabs();
+                        this.checkTextExpanders(); 
+                        if (this.isPreviewActive) this.updatePreview();
+                        if (this.isGridActive) this.updateCsvFromGrid();
+                    }
+                    this.updateStatusBar();
+                }
+
+                checkTextExpanders() {
+                    const cursorPos = this.editorEl.selectionStart;
+                    const textBeforeCursor = this.editorEl.value.substring(0, cursorPos);
+                    for (const [trigger, replacement] of this.expanders) {
+                        if (trigger && textBeforeCursor.endsWith(trigger)) {
+                            const expandedText = this.processExpansion(replacement);
+                            this.editorEl.value = this.editorEl.value.substring(0, cursorPos - trigger.length) + expandedText + this.editorEl.value.substring(cursorPos);
+                            this.editorEl.setSelectionRange(cursorPos - trigger.length + expandedText.length, cursorPos - trigger.length + expandedText.length);
+                            this.handleEditorInput();
+                            break;
+                        }
+                    }
+                }
+
+                processExpansion(text) {
+                    const now = new Date();
+                    return text.replace(/\{date\}/g, now.toLocaleDateString()).replace(/\{time\}/g, now.toLocaleTimeString()).replace(/\{datetime\}/g, now.toLocaleString()).replace(/\{timestamp\}/g, Date.now().toString());
                 }
                 
-                const cursorPos = editor.selectionStart;
-                const lines = editor.value.substring(0, cursorPos).split('\n');
-                cursorPosition.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
-            }
+                renderTabs() {
+                    this.tabsContainerEl.innerHTML = '';
+                    this.files.forEach(file => {
+                        const modifiedIndicator = file.modified ? '*' : '';
+                        const linkedIndicator = file.isLinked ? ' 💾' : '';
+                        const tab = document.createElement('div');
+                        tab.className = `tab ${file.id === this.activeFileId ? 'active' : ''}`;
+                        tab.textContent = file.name + modifiedIndicator + linkedIndicator;
+                        tab.title = file.isLinked ? 'Saved directly to your computer' : 'Not saved to a permanent file';
+                        tab.addEventListener('click', () => this.switchToFile(file.id));
+                        this.tabsContainerEl.appendChild(tab);
+                    });
+                }
 
-            setStatus(message) {
-                document.getElementById('statusText').textContent = message;
-                setTimeout(() => this.updateStatusBar(), 3000);
-            }
-        }
+                updateStatusBar() {
+                    const file = this.files.get(this.activeFileId);
+                    this.statusTextEl.textContent = file ? file.name : 'Ready';
+                    const pos = this.editorEl.selectionStart;
+                    const text = this.editorEl.value.substring(0, pos);
+                    const lines = text.split('\n');
+                    this.cursorPositionEl.textContent = `Ln ${lines.length}, Col ${lines[lines.length-1].length + 1}`;
+                }
 
-        window.addEventListener('DOMContentLoaded', () => {
+                setStatus(message) {
+                    const originalStatus = this.statusTextEl.textContent;
+                    this.statusTextEl.textContent = message;
+                    setTimeout(() => { this.updateStatusBar(); }, 3000);
+                }
+                
+                exportToPDF() {
+                    const file = this.files.get(this.activeFileId);
+                    if (!file || !file.name.endsWith('.md')) return;
+                    const printWindow = window.open('', '_blank');
+                    printWindow.document.write(`
+                        <html><head><title>Print</title>
+                        <style> @page { size: auto; margin: 20mm; } body { margin: 0; } </style>
+                        </head><body>${marked.parse(file.content)}</body></html>
+                    `);
+                    printWindow.document.close();
+                    printWindow.focus();
+                    setTimeout(() => { printWindow.print(); printWindow.close(); }, 250);
+                }
+
+                exportToHTML() {
+                    const file = this.files.get(this.activeFileId);
+                    if (!file || !file.name.endsWith('.md')) return;
+                    const htmlContent = '<!DOCTYPE html><html><head><title>' + file.name + '</title></head><body>' + marked.parse(file.content) + '</body></html>';
+                    const blob = new Blob([htmlContent], { type: 'text/html' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = file.name.replace('.md', '.html');
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+
+                showTextModal() { this.updateExpandersList(); this.textModal.style.display = 'block'; }
+                closeTextModal() { this.textModal.style.display = 'none'; }
+                showExpanderModal() { this.expanderModal.style.display = 'block'; }
+                closeExpanderModal() { this.expanderModal.style.display = 'none'; }
+                
+                addExpander() {
+                    const trigger = document.getElementById('expanderTrigger').value.trim();
+                    const text = document.getElementById('expanderText').value;
+                    if (trigger && text) {
+                        this.expanders.set(trigger, text);
+                        this.saveExpanders();
+                        this.closeExpanderModal();
+                        this.updateExpandersList();
+                    } else {
+                        this.setStatus("Trigger and text cannot be empty.");
+                    }
+                }
+                
+                updateExpandersList() {
+                    const listEl = document.getElementById('expandersList');
+                    listEl.innerHTML = '';
+                    this.expanders.forEach((text, trigger) => {
+                        const item = document.createElement('div');
+                        item.className = 'expander-item';
+                        const displayText = text.replace(/\n/g, ' ').length > 25 ? text.replace(/\n/g, ' ').substring(0, 25) + '...' : text.replace(/\n/g, ' ');
+                        item.innerHTML = `<span><b>${trigger}</b> → ${displayText}</span><span class="delete-expander">Delete</span>`;
+                        item.querySelector('.delete-expander').addEventListener('click', () => { this.expanders.delete(trigger); this.saveExpanders(); this.updateExpandersList(); });
+                        listEl.appendChild(item);
+                    });
+                }
+                
+                exportExpanders() {
+                    if (this.expanders.size === 0) {
+                        this.setStatus('No expansions to export.');
+                        return;
+                    }
+                    const lines = [];
+                    this.expanders.forEach((text, trigger) => {
+                        // Escape newlines so each expansion is on a single line in the file
+                        const escapedText = text.replace(/\n/g, '\\n');
+                        lines.push(`${trigger}=${escapedText}`);
+                    });
+                    const data = lines.join('\n');
+                    const blob = new Blob([data], { type: 'text/plain' });
+                    const a = document.createElement('a');
+                    a.href = URL.createObjectURL(blob);
+                    a.download = 'editr-expansions.txt';
+                    a.click();
+                    URL.revokeObjectURL(a.href);
+                }
+
+                importExpanders() {
+                    const input = document.createElement('input');
+                    input.type = 'file';
+                    input.accept = '.txt';
+                    input.onchange = e => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        const reader = new FileReader();
+                        reader.onload = e => {
+                            try {
+                                const newExpanders = new Map();
+                                const lines = e.target.result.split('\n');
+                                lines.forEach(line => {
+                                    if (line.trim() === '') return;
+                                    const separatorIndex = line.indexOf('=');
+                                    if (separatorIndex === -1) return;
+                                    
+                                    const trigger = line.substring(0, separatorIndex);
+                                    const escapedText = line.substring(separatorIndex + 1);
+                                    const text = escapedText.replace(/\\n/g, '\n'); // Un-escape newlines
+                                    
+                                    if (trigger) {
+                                        newExpanders.set(trigger, text);
+                                    }
+                                });
+                                this.expanders = newExpanders;
+                                this.saveExpanders();
+                                this.updateExpandersList();
+                                this.setStatus('Expansions imported successfully.');
+                            } catch (err) {
+                                this.setStatus('Error: Invalid import file format.');
+                                console.error('Import failed:', err);
+                            }
+                        };
+                        reader.readAsText(file);
+                    };
+                    input.click();
+                }
+
+                saveExpanders() { localStorage.setItem('editr_expanders', JSON.stringify(Array.from(this.expanders.entries()))); }
+                loadExpanders() {
+                    const data = localStorage.getItem('editr_expanders');
+                    if (data) {
+                        try {
+                            this.expanders = new Map(JSON.parse(data));
+                        } catch {
+                            this.expanders = new Map(); // Handle corrupted data
+                        }
+                    }
+                }
+            }
             new TextEditor();
         });
     </script>
