@@ -358,6 +358,7 @@
                         this.currentGridRow = 0;
                         this.currentGridCol = 0;
                         this.isInitializingGrid = false;
+                        this.isSwitchingFile = false;
 
                         this.editorEl = document.getElementById("editor");
                         this.tabsContainerEl =
@@ -808,6 +809,7 @@
                     }
 
                     switchToFile(fileId) {
+                        this.isSwitchingFile = true;
                         this.activeFileId = fileId;
                         const file = this.files.get(fileId);
                         if (file) {
@@ -822,6 +824,7 @@
                         }
                         this.renderTabs();
                         this.updateStatusBar();
+                        this.isSwitchingFile = false;
                     }
 
                     createNewFile() {
@@ -860,6 +863,7 @@
                     }
 
                     handleEditorInput() {
+                        if (this.isSwitchingFile) return;
                         const file = this.files.get(this.activeFileId);
                         if (file) {
                             file.content = this.editorEl.value;
