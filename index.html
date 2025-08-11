@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Editr</title>
+        <title>editr</title>
         <link
             rel="icon"
             href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDAwMDAwIi8+Cjx0ZXh0IHg9IjE2IiB5PSIyMiIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmb250LXdlaWdodD0iNDAwIiBmaWxsPSIjZmZmZmZmIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIj5lPC90ZXh0Pgo8L3N2Zz4K"
@@ -268,7 +268,7 @@
     </head>
     <body>
         <div class="header">
-            <div class="logo">Editr</div>
+            <div class="logo">editr</div>
             <div class="toolbar">
                 <button class="btn" id="newFileBtn">New</button>
                 <button class="btn" id="openFileBtn">Open</button>
@@ -357,6 +357,7 @@
                         this.isGridActive = false;
                         this.currentGridRow = 0;
                         this.currentGridCol = 0;
+                        this.isInitializingGrid = false;
 
                         this.editorEl = document.getElementById("editor");
                         this.tabsContainerEl =
@@ -520,7 +521,11 @@
                             "grid-mode-active",
                             this.isGridActive,
                         );
-                        if (this.isGridActive) this.renderCsvGrid();
+                        if (this.isGridActive) {
+                            this.isInitializingGrid = true;
+                            this.renderCsvGrid();
+                            this.isInitializingGrid = false;
+                        }
                     }
 
                     renderCsvGrid() {
@@ -560,9 +565,11 @@
                             this.csvGrid.querySelectorAll(".csv-grid-input");
 
                         inputs.forEach((input) => {
-                            input.addEventListener("input", (e) =>
-                                this.updateCsvFromGrid(e),
-                            );
+                            input.addEventListener("input", (e) => {
+                                if (!this.isInitializingGrid) {
+                                    this.updateCsvFromGrid(e);
+                                }
+                            });
                             input.addEventListener("focus", (e) => {
                                 this.currentGridRow = parseInt(
                                     e.target.dataset.row,
@@ -860,7 +867,11 @@
                             this.renderTabs();
                             this.checkTextExpanders();
                             if (this.isPreviewActive) this.updatePreview();
-                            if (this.isGridActive) this.renderCsvGrid();
+                            if (this.isGridActive && !this.isInitializingGrid) {
+                                this.isInitializingGrid = true;
+                                this.renderCsvGrid();
+                                this.isInitializingGrid = false;
+                            }
                         }
                         this.updateStatusBar();
                     }
