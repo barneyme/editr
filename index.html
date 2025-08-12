@@ -78,6 +78,24 @@
             .editor-wrapper {
                 flex: 1;
                 position: relative;
+                display: flex;
+            }
+            .line-numbers {
+                background: #2d2d30;
+                color: #858585;
+                font-family: "Courier New", Monaco, "Lucida Console", monospace;
+                font-size: 14px;
+                padding: 16px 4px 16px 8px;
+                border-right: 1px solid #3e3e42;
+                text-align: right;
+                user-select: none;
+                min-width: 35px;
+                line-height: 1.5;
+                white-space: pre;
+            }
+            .editor-content {
+                flex: 1;
+                position: relative;
             }
             .tabs-container {
                 background: #2d2d30;
@@ -125,6 +143,7 @@
                 padding: 16px;
                 resize: none;
                 outline: none;
+                line-height: 1.5;
             }
             .preview-pane {
                 width: 50%;
@@ -335,23 +354,26 @@
                 <div class="tabs-container" id="tabsContainer"></div>
                 <div class="editor-container" id="editorContainer">
                     <div class="editor-wrapper" id="editorWrapper">
-                        <textarea class="editor" id="editor"></textarea>
-                        <div class="csv-grid-container" id="csvGridContainer">
-                            <div class="csv-grid-controls" id="csvGridControls">
-                                <button id="addRowBtn">
-                                    <span>➕</span>Add Row
-                                </button>
-                                <button id="addColBtn">
-                                    <span>➕</span>Add Column
-                                </button>
-                                <button id="deleteRowBtn">
-                                    <span>➖</span>Delete Row
-                                </button>
-                                <button id="deleteColBtn">
-                                    <span>➖</span>Delete Column
-                                </button>
+                        <div class="line-numbers" id="lineNumbers">1</div>
+                        <div class="editor-content">
+                            <textarea class="editor" id="editor"></textarea>
+                            <div class="csv-grid-container" id="csvGridContainer">
+                                <div class="csv-grid-controls" id="csvGridControls">
+                                    <button id="addRowBtn">
+                                        <span>➕</span>Add Row
+                                    </button>
+                                    <button id="addColBtn">
+                                        <span>➕</span>Add Column
+                                    </button>
+                                    <button id="deleteRowBtn">
+                                        <span>➖</span>Delete Row
+                                    </button>
+                                    <button id="deleteColBtn">
+                                        <span>➖</span>Delete Column
+                                    </button>
+                                </div>
+                                <table class="csv-grid" id="csvGrid"></table>
                             </div>
-                            <table class="csv-grid" id="csvGrid"></table>
                         </div>
                     </div>
                     <div class="preview-pane" id="previewPane"></div>
@@ -423,6 +445,7 @@
                         this.isSwitchingFile = false; // Prevents save prompt on open
 
                         this.editorEl = document.getElementById("editor");
+                        this.lineNumbersEl = document.getElementById("lineNumbers");
                         this.tabsContainerEl =
                             document.getElementById("tabsContainer");
                         this.statusTextEl =
@@ -563,6 +586,9 @@
                         );
                         this.editorEl.addEventListener("click", () =>
                             this.updateStatusBar(),
+                        );
+                        this.editorEl.addEventListener("scroll", () =>
+                            this.syncLineNumbers(),
                         );
 
                         // Show/hide grid controls on right-click
@@ -948,6 +974,7 @@
                         }
                         this.renderTabs();
                         this.updateStatusBar();
+                        this.updateLineNumbers();
                         this.isSwitchingFile = false;
                     }
 
@@ -1094,6 +1121,24 @@
                         const text = this.editorEl.value.substring(0, pos);
                         const lines = text.split("\n");
                         this.cursorPositionEl.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+                        this.updateLineNumbers();
+                    }
+
+                    updateLineNumbers() {
+                        const content = this.editorEl.value;
+                        const lines = content.split('\n');
+                        const lineCount = lines.length;
+                        
+                        let lineNumbersHtml = '';
+                        for (let i = 1; i <= lineCount; i++) {
+                            lineNumbersHtml += i + '\n';
+                        }
+                        
+                        this.lineNumbersEl.textContent = lineNumbersHtml.trim();
+                    }
+
+                    syncLineNumbers() {
+                        this.lineNumbersEl.scrollTop = this.editorEl.scrollTop;
                     }
 
                     exportToPDF() {
