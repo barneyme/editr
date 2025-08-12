@@ -144,6 +144,15 @@
                 resize: none;
                 outline: none;
                 line-height: 1.5;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+            }
+            .editor.has-selection {
+                background-color: #1e1e1e;
+            }
+            .find-highlight {
+                background-color: #eab308 !important;
+                color: #000 !important;
             }
             .preview-pane {
                 width: 50%;
@@ -275,7 +284,7 @@
                 padding: 20px;
                 border: 1px solid #3e3e42;
                 border-radius: 6px;
-                width: 400px;
+                width: 450px;
                 color: #e0e0e0;
             }
             .input-group {
@@ -314,6 +323,138 @@
             .delete-expander:hover {
                 text-decoration: underline;
             }
+            .find-dialog {
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #2d2d30;
+                border: 1px solid #3e3e42;
+                border-radius: 6px;
+                padding: 16px;
+                color: #e0e0e0;
+                z-index: 500;
+                min-width: 300px;
+                display: none;
+            }
+            .find-dialog.active {
+                display: block;
+            }
+            .find-input-group {
+                margin-bottom: 8px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .find-input-group label {
+                min-width: 60px;
+                font-size: 12px;
+            }
+            .find-input-group input {
+                flex: 1;
+                padding: 4px 8px;
+                background: #1e1e1e;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                border-radius: 3px;
+                font-size: 12px;
+            }
+            .find-buttons {
+                display: flex;
+                gap: 6px;
+                justify-content: flex-end;
+                margin-top: 12px;
+            }
+            .find-btn {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                padding: 4px 8px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 11px;
+            }
+            .find-btn:hover {
+                background: #4a4a4a;
+            }
+            .find-info {
+                font-size: 11px;
+                color: #888;
+                margin-top: 4px;
+            }
+            .goto-dialog {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #2d2d30;
+                border: 1px solid #3e3e42;
+                border-radius: 6px;
+                padding: 20px;
+                color: #e0e0e0;
+                z-index: 600;
+                min-width: 300px;
+                display: none;
+            }
+            .goto-dialog.active {
+                display: block;
+            }
+            .goto-input-group {
+                margin-bottom: 12px;
+            }
+            .goto-input-group label {
+                display: block;
+                margin-bottom: 4px;
+                font-size: 12px;
+            }
+            .goto-input-group input {
+                width: 100%;
+                padding: 6px 8px;
+                background: #1e1e1e;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                border-radius: 3px;
+                font-size: 14px;
+            }
+            .goto-buttons {
+                display: flex;
+                gap: 8px;
+                justify-content: flex-end;
+            }
+            .goto-btn {
+                background: #3c3c3c;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                padding: 6px 12px;
+                border-radius: 3px;
+                cursor: pointer;
+                font-size: 12px;
+            }
+            .goto-btn:hover {
+                background: #4a4a4a;
+            }
+            .shortcuts-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 16px;
+                font-size: 13px;
+            }
+            .shortcuts-table th,
+            .shortcuts-table td {
+                border: 1px solid #3e3e42;
+                padding: 8px;
+                text-align: left;
+            }
+            .shortcuts-table th {
+                background: #252526;
+            }
+            .shortcuts-table kbd {
+                background-color: #3c3c3c;
+                border: 1px solid #555;
+                padding: 2px 5px;
+                border-radius: 3px;
+                font-family: "Courier New", monospace;
+                font-size: 12px;
+            }
         </style>
     </head>
     <body>
@@ -344,8 +485,14 @@
                 <button class="btn" id="htmlBtn" style="display: none">
                     <span class="btn-icon">🌐</span>HTML
                 </button>
+                <button class="btn" id="findBtn">
+                    <span class="btn-icon">🔍</span>Find
+                </button>
                 <button class="btn" id="settingsBtn">
                     <span class="btn-icon">⚙️</span>Text
+                </button>
+                <button class="btn" id="helpBtn">
+                    <span class="btn-icon">❓</span>Help
                 </button>
             </div>
         </div>
@@ -357,6 +504,34 @@
                         <div class="line-numbers" id="lineNumbers">1</div>
                         <div class="editor-content">
                             <textarea class="editor" id="editor"></textarea>
+                            <div class="find-dialog" id="findDialog">
+                                <div class="find-input-group">
+                                    <label>Find:</label>
+                                    <input type="text" id="findInput" placeholder="Search text...">
+                                </div>
+                                <div class="find-input-group">
+                                    <label>Replace:</label>
+                                    <input type="text" id="replaceInput" placeholder="Replace with...">
+                                </div>
+                                <div class="find-info" id="findInfo"></div>
+                                <div class="find-buttons">
+                                    <button class="find-btn" id="findPrevBtn">◀ Previous</button>
+                                    <button class="find-btn" id="findNextBtn">Next ▶</button>
+                                    <button class="find-btn" id="replaceBtn">Replace</button>
+                                    <button class="find-btn" id="replaceAllBtn">Replace All</button>
+                                    <button class="find-btn" id="closeFindBtn">✖</button>
+                                </div>
+                            </div>
+                            <div class="goto-dialog" id="gotoDialog">
+                                <div class="goto-input-group">
+                                    <label for="gotoInput">Go to line number:</label>
+                                    <input type="number" id="gotoInput" min="1" placeholder="Enter line number...">
+                                </div>
+                                <div class="goto-buttons">
+                                    <button class="goto-btn" id="cancelGotoBtn">Cancel</button>
+                                    <button class="goto-btn" id="gotoBtn">Go</button>
+                                </div>
+                            </div>
                             <div class="csv-grid-container" id="csvGridContainer">
                                 <div class="csv-grid-controls" id="csvGridControls">
                                     <button id="addRowBtn">
@@ -428,6 +603,62 @@
                 </div>
             </div>
         </div>
+        <div id="helpModal" class="modal">
+            <div class="modal-content">
+                <h3>❓ Keyboard Shortcuts</h3>
+                <table class="shortcuts-table">
+                    <thead>
+                        <tr>
+                            <th>Shortcut</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>N</kbd></td>
+                            <td>Create a new file.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>O</kbd></td>
+                            <td>Open a local file.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>S</kbd></td>
+                            <td>Save the current file.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td>
+                            <td>Save the current file with a new name.</td>
+                        </tr>
+                         <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>F</kbd></td>
+                            <td>Open the Find dialog.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>H</kbd></td>
+                            <td>Open the Find & Replace dialog.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>G</kbd></td>
+                            <td>Open the "Go to Line" dialog.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>Z</kbd></td>
+                            <td>Undo the last action.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>Y</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>)</td>
+                            <td>Redo the last undone action.</td>
+                        </tr>
+                    </tbody>
+                </table>
+                 <div class="modal-buttons">
+                    <button class="btn" id="closeHelpBtn">
+                        <span class="btn-icon">✖️</span>Close
+                    </button>
+                </div>
+            </div>
+        </div>
 
         <script>
             document.addEventListener("DOMContentLoaded", () => {
@@ -443,6 +674,16 @@
                         this.currentGridCol = 0;
                         this.isInitializingGrid = false;
                         this.isSwitchingFile = false; // Prevents save prompt on open
+                        
+                        // Find and replace state
+                        this.findMatches = [];
+                        this.currentMatchIndex = -1;
+                        this.lastSearchTerm = "";
+                        
+                        // Undo/Redo state
+                        this.undoStack = [];
+                        this.redoStack = [];
+                        this.lastSavedState = "";
 
                         this.editorEl = document.getElementById("editor");
                         this.lineNumbersEl = document.getElementById("lineNumbers");
@@ -456,6 +697,8 @@
                             document.getElementById("settingsModal");
                         this.expanderModal =
                             document.getElementById("expanderModal");
+                        this.helpModal =
+                            document.getElementById("helpModal");
                         this.previewPane =
                             document.getElementById("previewPane");
                         this.editorWrapper =
@@ -469,6 +712,16 @@
                             document.getElementById("gridModeBtn");
                         this.pdfBtn = document.getElementById("pdfBtn");
                         this.htmlBtn = document.getElementById("htmlBtn");
+
+                        // Find dialog elements
+                        this.findDialog = document.getElementById("findDialog");
+                        this.findInput = document.getElementById("findInput");
+                        this.replaceInput = document.getElementById("replaceInput");
+                        this.findInfo = document.getElementById("findInfo");
+                        
+                        // Goto dialog elements
+                        this.gotoDialog = document.getElementById("gotoDialog");
+                        this.gotoInput = document.getElementById("gotoInput");
 
                         this.init();
                     }
@@ -498,6 +751,16 @@
                             .getElementById("settingsBtn")
                             .addEventListener("click", () =>
                                 this.showSettingsModal(),
+                            );
+                        document
+                            .getElementById("findBtn")
+                            .addEventListener("click", () =>
+                                this.showFindDialog(),
+                            );
+                        document
+                            .getElementById("helpBtn")
+                            .addEventListener("click", () =>
+                                this.showHelpModal(),
                             );
 
                         this.previewBtn.addEventListener("click", () =>
@@ -553,6 +816,11 @@
                                 this.closeSettingsModal(),
                             );
                         document
+                            .getElementById("closeHelpBtn")
+                            .addEventListener("click", () =>
+                                this.closeHelpModal(),
+                            );
+                        document
                             .getElementById("addExpanderBtn")
                             .addEventListener("click", () =>
                                 this.showExpanderModal(),
@@ -590,6 +858,98 @@
                         this.editorEl.addEventListener("scroll", () =>
                             this.syncLineNumbers(),
                         );
+
+                        // Find dialog event listeners
+                        document
+                            .getElementById("findNextBtn")
+                            .addEventListener("click", () => this.findNext());
+                        document
+                            .getElementById("findPrevBtn")
+                            .addEventListener("click", () => this.findPrevious());
+                        document
+                            .getElementById("replaceBtn")
+                            .addEventListener("click", () => this.replaceCurrent());
+                        document
+                            .getElementById("replaceAllBtn")
+                            .addEventListener("click", () => this.replaceAll());
+                        document
+                            .getElementById("closeFindBtn")
+                            .addEventListener("click", () => this.closeFindDialog());
+
+                        this.findInput.addEventListener("input", () => this.performFind());
+                        this.findInput.addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                if (e.shiftKey) {
+                                    this.findPrevious();
+                                } else {
+                                    this.findNext();
+                                }
+                            } else if (e.key === "Escape") {
+                                this.closeFindDialog();
+                            }
+                        });
+
+                        this.replaceInput.addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                this.replaceCurrent();
+                            } else if (e.key === "Escape") {
+                                this.closeFindDialog();
+                            }
+                        });
+
+                        // Global keyboard shortcuts
+                        document.addEventListener("keydown", (e) => {
+                            if (e.ctrlKey || e.metaKey) {
+                                if (e.key === 'n') {
+                                    e.preventDefault();
+                                    this.createNewFile();
+                                } else if (e.key === 'o') {
+                                    e.preventDefault();
+                                    this.openFile();
+                                } else if (e.shiftKey && e.key.toLowerCase() === 's') {
+                                    e.preventDefault();
+                                    this.saveAsFile();
+                                } else if (e.key === 's') {
+                                    e.preventDefault();
+                                    this.saveFile();
+                                } else if (e.key === 'f') {
+                                    e.preventDefault();
+                                    this.showFindDialog();
+                                } else if (e.key === 'h') {
+                                    e.preventDefault();
+                                    this.showFindDialog();
+                                    this.replaceInput.focus();
+                                } else if (e.key === 'g') {
+                                    e.preventDefault();
+                                    this.showGotoDialog();
+                                } else if (e.key === 'z' && !e.shiftKey) {
+                                    e.preventDefault();
+                                    this.undo();
+                                } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+                                    e.preventDefault();
+                                    this.redo();
+                                }
+                            }
+                        });
+                        
+                        // Goto dialog event listeners
+                        document
+                            .getElementById("gotoBtn")
+                            .addEventListener("click", () => this.gotoLine());
+                        document
+                            .getElementById("cancelGotoBtn")
+                            .addEventListener("click", () => this.closeGotoDialog());
+                            
+                        this.gotoInput.addEventListener("keydown", (e) => {
+                            if (e.key === "Enter") {
+                                e.preventDefault();
+                                this.gotoLine();
+                            } else if (e.key === "Escape") {
+                                this.closeGotoDialog();
+                            }
+                        });
 
                         // Show/hide grid controls on right-click
                         document.addEventListener("contextmenu", (e) => {
@@ -971,6 +1331,10 @@
                             this.editorWrapper.classList.remove(
                                 "grid-mode-active",
                             );
+                            // Reset undo/redo stacks for new file
+                            this.undoStack = [];
+                            this.redoStack = [];
+                            this.lastSavedState = file.content;
                         }
                         this.renderTabs();
                         this.updateStatusBar();
@@ -1015,8 +1379,14 @@
 
                     handleEditorInput() {
                         if (this.isSwitchingFile) return;
+                        
                         const file = this.files.get(this.activeFileId);
                         if (file) {
+                            // Save current state to undo stack before making changes
+                            if (file.content !== this.editorEl.value) {
+                                this.saveToUndoStack(file.content);
+                            }
+                            
                             file.content = this.editorEl.value;
                             file.modified = true;
                             this.renderTabs();
@@ -1083,6 +1453,7 @@
                         a.click();
                         URL.revokeObjectURL(a.href);
                         file.modified = false;
+                        this.lastSavedState = file.content;
                         this.renderTabs();
                     }
 
@@ -1141,6 +1512,217 @@
                         this.lineNumbersEl.scrollTop = this.editorEl.scrollTop;
                     }
 
+                    // --- START: CORRECTED AND ADDED FUNCTIONS ---
+
+                    // Find and Replace functionality
+                    showFindDialog() {
+                        this.findDialog.classList.add("active");
+                        this.findInput.focus();
+                        if (this.findInput.value) {
+                            this.performFind();
+                        }
+                    }
+
+                    closeFindDialog() {
+                        this.findDialog.classList.remove("active");
+                        this.clearHighlights();
+                        this.editorEl.focus();
+                    }
+
+                    performFind() {
+                        const searchTerm = this.findInput.value;
+                        if (!searchTerm) {
+                            this.clearHighlights();
+                            this.findInfo.textContent = "";
+                            return;
+                        }
+
+                        this.findMatches = [];
+                        this.currentMatchIndex = -1;
+                        this.lastSearchTerm = searchTerm;
+
+                        const content = this.editorEl.value;
+                        const searchRegex = new RegExp(this.escapeRegex(searchTerm), "gi");
+                        let match;
+
+                        while ((match = searchRegex.exec(content)) !== null) {
+                            this.findMatches.push({
+                                start: match.index,
+                                end: match.index + match[0].length
+                            });
+                        }
+
+                        this.updateFindInfo();
+                        if (this.findMatches.length > 0) {
+                            this.currentMatchIndex = 0;
+                            this.highlightCurrentMatch();
+                        }
+                    }
+
+                    findNext() {
+                        if (this.findMatches.length === 0) {
+                            this.performFind();
+                            return;
+                        }
+
+                        this.currentMatchIndex = (this.currentMatchIndex + 1) % this.findMatches.length;
+                        this.highlightCurrentMatch();
+                        this.updateFindInfo();
+                    }
+
+                    findPrevious() {
+                        if (this.findMatches.length === 0) {
+                            this.performFind();
+                            return;
+                        }
+
+                        this.currentMatchIndex = this.currentMatchIndex <= 0 
+                            ? this.findMatches.length - 1 
+                            : this.currentMatchIndex - 1;
+                        this.highlightCurrentMatch();
+                        this.updateFindInfo();
+                    }
+
+                    highlightCurrentMatch() {
+                        if (this.currentMatchIndex >= 0 && this.currentMatchIndex < this.findMatches.length) {
+                            const match = this.findMatches[this.currentMatchIndex];
+                            this.editorEl.setSelectionRange(match.start, match.end);
+                            this.editorEl.focus();
+                        }
+                    }
+
+                    replaceCurrent() {
+                        if (this.currentMatchIndex >= 0 && this.currentMatchIndex < this.findMatches.length) {
+                            const match = this.findMatches[this.currentMatchIndex];
+                            const replaceText = this.replaceInput.value;
+                            
+                            const content = this.editorEl.value;
+                            const newContent = content.substring(0, match.start) + 
+                                             replaceText + 
+                                             content.substring(match.end);
+                            
+                            this.editorEl.value = newContent;
+                            this.handleEditorInput();
+                            
+                            const newCursorPos = match.start + replaceText.length;
+                            this.editorEl.setSelectionRange(newCursorPos, newCursorPos);
+                            
+                            this.performFind();
+                        }
+                    }
+
+                    replaceAll() {
+                        const searchTerm = this.findInput.value;
+                        const replaceText = this.replaceInput.value;
+                        
+                        if (!searchTerm) return;
+                        
+                        const content = this.editorEl.value;
+                        const searchRegex = new RegExp(this.escapeRegex(searchTerm), "g");
+                        const newContent = content.replace(searchRegex, replaceText);
+                        
+                        if (newContent !== content) {
+                            this.editorEl.value = newContent;
+                            this.handleEditorInput();
+                            this.performFind();
+                        }
+                    }
+
+                    clearHighlights() {
+                        this.findMatches = [];
+                        this.currentMatchIndex = -1;
+                    }
+
+                    updateFindInfo() {
+                        if (this.findMatches.length === 0) {
+                            this.findInfo.textContent = this.findInput.value ? "No matches found" : "";
+                        } else {
+                            this.findInfo.textContent = `${this.currentMatchIndex + 1} of ${this.findMatches.length}`;
+                        }
+                    }
+
+                    escapeRegex(string) {
+                        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                    }
+
+                    saveToUndoStack(content) {
+                        if (this.undoStack.length > 0 && this.undoStack[this.undoStack.length - 1] === content) {
+                            return;
+                        }
+                        this.undoStack.push(content);
+                        this.redoStack = [];
+                    }
+
+                    undo() {
+                        if (this.undoStack.length === 0) return;
+                        const prevState = this.undoStack.pop();
+                        this.redoStack.push(this.editorEl.value);
+                        
+                        this.isSwitchingFile = true; 
+                        const file = this.files.get(this.activeFileId);
+                        this.editorEl.value = prevState;
+                        if (file) {
+                            file.content = prevState;
+                            file.modified = file.content !== this.lastSavedState;
+                        }
+                        this.isSwitchingFile = false;
+
+                        this.updateStatusBar();
+                        this.renderTabs();
+                    }
+
+                    redo() {
+                        if (this.redoStack.length === 0) return;
+                        const nextState = this.redoStack.pop();
+                        this.undoStack.push(this.editorEl.value);
+
+                        this.isSwitchingFile = true;
+                        const file = this.files.get(this.activeFileId);
+                        this.editorEl.value = nextState;
+                        if (file) {
+                            file.content = nextState;
+                            file.modified = file.content !== this.lastSavedState;
+                        }
+                        this.isSwitchingFile = false;
+
+                        this.updateStatusBar();
+                        this.renderTabs();
+                    }
+
+                    showGotoDialog() {
+                        this.gotoDialog.classList.add("active");
+                        this.gotoInput.value = "";
+                        this.gotoInput.focus();
+                    }
+                    
+                    closeGotoDialog() {
+                        this.gotoDialog.classList.remove("active");
+                        this.editorEl.focus();
+                    }
+
+                    gotoLine() {
+                        const lineNum = parseInt(this.gotoInput.value, 10);
+                        if (isNaN(lineNum) || lineNum < 1) {
+                            this.closeGotoDialog();
+                            return;
+                        }
+
+                        const lines = this.editorEl.value.split('\n');
+                        const targetLine = Math.min(lineNum, lines.length) - 1;
+
+                        let charIndex = 0;
+                        for (let i = 0; i < targetLine; i++) {
+                            charIndex += lines[i].length + 1; // +1 for newline
+                        }
+
+                        this.editorEl.focus();
+                        this.editorEl.setSelectionRange(charIndex, charIndex);
+                        this.updateStatusBar();
+                        this.closeGotoDialog();
+                    }
+                    
+                    // --- END: CORRECTED AND ADDED FUNCTIONS ---
+
                     exportToPDF() {
                         const file = this.files.get(this.activeFileId);
                         if (!file || !file.name.endsWith(".md")) return;
@@ -1182,6 +1764,14 @@
                     closeSettingsModal() {
                         this.settingsModal.style.display = "none";
                     }
+
+                    showHelpModal() {
+                        this.helpModal.style.display = "block";
+                    }
+                    closeHelpModal() {
+                        this.helpModal.style.display = "none";
+                    }
+
                     showExpanderModal() {
                         this.expanderModal.style.display = "block";
                     }
