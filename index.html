@@ -78,18 +78,30 @@
             .tab {
                 display: flex;
                 align-items: center;
-                padding: 8px 16px;
+                padding: 8px 8px 8px 16px;
                 border-right: 1px solid #3e3e42;
                 cursor: pointer;
                 font-size: 13px;
                 white-space: nowrap;
                 background: #1e1e1e;
                 color: #cccccc;
+                gap: 8px;
             }
             .tab.active {
                 background: #1e1e1e;
                 color: #ffffff;
                 border-bottom: 2px solid #2563eb;
+            }
+            .close-tab-btn {
+                font-family: Arial, sans-serif;
+                font-weight: bold;
+                padding: 0px 5px 2px 5px;
+                border-radius: 4px;
+                line-height: 16px;
+                font-size: 16px;
+            }
+            .close-tab-btn:hover {
+                background-color: #3e3e42;
             }
             .editor {
                 width: 100%;
@@ -315,10 +327,9 @@
         </div>
         <div id="settingsModal" class="modal">
             <div class="modal-content">
-                <h3>Text</h3>
-                <h4>Text Expanders</h4>
+                <h3>Text Expanders</h3>
                 <div id="settingsExpandersList"></div>
-                <button class="btn" id="addExpanderBtn">Add Expander</button>
+                <button class="btn" id="addExpanderBtn">Add</button>
                 <button class="btn" id="importExpandersBtn">Import</button>
                 <button class="btn" id="exportExpandersBtn">Export</button>
                 <div class="modal-buttons">
@@ -430,6 +441,20 @@
                             this.exportToHTML(),
                         );
 
+                        // Handle tab switching and closing
+                        this.tabsContainerEl.addEventListener("click", (e) => {
+                            const tab = e.target.closest(".tab");
+                            if (!tab) return;
+
+                            const fileId = tab.dataset.fileId;
+                            if (e.target.classList.contains("close-tab-btn")) {
+                                e.stopPropagation();
+                                this.closeFile(fileId);
+                            } else {
+                                this.switchToFile(fileId);
+                            }
+                        });
+
                         // CSV Grid controls
                         document
                             .getElementById("addRowBtn")
@@ -527,6 +552,26 @@
                                     }
                                 }
                             });
+                    }
+
+                    closeFile(fileIdToClose) {
+                        const fileToClose = this.files.get(fileIdToClose);
+                        if (!fileToClose) return;
+
+                        this.files.delete(fileIdToClose);
+
+                        if (this.activeFileId === fileIdToClose) {
+                            if (this.files.size > 0) {
+                                const nextFileId = this.files
+                                    .keys()
+                                    .next().value;
+                                this.switchToFile(nextFileId);
+                            } else {
+                                this.createNewFile();
+                            }
+                        } else {
+                            this.renderTabs();
+                        }
                     }
 
                     togglePreview() {
@@ -974,11 +1019,19 @@
                         this.files.forEach((file) => {
                             const tab = document.createElement("div");
                             tab.className = `tab ${file.id === this.activeFileId ? "active" : ""}`;
-                            tab.textContent =
+                            tab.dataset.fileId = file.id;
+
+                            const fileName = document.createElement("span");
+                            fileName.textContent =
                                 file.name + (file.modified ? "*" : "");
-                            tab.addEventListener("click", () =>
-                                this.switchToFile(file.id),
-                            );
+
+                            const closeBtn = document.createElement("span");
+                            closeBtn.className = "close-tab-btn";
+                            closeBtn.textContent = "x";
+                            closeBtn.title = "Close tab";
+
+                            tab.appendChild(fileName);
+                            tab.appendChild(closeBtn);
                             this.tabsContainerEl.appendChild(tab);
                         });
                     }
