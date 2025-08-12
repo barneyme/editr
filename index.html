@@ -319,6 +319,8 @@
                 <h4>Text Expanders</h4>
                 <div id="settingsExpandersList"></div>
                 <button class="btn" id="addExpanderBtn">Add Expander</button>
+                <button class="btn" id="importExpandersBtn">Import</button>
+                <button class="btn" id="exportExpandersBtn">Export</button>
                 <div class="modal-buttons">
                     <button class="btn" id="closeSettingsBtn">Close</button>
                 </div>
@@ -457,6 +459,16 @@
                             .getElementById("addExpanderBtn")
                             .addEventListener("click", () =>
                                 this.showExpanderModal(),
+                            );
+                        document
+                            .getElementById("importExpandersBtn")
+                            .addEventListener("click", () =>
+                                this.importExpanders(),
+                            );
+                        document
+                            .getElementById("exportExpandersBtn")
+                            .addEventListener("click", () =>
+                                this.exportExpanders(),
                             );
                         document
                             .getElementById("cancelExpanderBtn")
@@ -1108,6 +1120,96 @@
                             );
                             this.expanders = new Map();
                         }
+                    }
+
+                    exportExpanders() {
+                        if (this.expanders.size === 0) {
+                            alert("No text expanders to export.");
+                            return;
+                        }
+
+                        const lines = [];
+                        for (const [
+                            trigger,
+                            text,
+                        ] of this.expanders.entries()) {
+                            lines.push(`${trigger}=${text}`);
+                        }
+                        const content = lines.join("\n");
+
+                        const blob = new Blob([content], {
+                            type: "text/plain;charset=utf-8",
+                        });
+                        const a = document.createElement("a");
+                        a.href = URL.createObjectURL(blob);
+                        a.download = "editr-expanders.txt";
+                        a.style.display = "none";
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                        URL.revokeObjectURL(a.href);
+                    }
+
+                    importExpanders() {
+                        const input = document.createElement("input");
+                        input.type = "file";
+                        input.accept = ".txt,text/plain";
+                        input.onchange = (e) => {
+                            const file = e.target.files[0];
+                            if (!file) return;
+
+                            const reader = new FileReader();
+                            reader.onload = (e) => {
+                                const content = e.target.result;
+                                const lines = content.split("\n");
+                                let importedCount = 0;
+
+                                if (
+                                    !confirm(
+                                        "This will merge imported expanders and overwrite any with the same trigger. Continue?",
+                                    )
+                                ) {
+                                    return;
+                                }
+
+                                for (const line of lines) {
+                                    const trimmedLine = line.trim();
+                                    if (!trimmedLine) continue;
+
+                                    const separatorIndex =
+                                        trimmedLine.indexOf("=");
+                                    if (separatorIndex > 0) {
+                                        const trigger = trimmedLine
+                                            .substring(0, separatorIndex)
+                                            .trim();
+                                        const text = trimmedLine.substring(
+                                            separatorIndex + 1,
+                                        );
+                                        if (trigger) {
+                                            this.expanders.set(trigger, text);
+                                            importedCount++;
+                                        }
+                                    }
+                                }
+
+                                if (importedCount > 0) {
+                                    this.saveExpanders();
+                                    this.updateSettingsExpandersList();
+                                    alert(
+                                        `Successfully imported and merged ${importedCount} expander(s).`,
+                                    );
+                                } else {
+                                    alert(
+                                        "Could not find any valid expanders in the selected file. Ensure format is 'trigger=replacement'.",
+                                    );
+                                }
+                            };
+                            reader.onerror = () => {
+                                alert("Error reading file.");
+                            };
+                            reader.readAsText(file);
+                        };
+                        input.click();
                     }
                 }
                 new TextEditor();
