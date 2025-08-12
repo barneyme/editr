@@ -35,7 +35,7 @@
             }
             .logo {
                 font-weight: 600;
-                color: #2563eb;
+                color: #eab308;
             }
             .toolbar {
                 display: flex;
@@ -50,6 +50,17 @@
                 border-radius: 4px;
                 cursor: pointer;
                 font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                transition: background-color 0.2s;
+            }
+            .btn:hover {
+                background: #4a4a4a;
+            }
+            .btn-icon {
+                font-size: 14px;
+                font-style: normal;
             }
             .main-container {
                 display: flex;
@@ -90,7 +101,7 @@
             .tab.active {
                 background: #1e1e1e;
                 color: #ffffff;
-                border-bottom: 2px solid #2563eb;
+                border-bottom: 2px solid #eab308;
             }
             .close-tab-btn {
                 font-family: Arial, sans-serif;
@@ -195,6 +206,9 @@
                 cursor: pointer;
                 font-size: 11px;
                 margin: 2px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
             }
             .csv-grid-controls button:hover {
                 background: #4a4a4a;
@@ -275,6 +289,11 @@
             }
             .delete-expander {
                 cursor: pointer;
+                color: #f87171;
+                font-size: 12px;
+            }
+            .delete-expander:hover {
+                text-decoration: underline;
             }
         </style>
     </head>
@@ -282,23 +301,33 @@
         <div class="header">
             <div class="logo">editr</div>
             <div class="toolbar">
-                <button class="btn" id="newFileBtn">New</button>
-                <button class="btn" id="openFileBtn">Open</button>
-                <button class="btn" id="saveFileBtn">Save</button>
-                <button class="btn" id="saveAsFileBtn">Save As</button>
+                <button class="btn" id="newFileBtn">
+                    <span class="btn-icon">📄</span>New
+                </button>
+                <button class="btn" id="openFileBtn">
+                    <span class="btn-icon">📁</span>Open
+                </button>
+                <button class="btn" id="saveFileBtn">
+                    <span class="btn-icon">💾</span>Save
+                </button>
+                <button class="btn" id="saveAsFileBtn">
+                    <span class="btn-icon">📤</span>Save As
+                </button>
                 <button class="btn" id="previewBtn" style="display: none">
-                    Preview
+                    <span class="btn-icon">👁️</span>Preview
                 </button>
                 <button class="btn" id="gridModeBtn" style="display: none">
-                    Grid
+                    <span class="btn-icon">⊞</span>Grid
                 </button>
                 <button class="btn" id="pdfBtn" style="display: none">
-                    PDF
+                    <span class="btn-icon">📋</span>PDF
                 </button>
                 <button class="btn" id="htmlBtn" style="display: none">
-                    HTML
+                    <span class="btn-icon">🌐</span>HTML
                 </button>
-                <button class="btn" id="settingsBtn">Text</button>
+                <button class="btn" id="settingsBtn">
+                    <span class="btn-icon">⚙️</span>Text
+                </button>
             </div>
         </div>
         <div class="main-container">
@@ -309,10 +338,18 @@
                         <textarea class="editor" id="editor"></textarea>
                         <div class="csv-grid-container" id="csvGridContainer">
                             <div class="csv-grid-controls" id="csvGridControls">
-                                <button id="addRowBtn">Add Row</button>
-                                <button id="addColBtn">Add Column</button>
-                                <button id="deleteRowBtn">Delete Row</button>
-                                <button id="deleteColBtn">Delete Column</button>
+                                <button id="addRowBtn">
+                                    <span>➕</span>Add Row
+                                </button>
+                                <button id="addColBtn">
+                                    <span>➕</span>Add Column
+                                </button>
+                                <button id="deleteRowBtn">
+                                    <span>➖</span>Delete Row
+                                </button>
+                                <button id="deleteColBtn">
+                                    <span>➖</span>Delete Column
+                                </button>
                             </div>
                             <table class="csv-grid" id="csvGrid"></table>
                         </div>
@@ -327,33 +364,45 @@
         </div>
         <div id="settingsModal" class="modal">
             <div class="modal-content">
-                <h3>Text Expanders</h3>
+                <h3>⚙️ Text Expanders</h3>
                 <div id="settingsExpandersList"></div>
-                <button class="btn" id="addExpanderBtn">Add</button>
-                <button class="btn" id="importExpandersBtn">Import</button>
-                <button class="btn" id="exportExpandersBtn">Export</button>
+                <button class="btn" id="addExpanderBtn">
+                    <span class="btn-icon">➕</span>Add
+                </button>
+                <button class="btn" id="importExpandersBtn">
+                    <span class="btn-icon">📥</span>Import
+                </button>
+                <button class="btn" id="exportExpandersBtn">
+                    <span class="btn-icon">📤</span>Export
+                </button>
                 <div class="modal-buttons">
-                    <button class="btn" id="closeSettingsBtn">Close</button>
+                    <button class="btn" id="closeSettingsBtn">
+                        <span class="btn-icon">✖️</span>Close
+                    </button>
                 </div>
             </div>
         </div>
         <div id="expanderModal" class="modal">
             <div class="modal-content">
-                <h3>Add Text Expander</h3>
+                <h3>➕ Add Text Expander</h3>
                 <div class="input-group">
-                    <label for="expanderTrigger">Trigger</label
+                    <label for="expanderTrigger">🔑 Trigger</label
                     ><input type="text" id="expanderTrigger" />
                 </div>
                 <div class="input-group">
-                    <label for="expanderText">Replacement Text</label
+                    <label for="expanderText">📝 Replacement Text</label
                     ><textarea id="expanderText"></textarea>
                 </div>
-                <h4>Dynamic Variables:</h4>
+                <h4>🔧 Dynamic Variables:</h4>
                 <code>{date}</code> <code>{time}</code> <code>{datetime}</code>
                 <code>{timestamp}</code>
                 <div class="modal-buttons">
-                    <button class="btn" id="cancelExpanderBtn">Cancel</button
-                    ><button class="btn" id="expanderSaveBtn">Add</button>
+                    <button class="btn" id="cancelExpanderBtn">
+                        <span class="btn-icon">❌</span>Cancel
+                    </button>
+                    <button class="btn" id="expanderSaveBtn">
+                        <span class="btn-icon">✅</span>Add
+                    </button>
                 </div>
             </div>
         </div>
@@ -1027,7 +1076,7 @@
 
                             const closeBtn = document.createElement("span");
                             closeBtn.className = "close-tab-btn";
-                            closeBtn.textContent = "x";
+                            closeBtn.textContent = "×";
                             closeBtn.title = "Close tab";
 
                             tab.appendChild(fileName);
@@ -1134,7 +1183,7 @@
 
                             const deleteSpan = document.createElement("span");
                             deleteSpan.className = "delete-expander";
-                            deleteSpan.textContent = "Delete";
+                            deleteSpan.textContent = "🗑️ Delete";
                             deleteSpan.dataset.trigger = trigger;
 
                             item.appendChild(triggerSpan);
