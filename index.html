@@ -174,16 +174,33 @@
             .csv-grid-container {
                 width: 100%;
                 height: 100%;
-                overflow: auto;
+                overflow: hidden; /* Changed for better layout */
                 background: #1e1e1e;
                 display: none;
+                flex-direction: column; /* Changed for layout */
                 position: relative;
             }
             .grid-mode-active .editor {
                 display: none;
             }
             .grid-mode-active .csv-grid-container {
-                display: block;
+                display: flex; /* Changed for layout */
+            }
+            .csv-filter-bar {
+                padding: 4px 8px;
+                background: #252526;
+            }
+            #csvFilterInput {
+                width: 100%;
+                padding: 6px;
+                background: #1e1e1e;
+                border: 1px solid #555;
+                color: #e0e0e0;
+                border-radius: 3px;
+            }
+            .csv-grid-wrapper {
+                flex-grow: 1;
+                overflow: auto;
             }
             .csv-grid {
                 width: 100%;
@@ -201,6 +218,15 @@
                 background: #2d2d30;
                 font-weight: 600;
                 padding: 4px 8px;
+                cursor: pointer;
+            }
+            .csv-grid th.sorted-asc::after {
+                content: " ▲";
+                font-size: 10px;
+            }
+            .csv-grid th.sorted-desc::after {
+                content: " ▼";
+                font-size: 10px;
             }
             .csv-grid-input {
                 width: 100%;
@@ -713,6 +739,19 @@
                                 class="csv-grid-container"
                                 id="csvGridContainer"
                             >
+                                <div class="csv-filter-bar">
+                                    <input
+                                        type="text"
+                                        id="csvFilterInput"
+                                        placeholder="Filter rows..."
+                                    />
+                                </div>
+                                <div class="csv-grid-wrapper">
+                                    <table
+                                        class="csv-grid"
+                                        id="csvGrid"
+                                    ></table>
+                                </div>
                                 <div
                                     class="csv-grid-controls"
                                     id="csvGridControls"
@@ -730,7 +769,6 @@
                                         <span>➖</span>Delete Column
                                     </button>
                                 </div>
-                                <table class="csv-grid" id="csvGrid"></table>
                             </div>
                         </div>
                     </div>
@@ -1013,6 +1051,9 @@
                         this.redoStack = [];
                         this.lastSavedState = "";
 
+                        // CSV Sort state
+                        this.sortState = { colIndex: -1, direction: "asc" };
+
                         // WebRTC state
                         this.peerConnection = null;
                         this.dataChannel = null;
@@ -1042,6 +1083,8 @@
                         this.csvGrid = document.getElementById("csvGrid");
                         this.csvGridControls =
                             document.getElementById("csvGridControls");
+                        this.csvFilterInput =
+                            document.getElementById("csvFilterInput");
 
                         this.previewBtn = document.getElementById("previewBtn");
                         this.gridModeBtn =
@@ -1158,6 +1201,9 @@
                             .addEventListener("click", () =>
                                 this.deleteGridColumn(),
                             );
+                        this.csvFilterInput.addEventListener("input", (e) =>
+                            this.filterCsvGrid(e.target.value),
+                        );
 
                         document
                             .getElementById("closeSettingsBtn")
@@ -1224,6 +1270,9 @@
 
                         this.editorEl.addEventListener("input", () =>
                             this.handleEditorInput(),
+                        );
+                        this.editorEl.addEventListener("keydown", (e) =>
+                            this.handleBracketClosing(e),
                         );
                         this.editorEl.addEventListener("keyup", () =>
                             this.updateStatusBar(),
@@ -1420,6 +1469,49 @@
                             });
                     }
 
+                    handleBracketClosing(e) {
+                        const bracketMap = {
+                            "(": ")",
+                            "[": "]",
+                            "{": "}",
+                            '"': '"',
+                            "'": "'",
+                        };
+                        const openBracket = e.key;
+                        const closeBracket = bracketMap[openBracket];
+
+                        if (!closeBracket) return;
+
+                        e.preventDefault();
+                        const start = this.editorEl.selectionStart;
+                        const end = this.editorEl.selectionEnd;
+                        const selectedText = this.editorEl.value.substring(
+                            start,
+                            end,
+                        );
+
+                        const textBefore = this.editorEl.value.substring(
+                            0,
+                            start,
+                        );
+                        const textAfter = this.editorEl.value.substring(end);
+
+                        const newText =
+                            openBracket + selectedText + closeBracket;
+                        this.editorEl.value = textBefore + newText + textAfter;
+
+                        if (start === end) {
+                            this.editorEl.selectionStart =
+                                this.editorEl.selectionEnd = start + 1;
+                        } else {
+                            this.editorEl.selectionStart =
+                                start + openBracket.length;
+                            this.editorEl.selectionEnd =
+                                end + openBracket.length;
+                        }
+                        this.handleEditorInput();
+                    }
+
                     closeFile(fileIdToClose) {
                         const fileToClose = this.files.get(fileIdToClose);
                         if (!fileToClose) return;
@@ -1459,6 +1551,9 @@
 
                     toggleGridMode() {
                         this.isGridActive = !this.isGridActive;
+                        if (!this.isGridActive) {
+                            this.csvFilterInput.value = "";
+                        }
                         this.editorWrapper.classList.toggle(
                             "grid-mode-active",
                             this.isGridActive,
@@ -1486,7 +1581,14 @@
 
                         let tableHTML = "<thead><tr>";
                         data[0].forEach((header, index) => {
-                            tableHTML += `<th class="grid-header-controls">${header}<button class="header-menu-btn" data-col="${index}">⋮</button></th>`;
+                            let sortClass = "";
+                            if (this.sortState.colIndex === index) {
+                                sortClass =
+                                    this.sortState.direction === "asc"
+                                        ? "sorted-asc"
+                                        : "sorted-desc";
+                            }
+                            tableHTML += `<th class="grid-header-controls ${sortClass}" data-col-index="${index}">${header}</th>`;
                         });
                         tableHTML += "</tr></thead><tbody>";
 
@@ -1499,7 +1601,82 @@
                         });
                         this.csvGrid.innerHTML = tableHTML + "</tbody>";
 
+                        this.csvGrid.querySelectorAll("th").forEach((th) => {
+                            th.addEventListener("click", (e) => {
+                                const colIndex = parseInt(
+                                    e.currentTarget.dataset.colIndex,
+                                    10,
+                                );
+                                if (!isNaN(colIndex)) {
+                                    this.sortCsvColumn(colIndex);
+                                }
+                            });
+                        });
                         this.setupGridNavigation();
+                    }
+
+                    sortCsvColumn(colIndex) {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        if (this.sortState.colIndex === colIndex) {
+                            this.sortState.direction =
+                                this.sortState.direction === "asc"
+                                    ? "desc"
+                                    : "asc";
+                        } else {
+                            this.sortState.colIndex = colIndex;
+                            this.sortState.direction = "asc";
+                        }
+
+                        const directionModifier =
+                            this.sortState.direction === "asc" ? 1 : -1;
+
+                        const lines = file.content
+                            .split("\n")
+                            .filter((line) => line.trim());
+                        const header = lines.shift();
+                        const dataRows = lines.map((line) => line.split(","));
+
+                        dataRows.sort((a, b) => {
+                            const valA = a[colIndex] || "";
+                            const valB = b[colIndex] || "";
+
+                            const numA = parseFloat(valA);
+                            const numB = parseFloat(valB);
+
+                            if (!isNaN(numA) && !isNaN(numB)) {
+                                return (numA - numB) * directionModifier;
+                            }
+
+                            return valA.localeCompare(valB) * directionModifier;
+                        });
+
+                        const newContent = [
+                            header,
+                            ...dataRows.map((row) => row.join(",")),
+                        ].join("\n");
+
+                        file.content = newContent;
+                        file.modified = true;
+                        this.editorEl.value = file.content;
+                        this.renderCsvGrid();
+                        this.renderTabs();
+                        this.filterCsvGrid(this.csvFilterInput.value);
+                    }
+
+                    filterCsvGrid(query) {
+                        const lowerCaseQuery = query.toLowerCase();
+                        const rows = this.csvGrid.querySelectorAll("tbody tr");
+
+                        rows.forEach((row) => {
+                            const rowText = row.textContent.toLowerCase();
+                            if (rowText.includes(lowerCaseQuery)) {
+                                row.style.display = "";
+                            } else {
+                                row.style.display = "none";
+                            }
+                        });
                     }
 
                     setupGridNavigation() {
@@ -1705,11 +1882,11 @@
                     }
 
                     updateCsvFromGrid() {
-                        const inputs =
-                            this.csvGrid.querySelectorAll(".csv-grid-input");
                         const headers = Array.from(
                             this.csvGrid.querySelectorAll("th"),
-                        ).map((th) => th.textContent.replace("⋮", ""));
+                        ).map((th) =>
+                            th.textContent.replace(/[▲▼]/g, "").trim(),
+                        );
 
                         let newContent = headers.join(",") + "\n";
 
@@ -1764,6 +1941,8 @@
                             this.updateToolbarButtons(file);
                             this.isPreviewActive = false;
                             this.isGridActive = false;
+                            this.csvFilterInput.value = "";
+                            this.sortState = { colIndex: -1, direction: "asc" };
                             this.previewPane.classList.remove("active");
                             this.editorWrapper.classList.remove(
                                 "grid-mode-active",
