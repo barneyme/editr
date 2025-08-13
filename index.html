@@ -41,6 +41,7 @@
                 display: flex;
                 gap: 8px;
                 align-items: center;
+                flex-wrap: wrap;
             }
             .btn {
                 background: #3c3c3c;
@@ -120,6 +121,10 @@
                 background: #1e1e1e;
                 color: #ffffff;
                 border-bottom: 2px solid #eab308;
+            }
+            .tab-filename {
+                padding: 2px;
+                outline: none;
             }
             .close-tab-btn {
                 font-family: Arial, sans-serif;
@@ -308,17 +313,62 @@
                 justify-content: flex-end;
                 margin-top: 16px;
             }
+            #settingsExpandersList {
+                margin-bottom: 16px;
+                border: 1px solid #3e3e42;
+                border-radius: 4px;
+                max-height: 250px;
+                overflow-y: auto;
+                background: #1e1e1e;
+            }
             .expander-item {
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
-                padding: 4px 8px;
+                padding: 8px;
                 background: #252526;
+                border-bottom: 1px solid #3e3e42;
+                gap: 16px;
+            }
+            .expander-item:last-child {
+                border-bottom: none;
+            }
+            .expander-text-container {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                flex-grow: 1;
+                min-width: 0;
+            }
+            .expander-trigger {
+                font-weight: bold;
+                color: #eab308;
+                background-color: #3c3c3c;
+                padding: 2px 6px;
+                border-radius: 3px;
+                white-space: nowrap;
+            }
+            .expander-arrow {
+                color: #888;
+            }
+            .expander-replacement {
+                color: #ccc;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                font-family: "Courier New", Monaco, "Lucida Console", monospace;
+            }
+            .expander-placeholder {
+                padding: 16px;
+                text-align: center;
+                color: #888;
+                font-style: italic;
             }
             .delete-expander {
                 cursor: pointer;
                 color: #f87171;
                 font-size: 12px;
+                white-space: nowrap;
             }
             .delete-expander:hover {
                 text-decoration: underline;
@@ -473,6 +523,9 @@
                 <button class="btn" id="saveAsFileBtn">
                     <span class="btn-icon">📤</span>Save As
                 </button>
+                <button class="btn" id="renameFileBtn">
+                    <span class="btn-icon">✏️</span>Rename
+                </button>
                 <button class="btn" id="previewBtn" style="display: none">
                     <span class="btn-icon">👁️</span>Preview
                 </button>
@@ -507,33 +560,68 @@
                             <div class="find-dialog" id="findDialog">
                                 <div class="find-input-group">
                                     <label>Find:</label>
-                                    <input type="text" id="findInput" placeholder="Search text...">
+                                    <input
+                                        type="text"
+                                        id="findInput"
+                                        placeholder="Search text..."
+                                    />
                                 </div>
                                 <div class="find-input-group">
                                     <label>Replace:</label>
-                                    <input type="text" id="replaceInput" placeholder="Replace with...">
+                                    <input
+                                        type="text"
+                                        id="replaceInput"
+                                        placeholder="Replace with..."
+                                    />
                                 </div>
                                 <div class="find-info" id="findInfo"></div>
                                 <div class="find-buttons">
-                                    <button class="find-btn" id="findPrevBtn">◀ Previous</button>
-                                    <button class="find-btn" id="findNextBtn">Next ▶</button>
-                                    <button class="find-btn" id="replaceBtn">Replace</button>
-                                    <button class="find-btn" id="replaceAllBtn">Replace All</button>
-                                    <button class="find-btn" id="closeFindBtn">✖</button>
+                                    <button class="find-btn" id="findPrevBtn">
+                                        ◀ Previous
+                                    </button>
+                                    <button class="find-btn" id="findNextBtn">
+                                        Next ▶
+                                    </button>
+                                    <button class="find-btn" id="replaceBtn">
+                                        Replace
+                                    </button>
+                                    <button class="find-btn" id="replaceAllBtn">
+                                        Replace All
+                                    </button>
+                                    <button class="find-btn" id="closeFindBtn">
+                                        ✖
+                                    </button>
                                 </div>
                             </div>
                             <div class="goto-dialog" id="gotoDialog">
                                 <div class="goto-input-group">
-                                    <label for="gotoInput">Go to line number:</label>
-                                    <input type="number" id="gotoInput" min="1" placeholder="Enter line number...">
+                                    <label for="gotoInput"
+                                        >Go to line number:</label
+                                    >
+                                    <input
+                                        type="number"
+                                        id="gotoInput"
+                                        min="1"
+                                        placeholder="Enter line number..."
+                                    />
                                 </div>
                                 <div class="goto-buttons">
-                                    <button class="goto-btn" id="cancelGotoBtn">Cancel</button>
-                                    <button class="goto-btn" id="gotoBtn">Go</button>
+                                    <button class="goto-btn" id="cancelGotoBtn">
+                                        Cancel
+                                    </button>
+                                    <button class="goto-btn" id="gotoBtn">
+                                        Go
+                                    </button>
                                 </div>
                             </div>
-                            <div class="csv-grid-container" id="csvGridContainer">
-                                <div class="csv-grid-controls" id="csvGridControls">
+                            <div
+                                class="csv-grid-container"
+                                id="csvGridContainer"
+                            >
+                                <div
+                                    class="csv-grid-controls"
+                                    id="csvGridControls"
+                                >
                                     <button id="addRowBtn">
                                         <span>➕</span>Add Row
                                     </button>
@@ -627,10 +715,13 @@
                             <td>Save the current file.</td>
                         </tr>
                         <tr>
-                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd></td>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> +
+                                <kbd>S</kbd>
+                            </td>
                             <td>Save the current file with a new name.</td>
                         </tr>
-                         <tr>
+                        <tr>
                             <td><kbd>Ctrl/Cmd</kbd> + <kbd>F</kbd></td>
                             <td>Open the Find dialog.</td>
                         </tr>
@@ -647,12 +738,15 @@
                             <td>Undo the last action.</td>
                         </tr>
                         <tr>
-                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>Y</kbd> (or <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>)</td>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Y</kbd> (or
+                                <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd>)
+                            </td>
                             <td>Redo the last undone action.</td>
                         </tr>
                     </tbody>
                 </table>
-                 <div class="modal-buttons">
+                <div class="modal-buttons">
                     <button class="btn" id="closeHelpBtn">
                         <span class="btn-icon">✖️</span>Close
                     </button>
@@ -674,19 +768,20 @@
                         this.currentGridCol = 0;
                         this.isInitializingGrid = false;
                         this.isSwitchingFile = false; // Prevents save prompt on open
-                        
+
                         // Find and replace state
                         this.findMatches = [];
                         this.currentMatchIndex = -1;
                         this.lastSearchTerm = "";
-                        
+
                         // Undo/Redo state
                         this.undoStack = [];
                         this.redoStack = [];
                         this.lastSavedState = "";
 
                         this.editorEl = document.getElementById("editor");
-                        this.lineNumbersEl = document.getElementById("lineNumbers");
+                        this.lineNumbersEl =
+                            document.getElementById("lineNumbers");
                         this.tabsContainerEl =
                             document.getElementById("tabsContainer");
                         this.statusTextEl =
@@ -697,8 +792,7 @@
                             document.getElementById("settingsModal");
                         this.expanderModal =
                             document.getElementById("expanderModal");
-                        this.helpModal =
-                            document.getElementById("helpModal");
+                        this.helpModal = document.getElementById("helpModal");
                         this.previewPane =
                             document.getElementById("previewPane");
                         this.editorWrapper =
@@ -716,9 +810,10 @@
                         // Find dialog elements
                         this.findDialog = document.getElementById("findDialog");
                         this.findInput = document.getElementById("findInput");
-                        this.replaceInput = document.getElementById("replaceInput");
+                        this.replaceInput =
+                            document.getElementById("replaceInput");
                         this.findInfo = document.getElementById("findInfo");
-                        
+
                         // Goto dialog elements
                         this.gotoDialog = document.getElementById("gotoDialog");
                         this.gotoInput = document.getElementById("gotoInput");
@@ -747,6 +842,9 @@
                         document
                             .getElementById("saveAsFileBtn")
                             .addEventListener("click", () => this.saveAsFile());
+                        document
+                            .getElementById("renameFileBtn")
+                            .addEventListener("click", () => this.renameFile());
                         document
                             .getElementById("settingsBtn")
                             .addEventListener("click", () =>
@@ -785,7 +883,7 @@
                             if (e.target.classList.contains("close-tab-btn")) {
                                 e.stopPropagation();
                                 this.closeFile(fileId);
-                            } else {
+                            } else if (!e.target.isContentEditable) {
                                 this.switchToFile(fileId);
                             }
                         });
@@ -865,18 +963,26 @@
                             .addEventListener("click", () => this.findNext());
                         document
                             .getElementById("findPrevBtn")
-                            .addEventListener("click", () => this.findPrevious());
+                            .addEventListener("click", () =>
+                                this.findPrevious(),
+                            );
                         document
                             .getElementById("replaceBtn")
-                            .addEventListener("click", () => this.replaceCurrent());
+                            .addEventListener("click", () =>
+                                this.replaceCurrent(),
+                            );
                         document
                             .getElementById("replaceAllBtn")
                             .addEventListener("click", () => this.replaceAll());
                         document
                             .getElementById("closeFindBtn")
-                            .addEventListener("click", () => this.closeFindDialog());
+                            .addEventListener("click", () =>
+                                this.closeFindDialog(),
+                            );
 
-                        this.findInput.addEventListener("input", () => this.performFind());
+                        this.findInput.addEventListener("input", () =>
+                            this.performFind(),
+                        );
                         this.findInput.addEventListener("keydown", (e) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
@@ -902,46 +1008,54 @@
                         // Global keyboard shortcuts
                         document.addEventListener("keydown", (e) => {
                             if (e.ctrlKey || e.metaKey) {
-                                if (e.key === 'n') {
+                                if (e.key === "n") {
                                     e.preventDefault();
                                     this.createNewFile();
-                                } else if (e.key === 'o') {
+                                } else if (e.key === "o") {
                                     e.preventDefault();
                                     this.openFile();
-                                } else if (e.shiftKey && e.key.toLowerCase() === 's') {
+                                } else if (
+                                    e.shiftKey &&
+                                    e.key.toLowerCase() === "s"
+                                ) {
                                     e.preventDefault();
                                     this.saveAsFile();
-                                } else if (e.key === 's') {
+                                } else if (e.key === "s") {
                                     e.preventDefault();
                                     this.saveFile();
-                                } else if (e.key === 'f') {
+                                } else if (e.key === "f") {
                                     e.preventDefault();
                                     this.showFindDialog();
-                                } else if (e.key === 'h') {
+                                } else if (e.key === "h") {
                                     e.preventDefault();
                                     this.showFindDialog();
                                     this.replaceInput.focus();
-                                } else if (e.key === 'g') {
+                                } else if (e.key === "g") {
                                     e.preventDefault();
                                     this.showGotoDialog();
-                                } else if (e.key === 'z' && !e.shiftKey) {
+                                } else if (e.key === "z" && !e.shiftKey) {
                                     e.preventDefault();
                                     this.undo();
-                                } else if (e.key === 'y' || (e.key === 'z' && e.shiftKey)) {
+                                } else if (
+                                    e.key === "y" ||
+                                    (e.key === "z" && e.shiftKey)
+                                ) {
                                     e.preventDefault();
                                     this.redo();
                                 }
                             }
                         });
-                        
+
                         // Goto dialog event listeners
                         document
                             .getElementById("gotoBtn")
                             .addEventListener("click", () => this.gotoLine());
                         document
                             .getElementById("cancelGotoBtn")
-                            .addEventListener("click", () => this.closeGotoDialog());
-                            
+                            .addEventListener("click", () =>
+                                this.closeGotoDialog(),
+                            );
+
                         this.gotoInput.addEventListener("keydown", (e) => {
                             if (e.key === "Enter") {
                                 e.preventDefault();
@@ -1379,14 +1493,14 @@
 
                     handleEditorInput() {
                         if (this.isSwitchingFile) return;
-                        
+
                         const file = this.files.get(this.activeFileId);
                         if (file) {
                             // Save current state to undo stack before making changes
                             if (file.content !== this.editorEl.value) {
                                 this.saveToUndoStack(file.content);
                             }
-                            
+
                             file.content = this.editorEl.value;
                             file.modified = true;
                             this.renderTabs();
@@ -1449,7 +1563,7 @@
                         });
                         const a = document.createElement("a");
                         a.href = URL.createObjectURL(blob);
-                        a.download = file.name;
+                        a.download = file.name.replace(/\*$/, "");
                         a.click();
                         URL.revokeObjectURL(a.href);
                         file.modified = false;
@@ -1458,7 +1572,34 @@
                     }
 
                     saveAsFile() {
-                        this.saveFile();
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const newName = prompt(
+                            "Enter new file name:",
+                            file.name.replace(/\*$/, ""),
+                        );
+                        if (newName && newName !== file.name) {
+                            file.name = newName;
+                            this.saveFile(); // This will save with the new name and update the UI
+                        }
+                    }
+
+                    renameFile() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const newName = prompt(
+                            "Rename file to:",
+                            file.name.replace(/\*$/, ""),
+                        );
+                        if (newName && newName !== file.name) {
+                            file.name = newName;
+                            file.modified = true;
+                            this.renderTabs();
+                            this.updateStatusBar();
+                            this.updateToolbarButtons(file);
+                        }
                     }
 
                     renderTabs() {
@@ -1468,8 +1609,9 @@
                             tab.className = `tab ${file.id === this.activeFileId ? "active" : ""}`;
                             tab.dataset.fileId = file.id;
 
-                            const fileName = document.createElement("span");
-                            fileName.textContent =
+                            const fileNameSpan = document.createElement("span");
+                            fileNameSpan.className = "tab-filename";
+                            fileNameSpan.textContent =
                                 file.name + (file.modified ? "*" : "");
 
                             const closeBtn = document.createElement("span");
@@ -1477,7 +1619,7 @@
                             closeBtn.textContent = "×";
                             closeBtn.title = "Close tab";
 
-                            tab.appendChild(fileName);
+                            tab.appendChild(fileNameSpan);
                             tab.appendChild(closeBtn);
                             this.tabsContainerEl.appendChild(tab);
                         });
@@ -1486,7 +1628,7 @@
                     updateStatusBar() {
                         const file = this.files.get(this.activeFileId);
                         this.statusTextEl.textContent = file
-                            ? file.name
+                            ? file.name.replace(/\*$/, "")
                             : "Ready";
                         const pos = this.editorEl.selectionStart;
                         const text = this.editorEl.value.substring(0, pos);
@@ -1497,22 +1639,20 @@
 
                     updateLineNumbers() {
                         const content = this.editorEl.value;
-                        const lines = content.split('\n');
+                        const lines = content.split("\n");
                         const lineCount = lines.length;
-                        
-                        let lineNumbersHtml = '';
+
+                        let lineNumbersHtml = "";
                         for (let i = 1; i <= lineCount; i++) {
-                            lineNumbersHtml += i + '\n';
+                            lineNumbersHtml += i + "\n";
                         }
-                        
+
                         this.lineNumbersEl.textContent = lineNumbersHtml.trim();
                     }
 
                     syncLineNumbers() {
                         this.lineNumbersEl.scrollTop = this.editorEl.scrollTop;
                     }
-
-                    // --- START: CORRECTED AND ADDED FUNCTIONS ---
 
                     // Find and Replace functionality
                     showFindDialog() {
@@ -1542,13 +1682,16 @@
                         this.lastSearchTerm = searchTerm;
 
                         const content = this.editorEl.value;
-                        const searchRegex = new RegExp(this.escapeRegex(searchTerm), "gi");
+                        const searchRegex = new RegExp(
+                            this.escapeRegex(searchTerm),
+                            "gi",
+                        );
                         let match;
 
                         while ((match = searchRegex.exec(content)) !== null) {
                             this.findMatches.push({
                                 start: match.index,
-                                end: match.index + match[0].length
+                                end: match.index + match[0].length,
                             });
                         }
 
@@ -1565,7 +1708,9 @@
                             return;
                         }
 
-                        this.currentMatchIndex = (this.currentMatchIndex + 1) % this.findMatches.length;
+                        this.currentMatchIndex =
+                            (this.currentMatchIndex + 1) %
+                            this.findMatches.length;
                         this.highlightCurrentMatch();
                         this.updateFindInfo();
                     }
@@ -1576,37 +1721,54 @@
                             return;
                         }
 
-                        this.currentMatchIndex = this.currentMatchIndex <= 0 
-                            ? this.findMatches.length - 1 
-                            : this.currentMatchIndex - 1;
+                        this.currentMatchIndex =
+                            this.currentMatchIndex <= 0
+                                ? this.findMatches.length - 1
+                                : this.currentMatchIndex - 1;
                         this.highlightCurrentMatch();
                         this.updateFindInfo();
                     }
 
                     highlightCurrentMatch() {
-                        if (this.currentMatchIndex >= 0 && this.currentMatchIndex < this.findMatches.length) {
-                            const match = this.findMatches[this.currentMatchIndex];
-                            this.editorEl.setSelectionRange(match.start, match.end);
+                        if (
+                            this.currentMatchIndex >= 0 &&
+                            this.currentMatchIndex < this.findMatches.length
+                        ) {
+                            const match =
+                                this.findMatches[this.currentMatchIndex];
+                            this.editorEl.setSelectionRange(
+                                match.start,
+                                match.end,
+                            );
                             this.editorEl.focus();
                         }
                     }
 
                     replaceCurrent() {
-                        if (this.currentMatchIndex >= 0 && this.currentMatchIndex < this.findMatches.length) {
-                            const match = this.findMatches[this.currentMatchIndex];
+                        if (
+                            this.currentMatchIndex >= 0 &&
+                            this.currentMatchIndex < this.findMatches.length
+                        ) {
+                            const match =
+                                this.findMatches[this.currentMatchIndex];
                             const replaceText = this.replaceInput.value;
-                            
+
                             const content = this.editorEl.value;
-                            const newContent = content.substring(0, match.start) + 
-                                             replaceText + 
-                                             content.substring(match.end);
-                            
+                            const newContent =
+                                content.substring(0, match.start) +
+                                replaceText +
+                                content.substring(match.end);
+
                             this.editorEl.value = newContent;
                             this.handleEditorInput();
-                            
-                            const newCursorPos = match.start + replaceText.length;
-                            this.editorEl.setSelectionRange(newCursorPos, newCursorPos);
-                            
+
+                            const newCursorPos =
+                                match.start + replaceText.length;
+                            this.editorEl.setSelectionRange(
+                                newCursorPos,
+                                newCursorPos,
+                            );
+
                             this.performFind();
                         }
                     }
@@ -1614,13 +1776,19 @@
                     replaceAll() {
                         const searchTerm = this.findInput.value;
                         const replaceText = this.replaceInput.value;
-                        
+
                         if (!searchTerm) return;
-                        
+
                         const content = this.editorEl.value;
-                        const searchRegex = new RegExp(this.escapeRegex(searchTerm), "g");
-                        const newContent = content.replace(searchRegex, replaceText);
-                        
+                        const searchRegex = new RegExp(
+                            this.escapeRegex(searchTerm),
+                            "g",
+                        );
+                        const newContent = content.replace(
+                            searchRegex,
+                            replaceText,
+                        );
+
                         if (newContent !== content) {
                             this.editorEl.value = newContent;
                             this.handleEditorInput();
@@ -1635,18 +1803,24 @@
 
                     updateFindInfo() {
                         if (this.findMatches.length === 0) {
-                            this.findInfo.textContent = this.findInput.value ? "No matches found" : "";
+                            this.findInfo.textContent = this.findInput.value
+                                ? "No matches found"
+                                : "";
                         } else {
                             this.findInfo.textContent = `${this.currentMatchIndex + 1} of ${this.findMatches.length}`;
                         }
                     }
 
                     escapeRegex(string) {
-                        return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
                     }
 
                     saveToUndoStack(content) {
-                        if (this.undoStack.length > 0 && this.undoStack[this.undoStack.length - 1] === content) {
+                        if (
+                            this.undoStack.length > 0 &&
+                            this.undoStack[this.undoStack.length - 1] ===
+                                content
+                        ) {
                             return;
                         }
                         this.undoStack.push(content);
@@ -1657,13 +1831,14 @@
                         if (this.undoStack.length === 0) return;
                         const prevState = this.undoStack.pop();
                         this.redoStack.push(this.editorEl.value);
-                        
-                        this.isSwitchingFile = true; 
+
+                        this.isSwitchingFile = true;
                         const file = this.files.get(this.activeFileId);
                         this.editorEl.value = prevState;
                         if (file) {
                             file.content = prevState;
-                            file.modified = file.content !== this.lastSavedState;
+                            file.modified =
+                                file.content !== this.lastSavedState;
                         }
                         this.isSwitchingFile = false;
 
@@ -1681,7 +1856,8 @@
                         this.editorEl.value = nextState;
                         if (file) {
                             file.content = nextState;
-                            file.modified = file.content !== this.lastSavedState;
+                            file.modified =
+                                file.content !== this.lastSavedState;
                         }
                         this.isSwitchingFile = false;
 
@@ -1694,7 +1870,7 @@
                         this.gotoInput.value = "";
                         this.gotoInput.focus();
                     }
-                    
+
                     closeGotoDialog() {
                         this.gotoDialog.classList.remove("active");
                         this.editorEl.focus();
@@ -1707,7 +1883,7 @@
                             return;
                         }
 
-                        const lines = this.editorEl.value.split('\n');
+                        const lines = this.editorEl.value.split("\n");
                         const targetLine = Math.min(lineNum, lines.length) - 1;
 
                         let charIndex = 0;
@@ -1720,8 +1896,6 @@
                         this.updateStatusBar();
                         this.closeGotoDialog();
                     }
-                    
-                    // --- END: CORRECTED AND ADDED FUNCTIONS ---
 
                     exportToPDF() {
                         const file = this.files.get(this.activeFileId);
@@ -1799,11 +1973,14 @@
                         const listEl = document.getElementById(
                             "settingsExpandersList",
                         );
-                        listEl.innerHTML = ""; // Clear the list first
+                        listEl.innerHTML = "";
 
                         if (this.expanders.size === 0) {
-                            listEl.textContent =
+                            const placeholder = document.createElement("div");
+                            placeholder.className = "expander-placeholder";
+                            placeholder.textContent =
                                 "No text expanders have been added yet.";
+                            listEl.appendChild(placeholder);
                             return;
                         }
 
@@ -1811,17 +1988,32 @@
                             const item = document.createElement("div");
                             item.className = "expander-item";
 
+                            const textContainer = document.createElement("div");
+                            textContainer.className = "expander-text-container";
+
                             const triggerSpan = document.createElement("span");
-                            const triggerBold = document.createElement("b");
-                            triggerBold.textContent = trigger;
-                            triggerSpan.appendChild(triggerBold);
+                            triggerSpan.className = "expander-trigger";
+                            triggerSpan.textContent = trigger;
+
+                            const arrowSpan = document.createElement("span");
+                            arrowSpan.className = "expander-arrow";
+                            arrowSpan.textContent = "→";
+
+                            const replacementSpan =
+                                document.createElement("span");
+                            replacementSpan.className = "expander-replacement";
+                            replacementSpan.textContent = text;
+
+                            textContainer.appendChild(triggerSpan);
+                            textContainer.appendChild(arrowSpan);
+                            textContainer.appendChild(replacementSpan);
 
                             const deleteSpan = document.createElement("span");
                             deleteSpan.className = "delete-expander";
                             deleteSpan.textContent = "🗑️ Delete";
                             deleteSpan.dataset.trigger = trigger;
 
-                            item.appendChild(triggerSpan);
+                            item.appendChild(textContainer);
                             item.appendChild(deleteSpan);
                             listEl.appendChild(item);
                         });
