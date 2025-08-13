@@ -272,6 +272,12 @@
                 color: #cccccc;
                 display: flex;
                 justify-content: space-between;
+                align-items: center;
+            }
+            .status-bar-right {
+                display: flex;
+                align-items: center;
+                gap: 16px;
             }
             .modal {
                 display: none;
@@ -524,49 +530,116 @@
                 font-family: "Courier New", monospace;
                 font-size: 12px;
             }
+            #collabStatus {
+                font-weight: bold;
+            }
+            #collabStatus.disconnected {
+                color: #f87171;
+            }
+            #collabStatus.connecting {
+                color: #eab308;
+            }
+            #collabStatus.connected {
+                color: #86efac;
+            }
         </style>
     </head>
     <body>
         <div class="header">
             <div class="logo">editr</div>
             <div class="toolbar">
-                <button class="btn" id="newFileBtn">
+                <button
+                    class="btn"
+                    id="newFileBtn"
+                    title="New File (Ctrl/Cmd + N)"
+                >
                     <span class="btn-icon">📄</span>New
                 </button>
-                <button class="btn" id="openFileBtn">
+                <button
+                    class="btn"
+                    id="openFileBtn"
+                    title="Open File (Ctrl/Cmd + O)"
+                >
                     <span class="btn-icon">📁</span>Open
                 </button>
-                <button class="btn" id="saveFileBtn">
+                <button
+                    class="btn"
+                    id="saveFileBtn"
+                    title="Save File (Ctrl/Cmd + S)"
+                >
                     <span class="btn-icon">💾</span>Save
                 </button>
-                <button class="btn" id="saveAsFileBtn">
+                <button
+                    class="btn"
+                    id="saveAsFileBtn"
+                    title="Save As (Ctrl/Cmd + Shift + S)"
+                >
                     <span class="btn-icon">📤</span>Save As
                 </button>
-                <button class="btn" id="renameFileBtn">
+                <button
+                    class="btn"
+                    id="renameFileBtn"
+                    title="Rename File (Ctrl/Cmd + Shift + R)"
+                >
                     <span class="btn-icon">✏️</span>Rename
                 </button>
-                <button class="btn" id="emailBtn">
+                <button
+                    class="btn"
+                    id="emailBtn"
+                    title="Email File (Ctrl/Cmd + E)"
+                >
                     <span class="btn-icon">✉️</span>Email
                 </button>
-                <button class="btn" id="previewBtn" style="display: none">
+                <button
+                    class="btn"
+                    id="collabBtn"
+                    title="Collaborate (Ctrl/Cmd + Shift + C)"
+                >
+                    <span class="btn-icon">🤝</span>Collaborate
+                </button>
+                <button
+                    class="btn"
+                    id="previewBtn"
+                    style="display: none"
+                    title="Toggle Preview (Ctrl/Cmd + Alt + V)"
+                >
                     <span class="btn-icon">👁️</span>Preview
                 </button>
-                <button class="btn" id="gridModeBtn" style="display: none">
+                <button
+                    class="btn"
+                    id="gridModeBtn"
+                    style="display: none"
+                    title="Toggle Grid Mode (Ctrl/Cmd + Alt + G)"
+                >
                     <span class="btn-icon">⊞</span>Grid
                 </button>
-                <button class="btn" id="pdfBtn" style="display: none">
+                <button
+                    class="btn"
+                    id="pdfBtn"
+                    style="display: none"
+                    title="Export to PDF"
+                >
                     <span class="btn-icon">📋</span>PDF
                 </button>
-                <button class="btn" id="htmlBtn" style="display: none">
+                <button
+                    class="btn"
+                    id="htmlBtn"
+                    style="display: none"
+                    title="Export to HTML"
+                >
                     <span class="btn-icon">🌐</span>HTML
                 </button>
-                <button class="btn" id="findBtn">
+                <button class="btn" id="findBtn" title="Find (Ctrl/Cmd + F)">
                     <span class="btn-icon">🔍</span>Find
                 </button>
-                <button class="btn" id="settingsBtn">
+                <button
+                    class="btn"
+                    id="settingsBtn"
+                    title="Settings (Ctrl/Cmd + ,)"
+                >
                     <span class="btn-icon">⚙️</span>Settings
                 </button>
-                <button class="btn" id="helpBtn">
+                <button class="btn" id="helpBtn" title="Help (Ctrl/Cmd + /)">
                     <span class="btn-icon">❓</span>Help
                 </button>
             </div>
@@ -667,7 +740,10 @@
         </div>
         <div class="status-bar">
             <span id="statusText">Ready</span>
-            <span id="cursorPosition">Ln 1, Col 1</span>
+            <div class="status-bar-right">
+                <span id="wordCount">Words: 0, Chars: 0</span>
+                <span id="cursorPosition">Ln 1, Col 1</span>
+            </div>
         </div>
         <div id="settingsModal" class="modal">
             <div class="modal-content">
@@ -751,6 +827,24 @@
                             <td>Save the current file with a new name.</td>
                         </tr>
                         <tr>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> +
+                                <kbd>R</kbd>
+                            </td>
+                            <td>Rename the current file.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>E</kbd></td>
+                            <td>Email the current file.</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Shift</kbd> +
+                                <kbd>C</kbd>
+                            </td>
+                            <td>Open Collaboration panel.</td>
+                        </tr>
+                        <tr>
                             <td><kbd>Ctrl/Cmd</kbd> + <kbd>F</kbd></td>
                             <td>Open the Find dialog.</td>
                         </tr>
@@ -773,12 +867,105 @@
                             </td>
                             <td>Redo the last undone action.</td>
                         </tr>
+                        <tr>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Alt</kbd> +
+                                <kbd>V</kbd>
+                            </td>
+                            <td>Toggle Markdown Preview.</td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <kbd>Ctrl/Cmd</kbd> + <kbd>Alt</kbd> +
+                                <kbd>G</kbd>
+                            </td>
+                            <td>Toggle CSV Grid Mode.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>,</kbd></td>
+                            <td>Open Settings.</td>
+                        </tr>
+                        <tr>
+                            <td><kbd>Ctrl/Cmd</kbd> + <kbd>/</kbd></td>
+                            <td>Open Help.</td>
+                        </tr>
                     </tbody>
                 </table>
                 <div class="modal-buttons">
                     <button class="btn" id="closeHelpBtn">
                         <span class="btn-icon">✖️</span>Close
                     </button>
+                </div>
+            </div>
+        </div>
+        <div id="collabModal" class="modal">
+            <div class="modal-content">
+                <h3>🤝 Collaborate</h3>
+                <p>
+                    Status:
+                    <span id="collabStatus" class="disconnected"
+                        >Disconnected</span
+                    >
+                </p>
+                <br />
+                <div class="settings-section">
+                    <h4>Start a New Session</h4>
+                    <button class="btn" id="startCollabBtn">
+                        1. Start Session & Get Offer Code
+                    </button>
+                    <div class="input-group">
+                        <label for="collabOfferOutput"
+                            >Your Offer Code (Send to peer):</label
+                        >
+                        <textarea
+                            id="collabOfferOutput"
+                            readonly
+                            rows="3"
+                        ></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="collabAnswerInput"
+                            >3. Paste Peer's Answer Code:</label
+                        >
+                        <textarea
+                            id="collabAnswerInput"
+                            rows="3"
+                            placeholder="Paste the code from your peer here..."
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="settings-section">
+                    <h4>Join an Existing Session</h4>
+                    <div class="input-group">
+                        <label for="collabOfferInput"
+                            >2. Paste Peer's Offer Code:</label
+                        >
+                        <textarea
+                            id="collabOfferInput"
+                            rows="3"
+                            placeholder="Paste the code from the host here..."
+                        ></textarea>
+                    </div>
+                    <div class="input-group">
+                        <label for="collabAnswerOutput"
+                            >Your Answer Code (Send back to host):</label
+                        >
+                        <textarea
+                            id="collabAnswerOutput"
+                            readonly
+                            rows="3"
+                        ></textarea>
+                    </div>
+                </div>
+                <div class="modal-buttons">
+                    <button
+                        class="btn"
+                        id="disconnectCollabBtn"
+                        style="display: none"
+                    >
+                        Disconnect
+                    </button>
+                    <button class="btn" id="closeCollabBtn">Close</button>
                 </div>
             </div>
         </div>
@@ -798,6 +985,7 @@
                                 saveAsFileBtn: true,
                                 renameFileBtn: true,
                                 emailBtn: true,
+                                collabBtn: true,
                                 previewBtn: true,
                                 gridModeBtn: true,
                                 pdfBtn: true,
@@ -825,6 +1013,11 @@
                         this.redoStack = [];
                         this.lastSavedState = "";
 
+                        // WebRTC state
+                        this.peerConnection = null;
+                        this.dataChannel = null;
+                        this.isUpdatingFromPeer = false;
+
                         this.editorEl = document.getElementById("editor");
                         this.lineNumbersEl =
                             document.getElementById("lineNumbers");
@@ -834,11 +1027,14 @@
                             document.getElementById("statusText");
                         this.cursorPositionEl =
                             document.getElementById("cursorPosition");
+                        this.wordCountEl = document.getElementById("wordCount");
                         this.settingsModal =
                             document.getElementById("settingsModal");
                         this.expanderModal =
                             document.getElementById("expanderModal");
                         this.helpModal = document.getElementById("helpModal");
+                        this.collabModal =
+                            document.getElementById("collabModal");
                         this.previewPane =
                             document.getElementById("previewPane");
                         this.editorWrapper =
@@ -895,6 +1091,11 @@
                         document
                             .getElementById("emailBtn")
                             .addEventListener("click", () => this.emailFile());
+                        document
+                            .getElementById("collabBtn")
+                            .addEventListener("click", () =>
+                                this.showCollabModal(),
+                            );
                         document
                             .getElementById("settingsBtn")
                             .addEventListener("click", () =>
@@ -994,6 +1195,33 @@
                                 this.addExpander(),
                             );
 
+                        // Collaboration modal events
+                        document
+                            .getElementById("closeCollabBtn")
+                            .addEventListener("click", () =>
+                                this.closeCollabModal(),
+                            );
+                        document
+                            .getElementById("startCollabBtn")
+                            .addEventListener("click", () =>
+                                this.startCollaboration(),
+                            );
+                        document
+                            .getElementById("collabOfferInput")
+                            .addEventListener("paste", (e) =>
+                                this.handleOfferPaste(e),
+                            );
+                        document
+                            .getElementById("collabAnswerInput")
+                            .addEventListener("paste", (e) =>
+                                this.handleAnswerPaste(e),
+                            );
+                        document
+                            .getElementById("disconnectCollabBtn")
+                            .addEventListener("click", () =>
+                                this.disconnectCollaboration(),
+                            );
+
                         this.editorEl.addEventListener("input", () =>
                             this.handleEditorInput(),
                         );
@@ -1073,6 +1301,39 @@
                                 } else if (e.key === "s") {
                                     e.preventDefault();
                                     this.saveFile();
+                                } else if (
+                                    e.shiftKey &&
+                                    e.key.toLowerCase() === "r"
+                                ) {
+                                    e.preventDefault();
+                                    this.renameFile();
+                                } else if (e.key.toLowerCase() === "e") {
+                                    e.preventDefault();
+                                    this.emailFile();
+                                } else if (
+                                    e.shiftKey &&
+                                    e.key.toLowerCase() === "c"
+                                ) {
+                                    e.preventDefault();
+                                    this.showCollabModal();
+                                } else if (
+                                    e.altKey &&
+                                    e.key.toLowerCase() === "v"
+                                ) {
+                                    e.preventDefault();
+                                    this.togglePreview();
+                                } else if (
+                                    e.altKey &&
+                                    e.key.toLowerCase() === "g"
+                                ) {
+                                    e.preventDefault();
+                                    this.toggleGridMode();
+                                } else if (e.key === ",") {
+                                    e.preventDefault();
+                                    this.showSettingsModal();
+                                } else if (e.key === "/") {
+                                    e.preventDefault();
+                                    this.showHelpModal();
                                 } else if (e.key === "f") {
                                     e.preventDefault();
                                     this.showFindDialog();
@@ -1556,6 +1817,15 @@
                     handleEditorInput() {
                         if (this.isSwitchingFile) return;
 
+                        // Send data to peer if connected and not updating from peer
+                        if (
+                            this.dataChannel &&
+                            this.dataChannel.readyState === "open" &&
+                            !this.isUpdatingFromPeer
+                        ) {
+                            this.dataChannel.send(this.editorEl.value);
+                        }
+
                         const file = this.files.get(this.activeFileId);
                         if (file) {
                             // Save current state to undo stack before making changes
@@ -1704,6 +1974,15 @@
                         this.statusTextEl.textContent = file
                             ? file.name.replace(/\*$/, "")
                             : "Ready";
+
+                        const content = this.editorEl.value;
+                        const charCount = content.length;
+                        const wordCount = content
+                            .trim()
+                            .split(/\s+/)
+                            .filter(Boolean).length;
+                        this.wordCountEl.textContent = `Words: ${wordCount}, Chars: ${charCount}`;
+
                         const pos = this.editorEl.selectionStart;
                         const text = this.editorEl.value.substring(0, pos);
                         const lines = text.split("\n");
@@ -2020,6 +2299,13 @@
                         this.helpModal.style.display = "none";
                     }
 
+                    showCollabModal() {
+                        this.collabModal.style.display = "block";
+                    }
+                    closeCollabModal() {
+                        this.collabModal.style.display = "none";
+                    }
+
                     showExpanderModal() {
                         this.expanderModal.style.display = "block";
                     }
@@ -2261,6 +2547,151 @@
                             reader.readAsText(file);
                         };
                         input.click();
+                    }
+
+                    // --- WebRTC Collaboration Methods ---
+
+                    async startCollaboration() {
+                        this.updateCollabStatus("connecting", "Connecting...");
+                        const configuration = {
+                            iceServers: [
+                                { urls: "stun:stun.l.google.com:19302" },
+                            ],
+                        };
+                        this.peerConnection = new RTCPeerConnection(
+                            configuration,
+                        );
+
+                        this.peerConnection.onicecandidate = (event) => {
+                            if (event.candidate) {
+                                document.getElementById(
+                                    "collabOfferOutput",
+                                ).value = JSON.stringify(
+                                    this.peerConnection.localDescription,
+                                );
+                            }
+                        };
+
+                        this.dataChannel =
+                            this.peerConnection.createDataChannel(
+                                "text-editor",
+                            );
+                        this.setupDataChannel();
+
+                        const offer = await this.peerConnection.createOffer();
+                        await this.peerConnection.setLocalDescription(offer);
+
+                        document.getElementById("collabOfferOutput").value =
+                            JSON.stringify(offer);
+                    }
+
+                    async handleOfferPaste(event) {
+                        const offerText = event.clipboardData.getData("text");
+                        document.getElementById("collabOfferInput").value =
+                            offerText;
+
+                        this.updateCollabStatus("connecting", "Connecting...");
+                        const configuration = {
+                            iceServers: [
+                                { urls: "stun:stun.l.google.com:19302" },
+                            ],
+                        };
+                        this.peerConnection = new RTCPeerConnection(
+                            configuration,
+                        );
+
+                        this.peerConnection.onicecandidate = (event) => {
+                            if (event.candidate) {
+                                document.getElementById(
+                                    "collabAnswerOutput",
+                                ).value = JSON.stringify(
+                                    this.peerConnection.localDescription,
+                                );
+                            }
+                        };
+
+                        this.peerConnection.ondatachannel = (event) => {
+                            this.dataChannel = event.channel;
+                            this.setupDataChannel();
+                        };
+
+                        const offer = JSON.parse(offerText);
+                        await this.peerConnection.setRemoteDescription(
+                            new RTCSessionDescription(offer),
+                        );
+
+                        const answer = await this.peerConnection.createAnswer();
+                        await this.peerConnection.setLocalDescription(answer);
+
+                        document.getElementById("collabAnswerOutput").value =
+                            JSON.stringify(answer);
+                    }
+
+                    async handleAnswerPaste(event) {
+                        const answerText = event.clipboardData.getData("text");
+                        document.getElementById("collabAnswerInput").value =
+                            answerText;
+                        const answer = JSON.parse(answerText);
+                        if (
+                            this.peerConnection &&
+                            !this.peerConnection.currentRemoteDescription
+                        ) {
+                            await this.peerConnection.setRemoteDescription(
+                                new RTCSessionDescription(answer),
+                            );
+                        }
+                    }
+
+                    setupDataChannel() {
+                        this.dataChannel.onopen = () => {
+                            this.updateCollabStatus("connected", "Connected");
+                            document.getElementById(
+                                "disconnectCollabBtn",
+                            ).style.display = "flex";
+                            // Sync initial content
+                            this.dataChannel.send(this.editorEl.value);
+                        };
+                        this.dataChannel.onclose = () => {
+                            this.updateCollabStatus(
+                                "disconnected",
+                                "Disconnected",
+                            );
+                            document.getElementById(
+                                "disconnectCollabBtn",
+                            ).style.display = "none";
+                        };
+                        this.dataChannel.onmessage = (event) => {
+                            this.isUpdatingFromPeer = true;
+                            const cursorPosition = this.editorEl.selectionStart;
+                            this.editorEl.value = event.data;
+                            this.editorEl.selectionStart =
+                                this.editorEl.selectionEnd = cursorPosition;
+                            this.handleEditorInput(); // To update file state and UI
+                            this.isUpdatingFromPeer = false;
+                        };
+                    }
+
+                    disconnectCollaboration() {
+                        if (this.dataChannel) this.dataChannel.close();
+                        if (this.peerConnection) this.peerConnection.close();
+                        this.peerConnection = null;
+                        this.dataChannel = null;
+                        this.updateCollabStatus("disconnected", "Disconnected");
+                        document.getElementById(
+                            "disconnectCollabBtn",
+                        ).style.display = "none";
+                        document.getElementById("collabOfferOutput").value = "";
+                        document.getElementById("collabAnswerInput").value = "";
+                        document.getElementById("collabOfferInput").value = "";
+                        document.getElementById("collabAnswerOutput").value =
+                            "";
+                    }
+
+                    updateCollabStatus(statusClass, statusText) {
+                        const statusEl =
+                            document.getElementById("collabStatus");
+                        statusEl.className = statusClass;
+                        statusEl.textContent = statusText;
                     }
                 }
                 new TextEditor();
