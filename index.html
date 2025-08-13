@@ -289,7 +289,7 @@
                 padding: 20px;
                 border: 1px solid #3e3e42;
                 border-radius: 6px;
-                width: 450px;
+                width: 550px;
                 color: #e0e0e0;
             }
             .input-group {
@@ -313,11 +313,19 @@
                 justify-content: flex-end;
                 margin-top: 16px;
             }
+            .settings-section {
+                margin-bottom: 20px;
+            }
+            .settings-section h4 {
+                margin-bottom: 10px;
+                border-bottom: 1px solid #3e3e42;
+                padding-bottom: 5px;
+            }
             #settingsExpandersList {
                 margin-bottom: 16px;
                 border: 1px solid #3e3e42;
                 border-radius: 4px;
-                max-height: 250px;
+                max-height: 150px;
                 overflow-y: auto;
                 background: #1e1e1e;
             }
@@ -372,6 +380,17 @@
             }
             .delete-expander:hover {
                 text-decoration: underline;
+            }
+            #buttonVisibilitySettings {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                gap: 10px;
+            }
+            .button-toggle {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 13px;
             }
             .find-dialog {
                 position: absolute;
@@ -526,6 +545,9 @@
                 <button class="btn" id="renameFileBtn">
                     <span class="btn-icon">✏️</span>Rename
                 </button>
+                <button class="btn" id="emailBtn">
+                    <span class="btn-icon">✉️</span>Email
+                </button>
                 <button class="btn" id="previewBtn" style="display: none">
                     <span class="btn-icon">👁️</span>Preview
                 </button>
@@ -542,7 +564,7 @@
                     <span class="btn-icon">🔍</span>Find
                 </button>
                 <button class="btn" id="settingsBtn">
-                    <span class="btn-icon">⚙️</span>Text
+                    <span class="btn-icon">⚙️</span>Settings
                 </button>
                 <button class="btn" id="helpBtn">
                     <span class="btn-icon">❓</span>Help
@@ -649,16 +671,23 @@
         </div>
         <div id="settingsModal" class="modal">
             <div class="modal-content">
-                <h3>⚙️ Text Expanders</h3>
-                <div id="settingsExpandersList"></div>
-                <button class="btn" id="addExpanderBtn">
-                    <span class="btn-icon">➕</span>Add
+                <h3>⚙️ Settings</h3>
+                <div class="settings-section">
+                    <h4>Text Expanders</h4>
+                    <div id="settingsExpandersList"></div>
+                    <button class="btn" id="addExpanderBtn">
+                        <span class="btn-icon">➕</span>Add
+                    </button>
+                </div>
+                <div class="settings-section">
+                    <h4>Toolbar Buttons</h4>
+                    <div id="buttonVisibilitySettings"></div>
+                </div>
+                <button class="btn" id="importSettingsBtn">
+                    <span class="btn-icon">📥</span>Import Settings
                 </button>
-                <button class="btn" id="importExpandersBtn">
-                    <span class="btn-icon">📥</span>Import
-                </button>
-                <button class="btn" id="exportExpandersBtn">
-                    <span class="btn-icon">📤</span>Export
+                <button class="btn" id="exportSettingsBtn">
+                    <span class="btn-icon">📤</span>Export Settings
                 </button>
                 <div class="modal-buttons">
                     <button class="btn" id="closeSettingsBtn">
@@ -760,7 +789,24 @@
                     constructor() {
                         this.files = new Map();
                         this.activeFileId = null;
-                        this.expanders = new Map();
+                        this.settings = {
+                            expanders: [],
+                            buttons: {
+                                newFileBtn: true,
+                                openFileBtn: true,
+                                saveFileBtn: true,
+                                saveAsFileBtn: true,
+                                renameFileBtn: true,
+                                emailBtn: true,
+                                previewBtn: true,
+                                gridModeBtn: true,
+                                pdfBtn: true,
+                                htmlBtn: true,
+                                findBtn: true,
+                                settingsBtn: true,
+                                helpBtn: true,
+                            },
+                        };
                         this.nextFileId = 1;
                         this.isPreviewActive = false;
                         this.isGridActive = false;
@@ -823,7 +869,8 @@
 
                     init() {
                         this.setupEventListeners();
-                        this.loadExpanders();
+                        this.loadSettings();
+                        this.applySettings();
                         this.createNewFile();
                     }
 
@@ -845,6 +892,9 @@
                         document
                             .getElementById("renameFileBtn")
                             .addEventListener("click", () => this.renameFile());
+                        document
+                            .getElementById("emailBtn")
+                            .addEventListener("click", () => this.emailFile());
                         document
                             .getElementById("settingsBtn")
                             .addEventListener("click", () =>
@@ -924,14 +974,14 @@
                                 this.showExpanderModal(),
                             );
                         document
-                            .getElementById("importExpandersBtn")
+                            .getElementById("importSettingsBtn")
                             .addEventListener("click", () =>
-                                this.importExpanders(),
+                                this.importSettings(),
                             );
                         document
-                            .getElementById("exportExpandersBtn")
+                            .getElementById("exportSettingsBtn")
                             .addEventListener("click", () =>
-                                this.exportExpanders(),
+                                this.exportSettings(),
                             );
                         document
                             .getElementById("cancelExpanderBtn")
@@ -1095,9 +1145,15 @@
                                 ) {
                                     const trigger = e.target.dataset.trigger;
                                     if (trigger) {
-                                        this.expanders.delete(trigger);
-                                        this.saveExpanders();
-                                        this.updateSettingsExpandersList();
+                                        const expanders = new Map(
+                                            this.settings.expanders,
+                                        );
+                                        expanders.delete(trigger);
+                                        this.settings.expanders = Array.from(
+                                            expanders.entries(),
+                                        );
+                                        this.saveSettings();
+                                        this.updateSettingsModal();
                                     }
                                 }
                             });
@@ -1418,18 +1474,24 @@
                     updateToolbarButtons(file) {
                         const isMarkdown = file.name.endsWith(".md");
                         const isCsv = file.name.endsWith(".csv");
-                        this.previewBtn.style.display = isMarkdown
-                            ? "inline-block"
-                            : "none";
-                        this.pdfBtn.style.display = isMarkdown
-                            ? "inline-block"
-                            : "none";
-                        this.htmlBtn.style.display = isMarkdown
-                            ? "inline-block"
-                            : "none";
-                        this.gridModeBtn.style.display = isCsv
-                            ? "inline-block"
-                            : "none";
+
+                        // These buttons are conditional on file type
+                        document.getElementById("previewBtn").style.display =
+                            isMarkdown && this.settings.buttons.previewBtn
+                                ? "flex"
+                                : "none";
+                        document.getElementById("pdfBtn").style.display =
+                            isMarkdown && this.settings.buttons.pdfBtn
+                                ? "flex"
+                                : "none";
+                        document.getElementById("htmlBtn").style.display =
+                            isMarkdown && this.settings.buttons.htmlBtn
+                                ? "flex"
+                                : "none";
+                        document.getElementById("gridModeBtn").style.display =
+                            isCsv && this.settings.buttons.gridModeBtn
+                                ? "flex"
+                                : "none";
                     }
 
                     switchToFile(fileId) {
@@ -1521,7 +1583,8 @@
                             0,
                             cursorPos,
                         );
-                        for (const [trigger, replacement] of this.expanders) {
+                        const expanders = new Map(this.settings.expanders);
+                        for (const [trigger, replacement] of expanders) {
                             if (textBeforeCursor.endsWith(trigger)) {
                                 const expandedText =
                                     this.processExpansion(replacement);
@@ -1600,6 +1663,17 @@
                             this.updateStatusBar();
                             this.updateToolbarButtons(file);
                         }
+                    }
+
+                    emailFile() {
+                        const file = this.files.get(this.activeFileId);
+                        if (!file) return;
+
+                        const subject = encodeURIComponent(
+                            file.name.replace(/\*$/, ""),
+                        );
+                        const body = encodeURIComponent(file.content);
+                        window.location.href = `mailto:?subject=${subject}&body=${body}`;
                     }
 
                     renderTabs() {
@@ -1932,7 +2006,7 @@
                     }
 
                     showSettingsModal() {
-                        this.updateSettingsExpandersList();
+                        this.updateSettingsModal();
                         this.settingsModal.style.display = "block";
                     }
                     closeSettingsModal() {
@@ -1962,116 +2036,178 @@
                         const text =
                             document.getElementById("expanderText").value;
                         if (trigger && text) {
-                            this.expanders.set(trigger, text);
-                            this.saveExpanders();
-                            this.updateSettingsExpandersList();
+                            const expanders = new Map(this.settings.expanders);
+                            expanders.set(trigger, text);
+                            this.settings.expanders = Array.from(
+                                expanders.entries(),
+                            );
+                            this.saveSettings();
+                            this.updateSettingsModal();
                             this.closeExpanderModal();
                         }
                     }
 
-                    updateSettingsExpandersList() {
+                    updateSettingsModal() {
+                        // Update expanders list
                         const listEl = document.getElementById(
                             "settingsExpandersList",
                         );
                         listEl.innerHTML = "";
+                        const expanders = new Map(this.settings.expanders);
 
-                        if (this.expanders.size === 0) {
+                        if (expanders.size === 0) {
                             const placeholder = document.createElement("div");
                             placeholder.className = "expander-placeholder";
                             placeholder.textContent =
                                 "No text expanders have been added yet.";
                             listEl.appendChild(placeholder);
-                            return;
+                        } else {
+                            expanders.forEach((text, trigger) => {
+                                const item = document.createElement("div");
+                                item.className = "expander-item";
+                                const textContainer =
+                                    document.createElement("div");
+                                textContainer.className =
+                                    "expander-text-container";
+                                const triggerSpan =
+                                    document.createElement("span");
+                                triggerSpan.className = "expander-trigger";
+                                triggerSpan.textContent = trigger;
+                                const arrowSpan =
+                                    document.createElement("span");
+                                arrowSpan.className = "expander-arrow";
+                                arrowSpan.textContent = "→";
+                                const replacementSpan =
+                                    document.createElement("span");
+                                replacementSpan.className =
+                                    "expander-replacement";
+                                replacementSpan.textContent = text;
+                                textContainer.appendChild(triggerSpan);
+                                textContainer.appendChild(arrowSpan);
+                                textContainer.appendChild(replacementSpan);
+                                const deleteSpan =
+                                    document.createElement("span");
+                                deleteSpan.className = "delete-expander";
+                                deleteSpan.textContent = "🗑️ Delete";
+                                deleteSpan.dataset.trigger = trigger;
+                                item.appendChild(textContainer);
+                                item.appendChild(deleteSpan);
+                                listEl.appendChild(item);
+                            });
                         }
 
-                        this.expanders.forEach((text, trigger) => {
-                            const item = document.createElement("div");
-                            item.className = "expander-item";
-
-                            const textContainer = document.createElement("div");
-                            textContainer.className = "expander-text-container";
-
-                            const triggerSpan = document.createElement("span");
-                            triggerSpan.className = "expander-trigger";
-                            triggerSpan.textContent = trigger;
-
-                            const arrowSpan = document.createElement("span");
-                            arrowSpan.className = "expander-arrow";
-                            arrowSpan.textContent = "→";
-
-                            const replacementSpan =
-                                document.createElement("span");
-                            replacementSpan.className = "expander-replacement";
-                            replacementSpan.textContent = text;
-
-                            textContainer.appendChild(triggerSpan);
-                            textContainer.appendChild(arrowSpan);
-                            textContainer.appendChild(replacementSpan);
-
-                            const deleteSpan = document.createElement("span");
-                            deleteSpan.className = "delete-expander";
-                            deleteSpan.textContent = "🗑️ Delete";
-                            deleteSpan.dataset.trigger = trigger;
-
-                            item.appendChild(textContainer);
-                            item.appendChild(deleteSpan);
-                            listEl.appendChild(item);
-                        });
+                        // Update button visibility checkboxes
+                        const buttonSettingsEl = document.getElementById(
+                            "buttonVisibilitySettings",
+                        );
+                        buttonSettingsEl.innerHTML = "";
+                        for (const btnId in this.settings.buttons) {
+                            const btn = document.getElementById(btnId);
+                            if (btn) {
+                                const label = document.createElement("label");
+                                label.className = "button-toggle";
+                                const checkbox =
+                                    document.createElement("input");
+                                checkbox.type = "checkbox";
+                                checkbox.checked = this.settings.buttons[btnId];
+                                checkbox.dataset.btnId = btnId;
+                                checkbox.addEventListener("change", (e) => {
+                                    this.settings.buttons[
+                                        e.target.dataset.btnId
+                                    ] = e.target.checked;
+                                    this.saveSettings();
+                                    this.applySettings();
+                                });
+                                label.appendChild(checkbox);
+                                label.appendChild(
+                                    document.createTextNode(
+                                        btn.textContent.trim(),
+                                    ),
+                                );
+                                buttonSettingsEl.appendChild(label);
+                            }
+                        }
                     }
 
-                    saveExpanders() {
+                    applySettings() {
+                        for (const btnId in this.settings.buttons) {
+                            const btn = document.getElementById(btnId);
+                            if (btn) {
+                                // Special handling for conditional buttons
+                                if (
+                                    [
+                                        "previewBtn",
+                                        "gridModeBtn",
+                                        "pdfBtn",
+                                        "htmlBtn",
+                                    ].includes(btnId)
+                                ) {
+                                    // Their visibility is handled by updateToolbarButtons
+                                    continue;
+                                }
+                                btn.style.display = this.settings.buttons[btnId]
+                                    ? "flex"
+                                    : "none";
+                            }
+                        }
+                        // Re-evaluate conditional buttons based on the current file
+                        const currentFile = this.files.get(this.activeFileId);
+                        if (currentFile) {
+                            this.updateToolbarButtons(currentFile);
+                        }
+                    }
+
+                    saveSettings() {
                         try {
                             localStorage.setItem(
-                                "editr_expanders",
-                                JSON.stringify(
-                                    Array.from(this.expanders.entries()),
-                                ),
+                                "editr_settings",
+                                JSON.stringify(this.settings),
                             );
                         } catch (e) {
                             console.error(
-                                "Failed to save expanders to localStorage:",
+                                "Failed to save settings to localStorage:",
                                 e,
                             );
                         }
                     }
 
-                    loadExpanders() {
+                    loadSettings() {
                         try {
-                            const data =
-                                localStorage.getItem("editr_expanders");
+                            const data = localStorage.getItem("editr_settings");
                             if (data) {
-                                this.expanders = new Map(JSON.parse(data));
+                                const loadedSettings = JSON.parse(data);
+                                // Merge loaded settings with defaults to ensure new settings are not missed
+                                this.settings.expanders =
+                                    loadedSettings.expanders || [];
+                                Object.assign(
+                                    this.settings.buttons,
+                                    loadedSettings.buttons,
+                                );
                             }
                         } catch (e) {
                             console.error(
-                                "Failed to load expanders from localStorage:",
+                                "Failed to load settings from localStorage:",
                                 e,
                             );
-                            this.expanders = new Map();
                         }
                     }
 
-                    exportExpanders() {
-                        if (this.expanders.size === 0) {
-                            alert("No text expanders to export.");
+                    exportSettings() {
+                        if (
+                            this.settings.expanders.length === 0 &&
+                            Object.values(this.settings.buttons).every((v) => v)
+                        ) {
+                            alert("No custom settings to export.");
                             return;
                         }
 
-                        const lines = [];
-                        for (const [
-                            trigger,
-                            text,
-                        ] of this.expanders.entries()) {
-                            lines.push(`${trigger}=${text}`);
-                        }
-                        const content = lines.join("\n");
-
+                        const content = JSON.stringify(this.settings, null, 2);
                         const blob = new Blob([content], {
-                            type: "text/plain;charset=utf-8",
+                            type: "application/json;charset=utf-8",
                         });
                         const a = document.createElement("a");
                         a.href = URL.createObjectURL(blob);
-                        a.download = "editr-expanders.txt";
+                        a.download = "editr-settings.json";
                         a.style.display = "none";
                         document.body.appendChild(a);
                         a.click();
@@ -2079,57 +2215,43 @@
                         URL.revokeObjectURL(a.href);
                     }
 
-                    importExpanders() {
+                    importSettings() {
                         const input = document.createElement("input");
                         input.type = "file";
-                        input.accept = ".txt,text/plain";
+                        input.accept = ".json,application/json";
                         input.onchange = (e) => {
                             const file = e.target.files[0];
                             if (!file) return;
 
                             const reader = new FileReader();
                             reader.onload = (e) => {
-                                const content = e.target.result;
-                                const lines = content.split("\n");
-                                let importedCount = 0;
-
-                                if (
-                                    !confirm(
-                                        "This will merge imported expanders and overwrite any with the same trigger. Continue?",
-                                    )
-                                ) {
-                                    return;
-                                }
-
-                                for (const line of lines) {
-                                    const trimmedLine = line.trim();
-                                    if (!trimmedLine) continue;
-
-                                    const separatorIndex =
-                                        trimmedLine.indexOf("=");
-                                    if (separatorIndex > 0) {
-                                        const trigger = trimmedLine
-                                            .substring(0, separatorIndex)
-                                            .trim();
-                                        const text = trimmedLine.substring(
-                                            separatorIndex + 1,
-                                        );
-                                        if (trigger) {
-                                            this.expanders.set(trigger, text);
-                                            importedCount++;
-                                        }
-                                    }
-                                }
-
-                                if (importedCount > 0) {
-                                    this.saveExpanders();
-                                    this.updateSettingsExpandersList();
-                                    alert(
-                                        `Successfully imported and merged ${importedCount} expander(s).`,
+                                try {
+                                    const importedData = JSON.parse(
+                                        e.target.result,
                                     );
-                                } else {
-                                    alert(
-                                        "Could not find any valid expanders in the selected file. Ensure format is 'trigger=replacement'.",
+                                    if (
+                                        confirm(
+                                            "This will overwrite your current settings. Continue?",
+                                        )
+                                    ) {
+                                        this.settings.expanders =
+                                            importedData.expanders || [];
+                                        Object.assign(
+                                            this.settings.buttons,
+                                            importedData.buttons,
+                                        );
+                                        this.saveSettings();
+                                        this.applySettings();
+                                        this.updateSettingsModal();
+                                        alert(
+                                            "Settings imported successfully.",
+                                        );
+                                    }
+                                } catch (err) {
+                                    alert("Invalid settings file.");
+                                    console.error(
+                                        "Failed to parse settings file:",
+                                        err,
                                     );
                                 }
                             };
