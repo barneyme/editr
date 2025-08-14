@@ -63,11 +63,16 @@ document.addEventListener("DOMContentLoaded", function () {
     if (hasIdInUrl) {
       tabId = lastSegment;
     } else {
+      // Generate a new tab ID
       tabId = Math.random().toString(36).substr(2, 6);
-      const basePath = path.endsWith("/")
-        ? path
-        : path.substring(0, path.lastIndexOf("/") + 1);
-      window.history.replaceState({}, "", `${basePath}${tabId}`);
+
+      // Only update the URL if we're not on the root path or index.html
+      if (path !== '/' && !path.endsWith('index.html')) {
+        const basePath = path.endsWith("/")
+          ? path
+          : path.substring(0, path.lastIndexOf("/") + 1);
+        window.history.replaceState({}, "", `${basePath}${tabId}`);
+      }
     }
   }
 
@@ -548,11 +553,9 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function newTab() {
-    const newId = Math.random().toString(36).substr(2, 6);
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
-    const newUrl = `${window.location.origin}${basePath}${newId}`;
-    window.open(newUrl, "_blank");
+    // Simply open the same base URL - let the initialization handle creating a new tab ID
+    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
+    window.open(baseUrl, "_blank");
   }
 
   function toggleFullscreen() {
@@ -869,7 +872,9 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!searchTerm) return;
 
     const regex = new RegExp(
-      searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
+      searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\  function replaceAll() {
+    const searchTerm = findInput.value;
+    const replaceTerm"),
       "gi",
     );
     const originalValue = editor.value;
