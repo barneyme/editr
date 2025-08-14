@@ -63,16 +63,11 @@ document.addEventListener("DOMContentLoaded", function () {
     if (hasIdInUrl) {
       tabId = lastSegment;
     } else {
-      // Generate a new tab ID
       tabId = Math.random().toString(36).substr(2, 6);
-
-      // Only update the URL if we're not on the root path or index.html
-      if (path !== '/' && !path.endsWith('index.html')) {
-        const basePath = path.endsWith("/")
-          ? path
-          : path.substring(0, path.lastIndexOf("/") + 1);
-        window.history.replaceState({}, "", `${basePath}${tabId}`);
-      }
+      const basePath = path.endsWith("/")
+        ? path
+        : path.substring(0, path.lastIndexOf("/") + 1);
+      window.history.replaceState({}, "", `${basePath}${tabId}`);
     }
   }
 
@@ -553,9 +548,28 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function newTab() {
-    // Simply open the same base URL - let the initialization handle creating a new tab ID
-    const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/');
-    window.open(baseUrl, "_blank");
+    // Try different approaches based on current URL structure
+    const currentPath = window.location.pathname;
+    const origin = window.location.origin;
+
+    // If current path has an ID, replace it with a new one
+    if (currentPath.match(/\/[a-z0-9]{6}$/)) {
+      const newId = Math.random().toString(36).substr(2, 6);
+      const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
+      const newUrl = `${origin}${basePath}${newId}`;
+      window.open(newUrl, "_blank");
+    }
+    // If we're on index.html or root, open with a new ID
+    else if (currentPath.endsWith('/') || currentPath.endsWith('index.html') || currentPath === '/') {
+      const newId = Math.random().toString(36).substr(2, 6);
+      const basePath = currentPath.endsWith('/') ? currentPath : currentPath.replace(/\/[^\/]*$/, '/');
+      const newUrl = `${origin}${basePath}${newId}`;
+      window.open(newUrl, "_blank");
+    }
+    // Fallback: just open the same URL and let initialization handle it
+    else {
+      window.open(window.location.href, "_blank");
+    }
   }
 
   function toggleFullscreen() {
