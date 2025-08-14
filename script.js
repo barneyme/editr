@@ -1349,7 +1349,24 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      switch (e.key.toLowerCase()) {
+      
+      // Provide alternative shortcuts that avoid browser-reserved ones:
+      // - Ctrl/Cmd+Shift+N for New Tab (avoid Cmd+N)
+      // - Ctrl/Cmd+Shift+W for Close Buffer (avoid Cmd+W)
+      if (e.shiftKey) {
+        const keyLower = e.key.toLowerCase();
+        if (keyLower === "n") {
+          e.preventDefault();
+          newTab();
+          return;
+        }
+        if (keyLower === "w") {
+          e.preventDefault();
+          closeBuffer(activeBufferIndex);
+          return;
+        }
+      }
+switch (e.key.toLowerCase()) {
         case "f":
           e.preventDefault();
           openFindDialog();
@@ -1401,9 +1418,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   document.addEventListener("contextmenu", (e) => {
-    if (window.innerWidth <= 768) {
-      return;
-    }
     e.preventDefault();
 
     const bufferList = document.getElementById("ctxBufferList");
