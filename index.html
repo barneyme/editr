@@ -67,24 +67,31 @@ Files auto-save in browser.
 Editr.cc/#NOTE creates 'NOTE'
 ..................................
 SHORTCUTS
-Ctrl/Cmd + F : Find and Replace
-Ctrl/Cmd + E : Text expansions
-Ctrl/Cmd + S : Save file
-Ctrl/Cmd + O : Open file
-Ctrl/Cmd + N : New tab
-Ctrl/Cmd + W : Close buffer
-Ctrl/Cmd + D : Dark/light mode
-Ctrl/Cmd + = : Lock/unlock note
-Ctrl/Cmd + 1~9 : Switch buffers
-Ctrl/Cmd + ←/→ : Switch buffers
-F11          : Full screen
-Ctrl/Cmd + K : Open command palette
-Right-click  : Context Menu
+Ctrl/Cmd + F         : Find and Replace
+Ctrl/Cmd + E         : Text expansions
+Ctrl/Cmd + S         : Save file
+Ctrl/Cmd + O         : Open file
+Ctrl/Cmd + N         : New tab
+Ctrl/Cmd + W         : Close buffer
+Ctrl/Cmd + D         : Dark/light mode
+Ctrl/Cmd + =         : Lock/unlock note
+Ctrl/Cmd + Shift + E : Export project
+Ctrl/Cmd + Shift + I : Import project
+Ctrl/Cmd + 1~9       : Switch buffers
+Ctrl/Cmd + ←/→       : Switch buffers
+F11                  : Full screen
+Ctrl/Cmd + K         : Open command palette
+Right-click          : Context Menu
 ..................................
 EXPANSIONS
 Type a shortcut and press Space/Enter.
 .d           : Insert current date (YYYYMMDD)
-.a ~ .z    : User customizable
+.a ~ .z      : User customizable
+..................................
+PROJECTS
+Export: Save all buffers as JSON file
+Import: Load project (replace or merge)
+Projects preserve buffer states and encryption
 ..................................
 Made by [Barney](www.barney.me)
 ..................................
@@ -126,6 +133,13 @@ Made by [Barney](www.barney.me)
                     </div>
                     <div class="context-menu-item" id="ctxSaveFile">
                         Save File As
+                    </div>
+                    <hr class="context-menu-divider" />
+                    <div class="context-menu-item" id="ctxExportProject">
+                        Export Project
+                    </div>
+                    <div class="context-menu-item" id="ctxImportProject">
+                        Import Project
                     </div>
                     <hr class="context-menu-divider" />
                     <div class="context-menu-item" id="ctxFindReplace">

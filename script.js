@@ -243,10 +243,12 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       // Initialize with empty strings for all customizable shortcuts
       expansions = {};
-      const shortcuts = "abcdefghijklmnoprstuvwxyz".split(""); // q is missing because it's hard to type .q on some mobile keyboards.
+      const shortcuts = "abcdefghijklmnopqrstuvwxyz".split(""); // Now includes q
       shortcuts.forEach((char) => {
         expansions["." + char] = "";
       });
+      // Set default value for .d expansion
+      expansions[".d"] = "YYYYMMDD";
     }
   }
 
@@ -560,6 +562,102 @@ document.addEventListener("DOMContentLoaded", function () {
     loadActiveBuffer();
   }
 
+  async function exportProject() {
+    const projectData = {
+      version: "1.0",
+      tabId: tabId,
+      activeBufferIndex: activeBufferIndex,
+      buffers: buffers.map((buffer) => ({
+        name: buffer.name,
+        content: buffer.isLocked ? "" : buffer.content,
+        originalContent: buffer.originalContent,
+        isLocked: buffer.isLocked,
+        encryptedContent: buffer.encryptedContent,
+        salt: buffer.salt,
+        iv: buffer.iv,
+      })),
+      expansions: expansions,
+      exportDate: new Date().toISOString(),
+    };
+
+    const jsonContent = JSON.stringify(projectData, null, 2);
+    const blob = new Blob([jsonContent], { type: "application/json" });
+
+    // Use File System Access API if available
+    if ("showSaveFilePicker" in window) {
+      try {
+        const handle = await window.showSaveFilePicker({
+          suggestedName: `editr-project-${tabId}.json`,
+          types: [
+            {
+              description: "Editr Project files",
+              accept: {
+                "application/json": [".json"],
+              },
+            },
+          ],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(jsonContent);
+        await writable.close();
+        showSaveIndicator("Project exported!");
+        return;
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.log("Save picker failed:", err);
+        }
+        return;
+      }
+    }
+
+    // Fallback for older browsers
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `editr-project-${tabId}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showSaveIndicator("Project downloaded!");
+  }
+
+  async function importProject() {
+    if ("showOpenFilePicker" in window) {
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          multiple: false,
+          types: [
+            {
+              description: "Editr Project files",
+              accept: {
+                "application/json": [".json"],
+              },
+            },
+          ],
+        });
+        const file = await handle.getFile();
+        const content = await file.text();
+        await processProjectImport(content);
+      } catch (err) {
+        if (err.name !== "AbortError") {
+          console.log("File picker failed:", err);
+        }
+      }
+    } else {
+      // Create a temporary file input for older browsers
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = ".json";
+      input.addEventListener("change", async (e) => {
+        if (e.target.files[0]) {
+          const file = e.target.files[0];
+          const content = await file.text();
+          await processProjectImport(content);
+        }
+      });
+      input.click();
+    }
+  }
+
   function newTab() {
     const newId = Math.random().toString(36).substr(2, 6);
     const newUrl = `${window.location.origin}${window.location.pathname}#${newId}`;
@@ -846,11 +944,21 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
     {
-      name: "Open File...",
+      name: "Open File",
       action: openFile,
       shortcut: "Ctrl+O",
     },
     { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
+    {
+      name: "Export Project",
+      action: exportProject,
+      shortcut: "Ctrl+Shift+E",
+    },
+    {
+      name: "Import Project",
+      action: importProject,
+      shortcut: "Ctrl+Shift+I",
+    },
     {
       name: "Toggle Dark/Light Mode",
       action: toggleDarkMode,
@@ -1368,8 +1476,19 @@ document.addEventListener("DOMContentLoaded", function () {
           newTab();
           break;
         case "e":
-          e.preventDefault();
-          openExpansionsModal();
+          if (e.shiftKey) {
+            e.preventDefault();
+            exportProject();
+          } else {
+            e.preventDefault();
+            openExpansionsModal();
+          }
+          break;
+        case "i":
+          if (e.shiftKey) {
+            e.preventDefault();
+            importProject();
+          }
           break;
         case "w":
           e.preventDefault();
@@ -1497,6 +1616,14 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   document.getElementById("ctxSaveFile").addEventListener("click", () => {
     saveFile();
+    hideContextMenu();
+  });
+  document.getElementById("ctxExportProject").addEventListener("click", () => {
+    exportProject();
+    hideContextMenu();
+  });
+  document.getElementById("ctxImportProject").addEventListener("click", () => {
+    importProject();
     hideContextMenu();
   });
   document.getElementById("ctxCloseBuffer").addEventListener("click", () => {
