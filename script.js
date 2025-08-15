@@ -55,7 +55,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const hash = window.location.hash.slice(1); // Remove the #
 
     if (hash) {
-      tabId = hash;
+      // Parse the hash to extract just the tabId (everything before the first dash)
+      const hashParts = hash.split("-");
+      tabId = hashParts[0];
     } else {
       tabId = Math.random().toString(36).substr(2, 6);
       window.location.hash = tabId;
@@ -63,7 +65,10 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function getFileNameForUrl(fileName) {
+    // Remove file extension
     const nameWithoutExt = fileName.replace(/\.[^/.]+$/, "");
+    // Convert to lowercase and replace non-alphanumeric characters with nothing
+    // This ensures we get a clean URL-safe string
     return nameWithoutExt.toLowerCase().replace(/[^a-z0-9]/g, "");
   }
 
@@ -73,25 +78,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let newHash;
     if (buffer.name === "editr.txt") {
+      // For default buffer, just use the tab ID
       newHash = tabId;
     } else {
+      // For other files, use tabId + filename (but ensure we don't duplicate)
       const urlName = getFileNameForUrl(buffer.name);
       newHash = `${tabId}-${urlName}`;
     }
 
-    if (window.location.hash.slice(1) !== newHash) {
-      window.location.hash = newHash;
+    // Only update if the hash is actually different
+    const currentHash = window.location.hash.slice(1);
+    if (currentHash !== newHash) {
+      // Use replaceState to avoid adding to browser history for every buffer switch
+      window.history.replaceState(null, null, `#${newHash}`);
     }
   }
 
   function handleHashChange() {
     const newHash = window.location.hash.slice(1);
-    if (newHash && newHash !== tabId) {
-      // If the hash changed externally (e.g., browser back/forward)
-      tabId = newHash;
+    if (!newHash) return;
 
+    // Parse the hash to extract tabId and potential filename
+    const hashParts = newHash.split("-");
+    const newTabId = hashParts[0];
+
+    // If this is a different tab entirely, we could handle that here
+    if (newTabId && newTabId !== tabId) {
+      tabId = newTabId;
       // Optionally reload buffers for the new tab
-      // For now, we'll just update the current tab ID
     }
   }
 
