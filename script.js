@@ -38,6 +38,9 @@ document.addEventListener("DOMContentLoaded", function () {
   const KEY_DERIVATION_ALGORITHM = "PBKDF2";
   const HASH_ALGORITHM = "SHA-256";
   const KEY_DERIVATION_ITERATIONS = 100000;
+  // Special buffer names
+  const CALC_BUFFER_NAME = "[Calculator]";
+  const CALENDAR_BUFFER_NAME = "[Calendar]";
 
   let tabId;
   let buffers = [];
@@ -45,6 +48,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let commandPaletteOpen = false;
   let currentCommands = [];
   let expansions = {};
+  let calendarInterval = null;
 
   // --- App State & Settings ---
   let lastSearch = { term: "" };
@@ -74,7 +78,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function updateUrlForCurrentBuffer() {
     const buffer = buffers[activeBufferIndex];
-    if (!buffer) return;
+    if (!buffer || buffer.isSpecial) return;
 
     let newHash;
     if (buffer.name === "editr.txt") {
@@ -128,9 +132,10 @@ document.addEventListener("DOMContentLoaded", function () {
       this.encryptedContent = encryptedContent;
       this.salt = salt;
       this.iv = iv;
+      this.isSpecial = false; // For calculator/calendar buffers
     }
     get isModified() {
-      if (this.isLocked) return false;
+      if (this.isLocked || this.isSpecial) return false;
       return this.content !== this.originalContent;
     }
     markSaved() {
@@ -213,15 +218,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function saveBuffersToLocalStorage() {
-    const buffersToSave = buffers.map((buffer) => ({
-      name: buffer.name,
-      content: buffer.isLocked ? "" : buffer.content,
-      originalContent: buffer.originalContent,
-      isLocked: buffer.isLocked,
-      encryptedContent: buffer.encryptedContent,
-      salt: buffer.salt,
-      iv: buffer.iv,
-    }));
+    const buffersToSave = buffers
+      .filter((buffer) => !buffer.isSpecial) // Don't save special buffers
+      .map((buffer) => ({
+        name: buffer.name,
+        content: buffer.isLocked ? "" : buffer.content,
+        originalContent: buffer.originalContent,
+        isLocked: buffer.isLocked,
+        encryptedContent: buffer.encryptedContent,
+        salt: buffer.salt,
+        iv: buffer.iv,
+      }));
     localStorage.setItem(
       `editr_buffers_${tabId}`,
       JSON.stringify(buffersToSave),
@@ -310,8 +317,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function switchToBuffer(index) {
     if (index < 0 || index >= buffers.length) return;
+    // Clear calendar interval when switching away from a calendar buffer
+    if (calendarInterval) {
+      clearInterval(calendarInterval);
+      calendarInterval = null;
+    }
     const currentBuf = buffers[activeBufferIndex];
-    if (currentBuf && !currentBuf.isLocked) {
+    if (currentBuf && !currentBuf.isLocked && !currentBuf.isSpecial) {
       currentBuf.content = editor.value;
     }
     activeBufferIndex = index;
@@ -342,9 +354,30 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function loadActiveBuffer() {
+    if (calendarInterval) clearInterval(calendarInterval); // Clear any existing interval
+
     const buffer = buffers[activeBufferIndex];
     if (buffer) {
-      if (buffer.isLocked) {
+      if (buffer.name === CALENDAR_BUFFER_NAME) {
+        // Handle calendar buffer
+        editor.value = generateCalendarView(buffer.calendarDate);
+        editor.readOnly = true;
+        editor.placeholder = "Calendar View. 'n' for next, 'p' for previous.";
+        calendarInterval = setInterval(() => {
+          if (
+            activeBufferIndex >= buffers.length ||
+            buffers[activeBufferIndex].name !== CALENDAR_BUFFER_NAME
+          ) {
+            clearInterval(calendarInterval);
+            calendarInterval = null;
+            return;
+          }
+          const { scrollTop, scrollLeft } = editor;
+          editor.value = generateCalendarView(buffers[activeBufferIndex].calendarDate);
+          editor.scrollTop = scrollTop;
+          editor.scrollLeft = scrollLeft;
+        }, 1000);
+      } else if (buffer.isLocked) {
         editor.value = "";
         editor.placeholder =
           "🔒 This note is locked. Press Ctrl/Cmd + = to unlock.";
@@ -352,7 +385,10 @@ document.addEventListener("DOMContentLoaded", function () {
       } else {
         editor.value = buffer.content;
         editor.placeholder = "Right click or Ctrl\\Cmd + K for menu.";
-        editor.readOnly = false;
+        editor.readOnly = buffer.name === CALC_BUFFER_NAME;
+        if (buffer.name === CALC_BUFFER_NAME) {
+            editor.readOnly = false;
+        }
       }
       updateWordCount();
       updateBufferBar();
@@ -409,6 +445,10 @@ document.addEventListener("DOMContentLoaded", function () {
   async function saveFile() {
     const buffer = buffers[activeBufferIndex];
     if (!buffer) return;
+    if (buffer.isSpecial) {
+      showSaveIndicator("Cannot save this type of buffer.", true);
+      return;
+    }
     if (buffer.isLocked) {
       showSaveIndicator("Cannot save a locked note!");
       return;
@@ -515,7 +555,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   async function toggleLock() {
     const buffer = buffers[activeBufferIndex];
-    if (!buffer) return;
+    if (!buffer || buffer.isSpecial) return;
     if (buffer.isLocked) {
       const password = prompt("Enter password to unlock:");
       if (!password) return;
@@ -567,15 +607,17 @@ document.addEventListener("DOMContentLoaded", function () {
       version: "1.0",
       tabId: tabId,
       activeBufferIndex: activeBufferIndex,
-      buffers: buffers.map((buffer) => ({
-        name: buffer.name,
-        content: buffer.isLocked ? "" : buffer.content,
-        originalContent: buffer.originalContent,
-        isLocked: buffer.isLocked,
-        encryptedContent: buffer.encryptedContent,
-        salt: buffer.salt,
-        iv: buffer.iv,
-      })),
+      buffers: buffers
+        .filter((b) => !b.isSpecial)
+        .map((buffer) => ({
+          name: buffer.name,
+          content: buffer.isLocked ? "" : buffer.content,
+          originalContent: buffer.originalContent,
+          isLocked: buffer.isLocked,
+          encryptedContent: buffer.encryptedContent,
+          salt: buffer.salt,
+          iv: buffer.iv,
+        })),
       expansions: expansions,
       exportDate: new Date().toISOString(),
     };
@@ -931,6 +973,93 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // --- New Feature Functions ---
+  function emailBuffer() {
+    const buffer = buffers[activeBufferIndex];
+    if (!buffer) return;
+    if (buffer.isLocked) {
+      showSaveIndicator("Cannot email a locked note!", true);
+      return;
+    }
+    if (buffer.isSpecial) {
+      showSaveIndicator("Cannot email this type of buffer.", true);
+      return;
+    }
+    const subject = `Note: ${buffer.name}`;
+    const body = buffer.content;
+    const mailtoLink = `mailto:?subject=${encodeURIComponent(
+      subject,
+    )}&body=${encodeURIComponent(body)}`;
+    window.location.href = mailtoLink;
+  }
+
+  function openCalculator() {
+    const existingIndex = buffers.findIndex((b) => b.name === CALC_BUFFER_NAME);
+    if (existingIndex !== -1) {
+      switchToBuffer(existingIndex);
+      return;
+    }
+    const content = `Welcome to the Editr Calculator!\nType a math expression (e.g., 5 * (10 + 2)) and press Enter.\n\n`;
+    const buffer = new FileBuffer(CALC_BUFFER_NAME, content);
+    buffer.isSpecial = true;
+    buffers.push(buffer);
+    switchToBuffer(buffers.length - 1);
+  }
+
+  function openCalendar() {
+    const existingIndex = buffers.findIndex(
+      (b) => b.name === CALENDAR_BUFFER_NAME,
+    );
+    if (existingIndex !== -1) {
+      switchToBuffer(existingIndex);
+      return;
+    }
+    const buffer = new FileBuffer(CALENDAR_BUFFER_NAME, "");
+    buffer.isSpecial = true;
+    buffer.calendarDate = new Date();
+    buffers.push(buffer);
+    switchToBuffer(buffers.length - 1);
+  }
+
+  function generateCalendarView(date) {
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    const dateString = now.toLocaleDateString(undefined, {
+      weekday: "long",
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+
+    const month = date.getMonth();
+    const year = date.getFullYear();
+    const monthName = date.toLocaleString("default", { month: "long" });
+
+    let calendar = `..................................\n`;
+    calendar += `${dateString}\n`;
+    calendar += `${timeString}\n`;
+    calendar += `..................................\n\n`;
+    calendar += `     ${monthName} ${year}\n`;
+    calendar += `Su Mo Tu We Th Fr Sa\n`;
+
+    const firstDayOfMonth = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    let line = " ".repeat(firstDayOfMonth * 3);
+
+    for (let day = 1; day <= daysInMonth; day++) {
+      line += day.toString().padStart(2, " ") + " ";
+      if ((day + firstDayOfMonth) % 7 === 0 || day === daysInMonth) {
+        calendar += line.trimEnd() + "\n";
+        line = "";
+      }
+    }
+    calendar += `\n..................................\n`;
+    calendar += `Controls: 'n' for next month, 'p' for previous month.\n`;
+    return calendar;
+  }
+  // --- End New Feature Functions ---
+
   const staticCommands = [
     {
       name: "Find / Replace...",
@@ -942,6 +1071,9 @@ document.addEventListener("DOMContentLoaded", function () {
       action: openExpansionsModal,
       shortcut: "Ctrl+E",
     },
+    { name: "Open Calculator", action: openCalculator },
+    { name: "Open Calendar", action: openCalendar },
+    { name: "Email Current Buffer", action: emailBuffer },
     { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
     {
       name: "Open File",
@@ -1174,6 +1306,26 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function handleCalculatorEvaluation() {
+    const cursorPos = editor.selectionStart;
+    const textUpToCursor = editor.value.substring(0, cursorPos);
+    const lastNewline = textUpToCursor.lastIndexOf("\n");
+    const currentLine = editor.value.substring(lastNewline + 1, cursorPos).trim();
+
+    if (currentLine) {
+      try {
+        const sanitizedExpression = currentLine.replace(/[^-()\d/*+.\s^]/g, "");
+        const result = new Function(
+          "return " + sanitizedExpression.replace(/\^/g, "**"),
+        )();
+        editor.setRangeText(` = ${result}\n`, cursorPos, cursorPos, "end");
+      } catch (error) {
+        editor.setRangeText(` = Error\n`, cursorPos, cursorPos, "end");
+      }
+      editor.dispatchEvent(new Event("input", { bubbles: true }));
+    }
+  }
+
   function loadFileContent(file) {
     const reader = new FileReader();
     reader.onload = (e) => createNewBuffer(file.name, e.target.result, null);
@@ -1184,7 +1336,7 @@ document.addEventListener("DOMContentLoaded", function () {
   editor.addEventListener("input", function () {
     lastMatch = null;
     const buffer = buffers[activeBufferIndex];
-    if (buffer && !buffer.isLocked) {
+    if (buffer && !buffer.isLocked && !buffer.isSpecial) {
       buffer.content = editor.value;
       updateBufferBar();
       saveBuffersToLocalStorage();
@@ -1311,9 +1463,34 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  editor.addEventListener("keydown", handleTextExpansion);
-  editor.addEventListener("keydown", handleAutoClosingBrackets);
-  editor.addEventListener("keydown", handleAutoIndent);
+  editor.addEventListener("keydown", (e) => {
+    const buffer = buffers[activeBufferIndex];
+    if (!buffer) return;
+
+    // Handle special buffer inputs
+    if (buffer.name === CALC_BUFFER_NAME && e.key === "Enter") {
+      e.preventDefault();
+      handleCalculatorEvaluation();
+      return;
+    }
+    if (buffer.name === CALENDAR_BUFFER_NAME) {
+      if (e.key === "n" || e.key === "p") {
+        e.preventDefault();
+        const currentDate = buffer.calendarDate;
+        const direction = e.key === "n" ? 1 : -1;
+        currentDate.setMonth(currentDate.getMonth() + direction);
+        buffer.calendarDate = new Date(currentDate);
+        editor.value = generateCalendarView(buffer.calendarDate);
+      }
+      return; // Prevent other handlers for calendar
+    }
+
+    // Regular handlers
+    handleTextExpansion(e);
+    handleAutoClosingBrackets(e);
+    handleAutoIndent(e);
+  });
+
   editor.addEventListener("keyup", handleBracketMatching);
 
   hamburgerBtn.addEventListener("click", (e) => {
@@ -1664,6 +1841,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const prevIndex =
       activeBufferIndex > 0 ? activeBufferIndex - 1 : buffers.length - 1;
     switchToBuffer(prevIndex);
+    hideContextMenu();
+  });
+  // New context menu listeners
+  document.getElementById("ctxCalculator").addEventListener("click", () => {
+    openCalculator();
+    hideContextMenu();
+  });
+  document.getElementById("ctxCalendar").addEventListener("click", () => {
+    openCalendar();
+    hideContextMenu();
+  });
+  document.getElementById("ctxEmailBuffer").addEventListener("click", () => {
+    emailBuffer();
     hideContextMenu();
   });
 
