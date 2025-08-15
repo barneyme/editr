@@ -548,28 +548,11 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function newTab() {
-    // Try different approaches based on current URL structure
+    const newId = Math.random().toString(36).substr(2, 6);
     const currentPath = window.location.pathname;
-    const origin = window.location.origin;
-
-    // If current path has an ID, replace it with a new one
-    if (currentPath.match(/\/[a-z0-9]{6}$/)) {
-      const newId = Math.random().toString(36).substr(2, 6);
-      const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
-      const newUrl = `${origin}${basePath}${newId}`;
-      window.open(newUrl, "_blank");
-    }
-    // If we're on index.html or root, open with a new ID
-    else if (currentPath.endsWith('/') || currentPath.endsWith('index.html') || currentPath === '/') {
-      const newId = Math.random().toString(36).substr(2, 6);
-      const basePath = currentPath.endsWith('/') ? currentPath : currentPath.replace(/\/[^\/]*$/, '/');
-      const newUrl = `${origin}${basePath}${newId}`;
-      window.open(newUrl, "_blank");
-    }
-    // Fallback: just open the same URL and let initialization handle it
-    else {
-      window.open(window.location.href, "_blank");
-    }
+    const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
+    const newUrl = `${window.location.origin}${basePath}${newId}`;
+    window.open(newUrl, "_blank");
   }
 
   function toggleFullscreen() {
@@ -707,74 +690,6 @@ document.addEventListener("DOMContentLoaded", function () {
     editor.focus();
   }
 
-  saveExpansionsBtn.addEventListener("click", () => {
-    const inputs = expansionsList.querySelectorAll("input[data-key]");
-    inputs.forEach((input) => {
-      const key = input.dataset.key;
-      if (expansions.hasOwnProperty(key)) {
-        expansions[key] = input.value;
-      }
-    });
-    saveExpansions();
-    showSaveIndicator("Expansions saved!");
-    closeExpansionsModal();
-  });
-
-  exportExpansionsBtn.addEventListener("click", () => {
-    const content = Object.entries(expansions)
-      .filter(([key, value]) => value) // Only export non-empty expansions
-      .map(([key, value]) => `${key}=${value}`)
-      .join("\n");
-
-    const blob = new Blob([content], {
-      type: "text/plain;charset=utf-8",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "editr-expansions.txt";
-    a.click();
-    URL.revokeObjectURL(url);
-    showSaveIndicator("Expansions exported!");
-  });
-
-  importExpansionsBtn.addEventListener("click", () => {
-    importExpansionsInput.click();
-  });
-
-  importExpansionsInput.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const content = event.target.result;
-      const lines = content.split("\n");
-      let importCount = 0;
-      lines.forEach((line) => {
-        const parts = line.split("=");
-        if (parts.length >= 2) {
-          const key = parts[0].trim();
-          const value = parts.slice(1).join("=").trim();
-          if (expansions.hasOwnProperty(key)) {
-            expansions[key] = value;
-            importCount++;
-          }
-        }
-      });
-      saveExpansions();
-      openExpansionsModal(); // Re-open/refresh the modal with new values
-      showSaveIndicator(`Imported ${importCount} expansions!`);
-    };
-    reader.onerror = () => {
-      showSaveIndicator("Error reading file.", true);
-    };
-    reader.readAsText(file);
-    e.target.value = ""; // Reset file input
-  });
-
-  closeExpansionsBtn.addEventListener("click", closeExpansionsModal);
-
   // --- FINALIZED Find/Replace Logic ---
   function openFindDialog() {
     findReplaceDialog.classList.remove("hidden");
@@ -859,6 +774,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     editor.focus();
   }
+
   function replace() {
     const searchTerm = findInput.value;
     const replaceTerm = replaceInput.value;
@@ -886,9 +802,7 @@ document.addEventListener("DOMContentLoaded", function () {
     if (!searchTerm) return;
 
     const regex = new RegExp(
-      searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\  function replaceAll() {
-    const searchTerm = findInput.value;
-    const replaceTerm"),
+      searchTerm.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
       "gi",
     );
     const originalValue = editor.value;
@@ -1141,6 +1055,12 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  function loadFileContent(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => createNewBuffer(file.name, e.target.result, null);
+    reader.readAsText(file);
+  }
+
   // Event Listeners
   editor.addEventListener("input", function () {
     lastMatch = null;
@@ -1162,6 +1082,7 @@ document.addEventListener("DOMContentLoaded", function () {
   replaceBtn.addEventListener("click", replace);
   replaceAllBtn.addEventListener("click", replaceAll);
   closeFindBtn.addEventListener("click", closeFindDialog);
+
   findInput.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
       e.preventDefault();
@@ -1172,6 +1093,7 @@ document.addEventListener("DOMContentLoaded", function () {
       closeFindDialog();
     }
   });
+
   replaceInput.addEventListener("keydown", (e) => {
     if (e.key === "Escape") {
       e.preventDefault();
@@ -1179,17 +1101,80 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
-  function loadFileContent(file) {
+  saveExpansionsBtn.addEventListener("click", () => {
+    const inputs = expansionsList.querySelectorAll("input[data-key]");
+    inputs.forEach((input) => {
+      const key = input.dataset.key;
+      if (expansions.hasOwnProperty(key)) {
+        expansions[key] = input.value;
+      }
+    });
+    saveExpansions();
+    showSaveIndicator("Expansions saved!");
+    closeExpansionsModal();
+  });
+
+  exportExpansionsBtn.addEventListener("click", () => {
+    const content = Object.entries(expansions)
+      .filter(([key, value]) => value) // Only export non-empty expansions
+      .map(([key, value]) => `${key}=${value}`)
+      .join("\n");
+
+    const blob = new Blob([content], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "editr-expansions.txt";
+    a.click();
+    URL.revokeObjectURL(url);
+    showSaveIndicator("Expansions exported!");
+  });
+
+  importExpansionsBtn.addEventListener("click", () => {
+    importExpansionsInput.click();
+  });
+
+  importExpansionsInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
     const reader = new FileReader();
-    reader.onload = (e) => createNewBuffer(file.name, e.target.result, null);
+    reader.onload = (event) => {
+      const content = event.target.result;
+      const lines = content.split("\n");
+      let importCount = 0;
+      lines.forEach((line) => {
+        const parts = line.split("=");
+        if (parts.length >= 2) {
+          const key = parts[0].trim();
+          const value = parts.slice(1).join("=").trim();
+          if (expansions.hasOwnProperty(key)) {
+            expansions[key] = value;
+            importCount++;
+          }
+        }
+      });
+      saveExpansions();
+      openExpansionsModal(); // Re-open/refresh the modal with new values
+      showSaveIndicator(`Imported ${importCount} expansions!`);
+    };
+    reader.onerror = () => {
+      showSaveIndicator("Error reading file.", true);
+    };
     reader.readAsText(file);
-  }
+    e.target.value = ""; // Reset file input
+  });
+
+  closeExpansionsBtn.addEventListener("click", closeExpansionsModal);
 
   editor.addEventListener("dragover", (e) => {
     e.preventDefault();
     e.stopPropagation();
     editor.classList.add("drag-over");
   });
+
   editor.addEventListener("dragleave", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1197,6 +1182,7 @@ document.addEventListener("DOMContentLoaded", function () {
       editor.classList.remove("drag-over");
     }
   });
+
   editor.addEventListener("drop", (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -1349,24 +1335,7 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
 
-      
-      // Provide alternative shortcuts that avoid browser-reserved ones:
-      // - Ctrl/Cmd+Shift+N for New Tab (avoid Cmd+N)
-      // - Ctrl/Cmd+Shift+W for Close Buffer (avoid Cmd+W)
-      if (e.shiftKey) {
-        const keyLower = e.key.toLowerCase();
-        if (keyLower === "n") {
-          e.preventDefault();
-          newTab();
-          return;
-        }
-        if (keyLower === "w") {
-          e.preventDefault();
-          closeBuffer(activeBufferIndex);
-          return;
-        }
-      }
-switch (e.key.toLowerCase()) {
+      switch (e.key.toLowerCase()) {
         case "f":
           e.preventDefault();
           openFindDialog();
@@ -1418,6 +1387,9 @@ switch (e.key.toLowerCase()) {
   });
 
   document.addEventListener("contextmenu", (e) => {
+    if (window.innerWidth <= 768) {
+      return;
+    }
     e.preventDefault();
 
     const bufferList = document.getElementById("ctxBufferList");
@@ -1489,6 +1461,7 @@ switch (e.key.toLowerCase()) {
     }
   });
 
+  // Context menu item event listeners
   document.getElementById("ctxCommandPalette").addEventListener("click", () => {
     openCommandPalette();
     hideContextMenu();
