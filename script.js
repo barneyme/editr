@@ -52,22 +52,13 @@ document.addEventListener("DOMContentLoaded", function () {
   const bracketPairs = { "(": ")", "[": "]", "{": "}" };
 
   function initializeTabAndUrl() {
-    const path = window.location.pathname;
-    const pathSegments = path
-      .split("/")
-      .filter((segment) => segment && segment !== "index.html");
-    const lastSegment =
-      pathSegments.length > 0 ? pathSegments[pathSegments.length - 1] : null;
-    const hasIdInUrl = lastSegment && !lastSegment.includes(".");
+    const hash = window.location.hash.slice(1); // Remove the #
 
-    if (hasIdInUrl) {
-      tabId = lastSegment;
+    if (hash) {
+      tabId = hash;
     } else {
       tabId = Math.random().toString(36).substr(2, 6);
-      const basePath = path.endsWith("/")
-        ? path
-        : path.substring(0, path.lastIndexOf("/") + 1);
-      window.history.replaceState({}, "", `${basePath}${tabId}`);
+      window.location.hash = tabId;
     }
   }
 
@@ -80,19 +71,27 @@ document.addEventListener("DOMContentLoaded", function () {
     const buffer = buffers[activeBufferIndex];
     if (!buffer) return;
 
-    let urlPath;
+    let newHash;
     if (buffer.name === "editr.txt") {
-      urlPath = `/${tabId}`;
+      newHash = tabId;
     } else {
       const urlName = getFileNameForUrl(buffer.name);
-      urlPath = `/${urlName}`;
+      newHash = `${tabId}-${urlName}`;
     }
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
-    const newPath = `${basePath}${urlPath.substring(1)}`;
 
-    if (window.location.pathname !== newPath) {
-      window.history.replaceState({}, "", newPath);
+    if (window.location.hash.slice(1) !== newHash) {
+      window.location.hash = newHash;
+    }
+  }
+
+  function handleHashChange() {
+    const newHash = window.location.hash.slice(1);
+    if (newHash && newHash !== tabId) {
+      // If the hash changed externally (e.g., browser back/forward)
+      tabId = newHash;
+
+      // Optionally reload buffers for the new tab
+      // For now, we'll just update the current tab ID
     }
   }
 
@@ -549,9 +548,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function newTab() {
     const newId = Math.random().toString(36).substr(2, 6);
-    const currentPath = window.location.pathname;
-    const basePath = currentPath.substring(0, currentPath.lastIndexOf("/") + 1);
-    const newUrl = `${window.location.origin}${basePath}${newId}`;
+    const newUrl = `${window.location.origin}${window.location.pathname}#${newId}`;
     window.open(newUrl, "_blank");
   }
 
@@ -1528,6 +1525,9 @@ document.addEventListener("DOMContentLoaded", function () {
     switchToBuffer(prevIndex);
     hideContextMenu();
   });
+
+  // Hash change event listener for browser back/forward navigation
+  window.addEventListener("hashchange", handleHashChange);
 
   // Initialization
   initializeTabAndUrl();
