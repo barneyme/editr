@@ -296,7 +296,7 @@ body.dark-mode #findReplaceDialog button:hover {
 }
 
 body.dark-mode #contextMenu.mobile-menu .submenu {
-     border-top-color: #555;
+    border-top-color: #555;
 }
 
 /* --- Dark Mode Overrides --- */
@@ -574,9 +574,7 @@ body.dark-mode .expansions-footer button:hover {
 
     #contextMenu {
         width: 280px; /* Slightly wider on mobile */
-        max-width: calc(
-            100vw - 20px
-        ); /* Ensure it fits on screen */
+        max-width: calc(100vw - 20px); /* Ensure it fits on screen */
     }
     #findReplaceDialog {
         width: calc(100% - 20px);

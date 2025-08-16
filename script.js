@@ -373,7 +373,9 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
           }
           const { scrollTop, scrollLeft } = editor;
-          editor.value = generateCalendarView(buffers[activeBufferIndex].calendarDate);
+          editor.value = generateCalendarView(
+            buffers[activeBufferIndex].calendarDate,
+          );
           editor.scrollTop = scrollTop;
           editor.scrollLeft = scrollLeft;
         }, 1000);
@@ -387,7 +389,7 @@ document.addEventListener("DOMContentLoaded", function () {
         editor.placeholder = "Right click or Ctrl\\Cmd + K for menu.";
         editor.readOnly = buffer.name === CALC_BUFFER_NAME;
         if (buffer.name === CALC_BUFFER_NAME) {
-            editor.readOnly = false;
+          editor.readOnly = false;
         }
       }
       updateWordCount();
@@ -1062,12 +1064,12 @@ document.addEventListener("DOMContentLoaded", function () {
 
   const staticCommands = [
     {
-      name: "Find / Replace...",
+      name: "Find / Replace",
       action: openFindDialog,
       shortcut: "Ctrl+F",
     },
     {
-      name: "Manage Text Expansions",
+      name: "Text Expansions",
       action: openExpansionsModal,
       shortcut: "Ctrl+E",
     },
@@ -1310,7 +1312,9 @@ document.addEventListener("DOMContentLoaded", function () {
     const cursorPos = editor.selectionStart;
     const textUpToCursor = editor.value.substring(0, cursorPos);
     const lastNewline = textUpToCursor.lastIndexOf("\n");
-    const currentLine = editor.value.substring(lastNewline + 1, cursorPos).trim();
+    const currentLine = editor.value
+      .substring(lastNewline + 1, cursorPos)
+      .trim();
 
     if (currentLine) {
       try {
