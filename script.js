@@ -1247,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", function () {
       switchToBuffer(existingIndex);
       return;
     }
-    const content = `Welcome to the Text Tools!\n\nPaste your text in this buffer.\nThen, on a new line, type a command and press Enter.\nExample:\n\nHello World\n>> to uppercase\n\n----\n\nAvailable Commands:\n>> count words\n>> count characters\n>> to uppercase\n>> to lowercase\n>> to title case\n>> to sentence case\n>> invert case\n>> trim lines\n>> reverse lines\n>> sort lines\n>> sort lines desc\n>> shuffle lines\n>> unique lines\n>> delete blank lines\n>> number lines\n>> format json\n>> prefix lines [text]\n>> suffix lines [text]\n>> extract emails\n>> extract urls\n>> strip html\n`;
+    const content = `Welcome to the Text Tools. Paste your text in this buffer, then on a new line, type a command and press Enter.\n\nAvailable Commands:\n>> count words\n>> count characters\n>> to uppercase\n>> to lowercase\n>> to title case\n>> to sentence case\n>> invert case\n>> trim lines\n>> reverse lines\n>> sort lines\n>> sort lines desc\n>> shuffle lines\n>> unique lines\n>> delete blank lines\n>> number lines\n>> format json\n>> prefix lines [text]\n>> suffix lines [text]\n>> extract emails\n>> extract urls\n>> strip html\n`;
     const buffer = new FileBuffer(TEXT_TOOLS_BUFFER_NAME, content);
     buffer.isSpecial = true;
     buffers.push(buffer);
