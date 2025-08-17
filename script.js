@@ -630,11 +630,16 @@ document.addEventListener("DOMContentLoaded", function () {
     editor.focus();
   }
 
+  // MODIFIED FUNCTION
   function toggleStats() {
-    const isHidden = statsDisplay.classList.toggle("hidden");
-    localStorage.setItem("showStats", !isHidden);
-    if (!isHidden) {
+    const isCurrentlyHidden = statsDisplay.classList.contains("hidden");
+    if (isCurrentlyHidden) {
+      statsDisplay.classList.remove("hidden");
+      localStorage.setItem("showStats", "true");
       updateStatsDisplay();
+    } else {
+      statsDisplay.classList.add("hidden");
+      localStorage.setItem("showStats", "false");
     }
   }
 
@@ -935,6 +940,58 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       });
       input.click();
+    }
+  }
+
+  // NEW FUNCTION
+  async function processProjectImport(jsonContent) {
+    try {
+      const projectData = JSON.parse(jsonContent);
+
+      // Basic validation
+      if (!projectData.version || !projectData.buffers || !projectData.tabId) {
+        alert("Invalid or corrupted project file.");
+        return;
+      }
+
+      const confirmImport = confirm(
+        "Importing this project will replace your current buffers in this tab. Are you sure you want to continue?",
+      );
+
+      if (confirmImport) {
+        // Restore buffers
+        buffers = projectData.buffers.map((b) => {
+          const buffer = new FileBuffer(
+            b.name,
+            b.content,
+            null,
+            b.isLocked,
+            b.encryptedContent,
+            b.salt,
+            b.iv,
+          );
+          // Restore grid view state if it exists in the project file
+          buffer.isGridView = b.isGridView || false;
+          return buffer;
+        });
+        activeBufferIndex = projectData.activeBufferIndex || 0;
+        if (activeBufferIndex >= buffers.length) activeBufferIndex = 0;
+
+        // Restore expansions
+        if (projectData.expansions) {
+          expansions = projectData.expansions;
+          saveExpansions();
+        }
+
+        saveBuffersToLocalStorage();
+        updateBufferBar();
+        loadActiveBuffer();
+
+        showSaveIndicator("Project imported successfully!");
+      }
+    } catch (error) {
+      console.error("Failed to import project:", error);
+      alert("Failed to import project. The file may be invalid.");
     }
   }
 
