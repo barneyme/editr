@@ -69,23 +69,18 @@
 editr : browser editor
 <div id="currentBuffer">Buffer: 1/1 - editr.txt</div>
 <div id="wordCount">Words: 0 | Lines: 0</div>
-SHORTCUTS
-Ctrl/Cmd + F         : Find and Replace
-Ctrl/Cmd + E         : Text expansions
+HELP
+Ctrl/Cmd + K         : Open command palette
+Right-click          : Context Menu
 Ctrl/Cmd + S         : Save file
 Ctrl/Cmd + O         : Open file
 Ctrl/Cmd + N         : New tab
 Editr.cc/#NOTE       : Creates 'NOTE'
+Ctrl/Cmd + F         : Find and Replace
+Ctrl/Cmd + E         : Text expansions
 Ctrl/Cmd + W         : Close buffer
-Ctrl/Cmd + D         : Dark/light mode
 Ctrl/Cmd + =         : Lock/unlock note
-Ctrl/Cmd + Shift + E : Export project
-Ctrl/Cmd + Shift + I : Import project
-Ctrl/Cmd + 1~9       : Switch buffers
 Ctrl/Cmd + ←/→       : Switch buffers
-F11                  : Full screen
-Ctrl/Cmd + K         : Open command palette
-Right-click          : Context Menu
 
 TOOLS
 Calculator   : Open a simple calculator in a new buffer.
@@ -93,9 +88,34 @@ Calendar     : Open a dynamic calendar and clock in a new buffer.
 Email Buffer : Open default mail client with buffer content.
 Export       : Save all buffers + expansions as JSON project.
 Import       : Load project (replace or merge) from JSON project.
-Projects preserve buffer states and encryption
+Text Tools   : Perform actions on text.
+Text Expansion:Expand shortcut to long text.
 
-EXPANSIONS
+TEXT TOOLS
+Commands:
+>> count words
+>> count characters
+>> to uppercase
+>> to lowercase
+>> to title case
+>> to sentence case:
+>> invert case
+>> trim lines
+>> reverse lines
+>> sort lines
+>> sort lines desc
+>> shuffle lines
+>> unique lines
+>> delete blank lines
+>> number lines
+>> format json
+>> prefix lines [text]
+>> suffix lines [text]
+>> extract emails
+>> extract urls
+>> strip html
+
+TEXT EXPANSIONS
 Type a shortcut and press Space/Enter.
 .d           : Insert current date (YYYYMMDD)
 .a ~ .z      : User customizable

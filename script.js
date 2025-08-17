@@ -1247,7 +1247,7 @@ document.addEventListener("DOMContentLoaded", function () {
       switchToBuffer(existingIndex);
       return;
     }
-    const content = `Welcome to the Text Tools!\n\nPaste your text in this buffer.\nThen, on a new line, type a command and press Enter.\nExample:\n\nHello World\n>> to uppercase\n\n----\n\nAvailable Commands:\n>> count words\n>> count characters\n>> to uppercase\n>> to lowercase\n>> trim lines\n>> reverse lines\n>> sort lines\n>> unique lines\n>> format json\n>> url encode\n>> url decode\n>> base64 encode\n>> base64 decode\n`;
+    const content = `Welcome to the Text Tools!\n\nPaste your text in this buffer.\nThen, on a new line, type a command and press Enter.\nExample:\n\nHello World\n>> to uppercase\n\n----\n\nAvailable Commands:\n>> count words\n>> count characters\n>> to uppercase\n>> to lowercase\n>> to title case\n>> to sentence case\n>> invert case\n>> trim lines\n>> reverse lines\n>> sort lines\n>> sort lines desc\n>> shuffle lines\n>> unique lines\n>> delete blank lines\n>> number lines\n>> format json\n>> prefix lines [text]\n>> suffix lines [text]\n>> extract emails\n>> extract urls\n>> strip html\n`;
     const buffer = new FileBuffer(TEXT_TOOLS_BUFFER_NAME, content);
     buffer.isSpecial = true;
     buffers.push(buffer);
@@ -1320,11 +1320,11 @@ document.addEventListener("DOMContentLoaded", function () {
       shortcut: "Ctrl+←",
     },
     {
-      name: "Close Current Buffer",
+      name: "Close Buffer",
       action: () => closeBuffer(activeBufferIndex),
       shortcut: "Ctrl+W",
     },
-    { name: "Email Current Buffer", action: emailBuffer },
+    { name: "Email Buffer", action: emailBuffer },
     // --- Tools ---
     {
       name: "Lock/Unlock Note",
@@ -1336,10 +1336,10 @@ document.addEventListener("DOMContentLoaded", function () {
       action: openExpansionsModal,
       shortcut: "Ctrl+E",
     },
-    { name: "Open Calculator", action: openCalculator },
-    { name: "Open Calendar", action: openCalendar },
+    { name: "Calculator", action: openCalculator },
+    { name: "Calendar", action: openCalendar },
     // START OF CHANGE
-    { name: "Open Text Tools", action: openTextTools },
+    { name: "Text Tools", action: openTextTools },
     // END OF CHANGE
     {
       name: "Export Project",
@@ -1351,15 +1351,15 @@ document.addEventListener("DOMContentLoaded", function () {
       action: importProject,
       shortcut: "Ctrl+Shift+I",
     },
-    { name: "Toggle Grid View", action: toggleGridView },
+    { name: "Grid View", action: toggleGridView },
     {
-      name: "Toggle Dark/Light Mode",
+      name: "Dark/Light Mode",
       action: toggleDarkMode,
       shortcut: "Ctrl+D",
     },
-    { name: "Toggle Word Wrap", action: toggleWordWrap },
+    { name: "Word Wrap", action: toggleWordWrap },
     {
-      name: "Toggle Fullscreen",
+      name: "Fullscreen",
       action: toggleFullscreen,
       shortcut: "F11",
     },
@@ -1598,48 +1598,121 @@ document.addEventListener("DOMContentLoaded", function () {
     let result = "";
 
     try {
-      switch (command) {
-        case "count words":
+      switch (true) {
+        case command === "count words":
           result = `Word Count: ${textToProcess.trim() === "" ? 0 : textToProcess.trim().split(/\s+/).length}`;
           break;
-        case "count characters":
+        case command === "count characters":
           result = `Character Count: ${textToProcess.length}`;
           break;
-        case "to uppercase":
+        case command === "to uppercase":
           result = textToProcess.toUpperCase();
           break;
-        case "to lowercase":
+        case command === "to lowercase":
           result = textToProcess.toLowerCase();
           break;
-        case "trim lines":
+        case command === "to title case":
+          result = textToProcess
+            .toLowerCase()
+            .split(" ")
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+          break;
+        case command === "to sentence case":
+          result = textToProcess
+            .toLowerCase()
+            .replace(/(^|[.!?]\s+)([a-z])/g, (match, p1, p2) => {
+              return p1 + p2.toUpperCase();
+            });
+          break;
+        case command === "invert case":
+          result = textToProcess
+            .split("")
+            .map((char) => {
+              if (char === char.toLowerCase()) {
+                return char.toUpperCase();
+              } else {
+                return char.toLowerCase();
+              }
+            })
+            .join("");
+          break;
+        case command === "trim lines":
           result = textToProcess
             .split("\n")
             .map((line) => line.trim())
             .join("\n");
           break;
-        case "reverse lines":
+        case command === "reverse lines":
           result = textToProcess.split("\n").reverse().join("\n");
           break;
-        case "sort lines":
+        case command === "sort lines":
           result = textToProcess.split("\n").sort().join("\n");
           break;
-        case "unique lines":
+        case command === "sort lines desc":
+          result = textToProcess.split("\n").sort().reverse().join("\n");
+          break;
+        case command === "shuffle lines":
+          const lines = textToProcess.split("\n");
+          for (let i = lines.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [lines[i], lines[j]] = [lines[j], lines[i]];
+          }
+          result = lines.join("\n");
+          break;
+        case command === "delete blank lines":
+          result = textToProcess
+            .split("\n")
+            .filter((line) => line.trim() !== "")
+            .join("\n");
+          break;
+        case command === "number lines":
+          result = textToProcess
+            .split("\n")
+            .map((line, index) => `${index + 1}. ${line}`)
+            .join("\n");
+          break;
+        case command.startsWith("prefix lines"):
+          const prefix = command.substring("prefix lines".length).trim();
+          if (prefix) {
+            result = textToProcess
+              .split("\n")
+              .map((line) => `${prefix}${line}`)
+              .join("\n");
+          } else {
+            result = "Usage: >> prefix lines [your prefix]";
+          }
+          break;
+        case command.startsWith("suffix lines"):
+          const suffix = command.substring("suffix lines".length).trim();
+          if (suffix) {
+            result = textToProcess
+              .split("\n")
+              .map((line) => `${line}${suffix}`)
+              .join("\n");
+          } else {
+            result = "Usage: >> suffix lines [your suffix]";
+          }
+          break;
+        case command === "unique lines":
           result = [...new Set(textToProcess.split("\n"))].join("\n");
           break;
-        case "format json":
+        case command === "format json":
           result = JSON.stringify(JSON.parse(textToProcess), null, 2);
           break;
-        case "url encode":
-          result = encodeURIComponent(textToProcess);
+        case command === "extract emails":
+          const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
+          const emails = textToProcess.match(emailRegex);
+          result = emails ? emails.join("\n") : "No emails found.";
           break;
-        case "url decode":
-          result = decodeURIComponent(textToProcess);
+        case command === "extract urls":
+          const urlRegex = /https?:\/\/[^\s]+/g;
+          const urls = textToProcess.match(urlRegex);
+          result = urls ? urls.join("\n") : "No URLs found.";
           break;
-        case "base64 encode":
-          result = btoa(textToProcess);
-          break;
-        case "base64 decode":
-          result = atob(textToProcess);
+        case command === "strip html":
+          const htmlRegex = /<[^>]*>/g;
+          result = textToProcess.replace(htmlRegex, "");
           break;
         default:
           result = `Unknown command: "${command}"`;
@@ -1805,9 +1878,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     // START OF CHANGE
     if (buffer.name === TEXT_TOOLS_BUFFER_NAME && e.key === "Enter") {
-      e.preventDefault();
-      handleTextToolsEvaluation();
-      return;
+      const cursorPos = editor.selectionStart;
+      const textUpToCursor = editor.value.substring(0, cursorPos);
+      const lastNewline = textUpToCursor.lastIndexOf("\n");
+      const currentLine = editor.value
+        .substring(lastNewline + 1, cursorPos)
+        .trim();
+
+      if (currentLine.startsWith(">>")) {
+        e.preventDefault();
+        handleTextToolsEvaluation();
+        return;
+      }
     }
     // END OF CHANGE
     if (buffer.name === CALENDAR_BUFFER_NAME) {
