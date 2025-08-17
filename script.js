@@ -1192,21 +1192,32 @@ document.addEventListener("DOMContentLoaded", function () {
   function openLinkFromCurrentLine() {
     const cursorPos = editor.selectionStart;
     const text = editor.value;
-    const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
-    const lineEnd = text.indexOf("\n", cursorPos);
-    const currentLine = text
-      .substring(lineStart, lineEnd === -1 ? text.length : lineEnd)
-      .trim();
 
-    // Regex to find a URL in the line
-    const urlRegex = /(https?:\/\/[^\s]+)/;
+    // Find the start of the current line by going backwards from the cursor.
+    const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
+
+    // Find the end of the current line by going forwards from the line's start.
+    let lineEnd = text.indexOf("\n", lineStart);
+    if (lineEnd === -1) {
+      lineEnd = text.length; // Handles the last line of the file
+    }
+
+    const currentLine = text.substring(lineStart, lineEnd);
+
+    // Regex to find the first URL in the line.
+    const urlRegex = /https?:\/\/[^\s<>()"]+/;
     const match = currentLine.match(urlRegex);
 
     if (match && match[0]) {
       try {
-        // Further validation by creating a URL object
-        new URL(match[0]);
-        window.open(match[0], "_blank", "noopener,noreferrer");
+        // The regex can be greedy, so trim common trailing punctuation.
+        let url = match[0];
+        while (/[.,;!?]$/.test(url)) {
+          url = url.slice(0, -1);
+        }
+
+        new URL(url); // Validate the cleaned URL
+        window.open(url, "_blank", "noopener,noreferrer");
       } catch (_) {
         showSaveIndicator("Invalid URL found on the current line.", true);
       }
