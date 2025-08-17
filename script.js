@@ -2,7 +2,6 @@ document.addEventListener("DOMContentLoaded", function () {
   // Get DOM elements
   const editor = document.getElementById("editor");
   const fileInput = document.getElementById("fileInput");
-  const wordCount = document.getElementById("wordCount");
   const currentBuffer = document.getElementById("currentBuffer");
   const contextMenu = document.getElementById("contextMenu");
   const helpModal = document.getElementById("helpModal");
@@ -37,6 +36,12 @@ document.addEventListener("DOMContentLoaded", function () {
   const replaceBtn = document.getElementById("replaceBtn");
   const replaceAllBtn = document.getElementById("replaceAllBtn");
   const closeFindBtn = document.getElementById("closeFindBtn");
+
+  // Stats Display elements
+  const statsDisplay = document.getElementById("statsDisplay");
+  const lineStat = document.getElementById("lineStat");
+  const charStat = document.getElementById("charStat");
+  const wordStat = document.getElementById("wordStat");
 
   // Crypto constants
   const ENCRYPTION_ALGORITHM = "AES-GCM";
@@ -425,7 +430,7 @@ document.addEventListener("DOMContentLoaded", function () {
           }
         }
       }
-      updateWordCount();
+      updateStatsDisplay();
       updateBufferBar();
       if (!buffer.isGridView) editor.focus();
     }
@@ -602,6 +607,12 @@ document.addEventListener("DOMContentLoaded", function () {
     if (isWordWrapOff) {
       editor.classList.add("no-wrap");
     }
+
+    const showStats = localStorage.getItem("showStats") === "true";
+    if (showStats) {
+      statsDisplay.classList.remove("hidden");
+      updateStatsDisplay();
+    }
   }
 
   function toggleDarkMode() {
@@ -619,21 +630,41 @@ document.addEventListener("DOMContentLoaded", function () {
     editor.focus();
   }
 
-  function updateWordCount() {
+  function toggleStats() {
+    const isHidden = statsDisplay.classList.toggle("hidden");
+    localStorage.setItem("showStats", !isHidden);
+    if (!isHidden) {
+      updateStatsDisplay();
+    }
+  }
+
+  function updateStatsDisplay() {
+    if (!statsDisplay || statsDisplay.classList.contains("hidden")) return;
+
     const buffer = buffers[activeBufferIndex];
     if (!buffer) return;
 
-    let text;
+    let text, lineNumber, charPos, wordCountVal;
+
     if (buffer.isGridView) {
       const table = gridContent.querySelector("table");
       text = table ? table.innerText : "";
+      lineNumber = "-";
+      charPos = "-";
+      wordCountVal = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
     } else {
       text = editor.value;
+      const cursorPos = editor.selectionStart;
+      const textBeforeCursor = text.substring(0, cursorPos);
+      lineNumber = (textBeforeCursor.match(/\n/g) || []).length + 1;
+      const lastNewlineIndex = textBeforeCursor.lastIndexOf("\n");
+      charPos = cursorPos - (lastNewlineIndex + 1) + 1;
+      wordCountVal = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
     }
 
-    const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
-    const lines = text === "" ? 0 : text.split("\n").length;
-    wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
+    lineStat.textContent = `↓${lineNumber}`;
+    charStat.textContent = `→${charPos}`;
+    wordStat.textContent = `=${wordCountVal}`;
   }
 
   async function saveFile() {
@@ -1618,8 +1649,11 @@ document.addEventListener("DOMContentLoaded", function () {
       updateBufferBar();
       saveBuffersToLocalStorage();
     }
-    updateWordCount();
+    updateStatsDisplay();
   });
+
+  editor.addEventListener("keyup", updateStatsDisplay);
+  editor.addEventListener("click", updateStatsDisplay);
 
   fileInput.addEventListener("change", (e) => {
     if (e.target.files[0]) loadFileContent(e.target.files[0]);
@@ -1814,6 +1848,10 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const buffer = buffers[activeBufferIndex];
+      document.getElementById("ctxBufferMenuLabel").textContent =
+        `Buffer: ${buffer.name}`;
+      document.getElementById("ctxToggleStats").firstElementChild.textContent =
+        statsDisplay.classList.contains("hidden") ? "Show Stats" : "Hide Stats";
       document.getElementById("ctxToggleLock").firstElementChild.textContent =
         buffer && buffer.isLocked ? "Unlock Note" : "Lock Note";
       document.getElementById("ctxToggleDark").firstElementChild.textContent =
@@ -2009,6 +2047,10 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const buffer = buffers[activeBufferIndex];
+    document.getElementById("ctxBufferMenuLabel").textContent =
+      `Buffer: ${buffer.name}`;
+    document.getElementById("ctxToggleStats").firstElementChild.textContent =
+      statsDisplay.classList.contains("hidden") ? "Show Stats" : "Hide Stats";
     document.getElementById("ctxToggleLock").firstElementChild.textContent =
       buffer && buffer.isLocked ? "Unlock Note" : "Lock Note";
     document.getElementById("ctxToggleDark").firstElementChild.textContent =
@@ -2083,7 +2125,7 @@ document.addEventListener("DOMContentLoaded", function () {
       gridToContent(buffer);
       updateBufferBar();
       saveBuffersToLocalStorage();
-      updateWordCount();
+      updateStatsDisplay();
     }
   });
 
@@ -2143,6 +2185,10 @@ document.addEventListener("DOMContentLoaded", function () {
   });
   document.getElementById("ctxToggleWrap").addEventListener("click", () => {
     toggleWordWrap();
+    hideContextMenu();
+  });
+  document.getElementById("ctxToggleStats").addEventListener("click", () => {
+    toggleStats();
     hideContextMenu();
   });
   document

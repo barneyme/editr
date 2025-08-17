@@ -55,8 +55,7 @@
             <h3>editr Help & Shortcuts</h3>
             <pre id="helpText">
 editr : browser editor
-<div id="currentBuffer">Buffer: 1/1 - editr.txt</div>
-<div id="wordCount">Words: 0 | Lines: 0</div>
+
 HELP
 Right-click          : Context Menu
 Ctrl/Cmd + S         : Save file
@@ -169,7 +168,7 @@ Type a shortcut and press Space/Enter.
             </div>
 
             <div class="context-menu-item has-submenu">
-                <span>Buffer</span>
+                <span id="ctxBufferMenuLabel">Buffer</span>
                 <div class="submenu">
                     <div class="context-menu-item" id="ctxNextBuffer">
                         <span>Next Buffer</span>
@@ -231,6 +230,9 @@ Type a shortcut and press Space/Enter.
                     <div class="context-menu-item" id="ctxToggleWrap">
                         <span>Toggle Word Wrap</span>
                     </div>
+                    <div class="context-menu-item" id="ctxToggleStats">
+                        <span>Show Stats</span>
+                    </div>
                     <div class="context-menu-item" id="ctxToggleFullscreen">
                         <span>Fullscreen</span>
                         <span class="shortcut">F11</span>
@@ -246,6 +248,11 @@ Type a shortcut and press Space/Enter.
         </div>
 
         <div id="mobileControls">
+            <div id="statsDisplay" class="hidden">
+                <span id="lineStat">↓1</span>
+                <span id="charStat">→1</span>
+                <span id="wordStat">=0</span>
+            </div>
             <button class="mobile-btn" id="hamburgerBtn" title="Menu">
                 ☰
             </button>
