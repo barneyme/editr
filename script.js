@@ -49,9 +49,7 @@ document.addEventListener("DOMContentLoaded", function () {
   // Special buffer names
   const CALC_BUFFER_NAME = "[Calculator]";
   const CALENDAR_BUFFER_NAME = "[Calendar]";
-  // START OF CHANGE
   const TEXT_TOOLS_BUFFER_NAME = "[TextTools]";
-  // END OF CHANGE
 
   let tabId;
   let buffers = [];
@@ -1191,6 +1189,32 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   // --- New Feature Functions ---
+  function openLinkFromCurrentLine() {
+    const cursorPos = editor.selectionStart;
+    const text = editor.value;
+    const lineStart = text.lastIndexOf("\n", cursorPos - 1) + 1;
+    const lineEnd = text.indexOf("\n", cursorPos);
+    const currentLine = text
+      .substring(lineStart, lineEnd === -1 ? text.length : lineEnd)
+      .trim();
+
+    // Regex to find a URL in the line
+    const urlRegex = /(https?:\/\/[^\s]+)/;
+    const match = currentLine.match(urlRegex);
+
+    if (match && match[0]) {
+      try {
+        // Further validation by creating a URL object
+        new URL(match[0]);
+        window.open(match[0], "_blank", "noopener,noreferrer");
+      } catch (_) {
+        showSaveIndicator("Invalid URL found on the current line.", true);
+      }
+    } else {
+      showSaveIndicator("No URL found on the current line.", true);
+    }
+  }
+
   function emailBuffer() {
     const buffer = buffers[activeBufferIndex];
     if (!buffer) return;
@@ -1238,7 +1262,6 @@ document.addEventListener("DOMContentLoaded", function () {
     switchToBuffer(buffers.length - 1);
   }
 
-  // START OF CHANGE
   function openTextTools() {
     const existingIndex = buffers.findIndex(
       (b) => b.name === TEXT_TOOLS_BUFFER_NAME,
@@ -1253,7 +1276,6 @@ document.addEventListener("DOMContentLoaded", function () {
     buffers.push(buffer);
     switchToBuffer(buffers.length - 1);
   }
-  // END OF CHANGE
 
   function generateCalendarView(date) {
     const now = new Date();
@@ -1326,6 +1348,7 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     { name: "Email Buffer", action: emailBuffer },
     // --- Tools ---
+    { name: "Open Link", action: openLinkFromCurrentLine, shortcut: "Ctrl+L" },
     {
       name: "Lock/Unlock Note",
       action: toggleLock,
@@ -1338,9 +1361,7 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     { name: "Calculator", action: openCalculator },
     { name: "Calendar", action: openCalendar },
-    // START OF CHANGE
     { name: "Text Tools", action: openTextTools },
-    // END OF CHANGE
     {
       name: "Export Project",
       action: exportProject,
@@ -1576,7 +1597,6 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
-  // START OF CHANGE
   function handleTextToolsEvaluation() {
     const cursorPos = editor.selectionStart;
     const textUpToCursor = editor.value.substring(0, cursorPos);
@@ -1727,7 +1747,6 @@ document.addEventListener("DOMContentLoaded", function () {
     editor.selectionStart = editor.selectionEnd = editor.value.length;
     editor.dispatchEvent(new Event("input", { bubbles: true }));
   }
-  // END OF CHANGE
 
   function loadFileContent(file) {
     const reader = new FileReader();
@@ -1876,7 +1895,6 @@ document.addEventListener("DOMContentLoaded", function () {
       handleCalculatorEvaluation();
       return;
     }
-    // START OF CHANGE
     if (buffer.name === TEXT_TOOLS_BUFFER_NAME && e.key === "Enter") {
       const cursorPos = editor.selectionStart;
       const textUpToCursor = editor.value.substring(0, cursorPos);
@@ -1891,7 +1909,6 @@ document.addEventListener("DOMContentLoaded", function () {
         return;
       }
     }
-    // END OF CHANGE
     if (buffer.name === CALENDAR_BUFFER_NAME) {
       if (e.key === "n" || e.key === "p") {
         e.preventDefault();
@@ -2107,6 +2124,10 @@ document.addEventListener("DOMContentLoaded", function () {
         case "n":
           e.preventDefault();
           newTab();
+          break;
+        case "l":
+          e.preventDefault();
+          openLinkFromCurrentLine();
           break;
         case "e":
           if (e.shiftKey) {
@@ -2329,6 +2350,10 @@ document.addEventListener("DOMContentLoaded", function () {
     switchToBuffer(prevIndex);
     hideContextMenu();
   });
+  document.getElementById("ctxOpenLink").addEventListener("click", () => {
+    openLinkFromCurrentLine();
+    hideContextMenu();
+  });
   // New context menu listeners
   document.getElementById("ctxCalculator").addEventListener("click", () => {
     openCalculator();
@@ -2338,12 +2363,10 @@ document.addEventListener("DOMContentLoaded", function () {
     openCalendar();
     hideContextMenu();
   });
-  // START OF CHANGE
   document.getElementById("ctxTextTools").addEventListener("click", () => {
     openTextTools();
     hideContextMenu();
   });
-  // END OF CHANGE
   document.getElementById("ctxEmailBuffer").addEventListener("click", () => {
     emailBuffer();
     hideContextMenu();
