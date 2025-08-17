@@ -70,6 +70,105 @@ body.dark-mode #editor.drag-over {
     display: none;
 }
 
+/* --- Grid View Styles --- */
+#gridContainer {
+    width: 100%;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    background: #f0f0f0;
+}
+
+#gridToolbar {
+    padding: 8px;
+    background: #e0e0e0;
+    border-bottom: 1px solid #ccc;
+    display: flex;
+    gap: 8px;
+}
+
+#gridToolbar button {
+    padding: 4px 8px;
+    border: 1px solid #aaa;
+    background: #f0f0f0;
+    cursor: pointer;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+#gridToolbar button:hover {
+    background: #dcdcdc;
+}
+
+#gridContent {
+    flex-grow: 1;
+    overflow: auto;
+}
+
+#gridContent table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 14px;
+}
+
+#gridContent th,
+#gridContent td {
+    border: 1px solid #ccc;
+    padding: 6px 8px;
+    min-width: 100px;
+}
+
+#gridContent th {
+    background-color: #e8e8e8;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+#gridContent td {
+    background-color: #fff;
+}
+
+#gridContent td.selected {
+    outline: 2px solid #0078d7;
+    outline-offset: -2px;
+}
+
+#gridContent td[contenteditable="true"]:focus {
+    background-color: #fdfde2;
+}
+
+/* Dark mode for Grid */
+body.dark-mode #gridContainer {
+    background: #222222;
+    color: #e0e0e0;
+}
+body.dark-mode #gridToolbar {
+    background: #3a3a3a;
+    border-bottom: 1px solid #555;
+}
+body.dark-mode #gridToolbar button {
+    background: #555;
+    border-color: #999;
+    color: white;
+}
+body.dark-mode #gridToolbar button:hover {
+    background: #666;
+}
+body.dark-mode #gridContent th,
+body.dark-mode #gridContent td {
+    border-color: #555;
+}
+body.dark-mode #gridContent th {
+    background-color: #333;
+}
+body.dark-mode #gridContent td {
+    background-color: #2a2a2a;
+}
+body.dark-mode #gridContent td[contenteditable="true"]:focus {
+    background-color: #4a4a2a;
+}
+
 /* --- Find/Replace Dialog --- */
 #findReplaceDialog {
     position: fixed;

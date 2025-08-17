@@ -12,6 +12,14 @@ document.addEventListener("DOMContentLoaded", function () {
   const closeHelpBtn = document.getElementById("closeHelpBtn");
   const hamburgerBtn = document.getElementById("hamburgerBtn");
 
+  // Grid View DOM elements
+  const gridContainer = document.getElementById("gridContainer");
+  const gridContent = document.getElementById("gridContent");
+  const addRowBtn = document.getElementById("addRowBtn");
+  const addColBtn = document.getElementById("addColBtn");
+  const delRowBtn = document.getElementById("delRowBtn");
+  const delColBtn = document.getElementById("delColBtn");
+
   // Expansions DOM elements
   const expansionsModal = document.getElementById("expansionsModal");
   const closeExpansionsBtn = document.getElementById("closeExpansionsBtn");
@@ -41,6 +49,9 @@ document.addEventListener("DOMContentLoaded", function () {
   // Special buffer names
   const CALC_BUFFER_NAME = "[Calculator]";
   const CALENDAR_BUFFER_NAME = "[Calendar]";
+  // START OF CHANGE
+  const TEXT_TOOLS_BUFFER_NAME = "[TextTools]";
+  // END OF CHANGE
 
   let tabId;
   let buffers = [];
@@ -49,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
   let currentCommands = [];
   let expansions = {};
   let calendarInterval = null;
+  let selectedGridCell = null;
 
   // --- App State & Settings ---
   let lastSearch = { term: "" };
@@ -133,6 +145,7 @@ document.addEventListener("DOMContentLoaded", function () {
       this.salt = salt;
       this.iv = iv;
       this.isSpecial = false; // For calculator/calendar buffers
+      this.isGridView = false; // For CSV/TSV grid view
     }
     get isModified() {
       if (this.isLocked || this.isSpecial) return false;
@@ -228,6 +241,7 @@ document.addEventListener("DOMContentLoaded", function () {
         encryptedContent: buffer.encryptedContent,
         salt: buffer.salt,
         iv: buffer.iv,
+        isGridView: buffer.isGridView,
       }));
     localStorage.setItem(
       `editr_buffers_${tabId}`,
@@ -263,18 +277,19 @@ document.addEventListener("DOMContentLoaded", function () {
     const savedBuffersData = localStorage.getItem(`editr_buffers_${tabId}`);
     if (savedBuffersData) {
       const savedBuffers = JSON.parse(savedBuffersData);
-      buffers = savedBuffers.map(
-        (b) =>
-          new FileBuffer(
-            b.name,
-            b.content,
-            null,
-            b.isLocked,
-            b.encryptedContent,
-            b.salt,
-            b.iv,
-          ),
-      );
+      buffers = savedBuffers.map((b) => {
+        const buffer = new FileBuffer(
+          b.name,
+          b.content,
+          null,
+          b.isLocked,
+          b.encryptedContent,
+          b.salt,
+          b.iv,
+        );
+        buffer.isGridView = b.isGridView || false;
+        return buffer;
+      });
       activeBufferIndex =
         parseInt(
           localStorage.getItem(`editr_active_buffer_index_${tabId}`),
@@ -306,6 +321,10 @@ document.addEventListener("DOMContentLoaded", function () {
     fileHandle = null,
   ) {
     const buffer = new FileBuffer(name, content, fileHandle);
+    const fileExt = name.split(".").pop().toLowerCase();
+    if (["csv", "tsv"].includes(fileExt)) {
+      buffer.isGridView = true;
+    }
     buffers.push(buffer);
     activeBufferIndex = buffers.length - 1;
     updateBufferBar();
@@ -317,15 +336,23 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function switchToBuffer(index) {
     if (index < 0 || index >= buffers.length) return;
+
+    // Save current buffer state before switching
+    const currentBuf = buffers[activeBufferIndex];
+    if (currentBuf) {
+      if (currentBuf.isGridView) {
+        gridToContent(currentBuf);
+      } else if (!currentBuf.isLocked && !currentBuf.isSpecial) {
+        currentBuf.content = editor.value;
+      }
+    }
+
     // Clear calendar interval when switching away from a calendar buffer
     if (calendarInterval) {
       clearInterval(calendarInterval);
       calendarInterval = null;
     }
-    const currentBuf = buffers[activeBufferIndex];
-    if (currentBuf && !currentBuf.isLocked && !currentBuf.isSpecial) {
-      currentBuf.content = editor.value;
-    }
+
     activeBufferIndex = index;
     loadActiveBuffer();
     updateBufferBar();
@@ -355,46 +382,59 @@ document.addEventListener("DOMContentLoaded", function () {
 
   function loadActiveBuffer() {
     if (calendarInterval) clearInterval(calendarInterval); // Clear any existing interval
+    selectedGridCell = null;
 
     const buffer = buffers[activeBufferIndex];
     if (buffer) {
-      if (buffer.name === CALENDAR_BUFFER_NAME) {
-        // Handle calendar buffer
-        editor.value = generateCalendarView(buffer.calendarDate);
-        editor.readOnly = true;
-        editor.placeholder = "Calendar View. 'n' for next, 'p' for previous.";
-        calendarInterval = setInterval(() => {
-          if (
-            activeBufferIndex >= buffers.length ||
-            buffers[activeBufferIndex].name !== CALENDAR_BUFFER_NAME
-          ) {
-            clearInterval(calendarInterval);
-            calendarInterval = null;
-            return;
-          }
-          const { scrollTop, scrollLeft } = editor;
-          editor.value = generateCalendarView(
-            buffers[activeBufferIndex].calendarDate,
-          );
-          editor.scrollTop = scrollTop;
-          editor.scrollLeft = scrollLeft;
-        }, 1000);
-      } else if (buffer.isLocked) {
-        editor.value = "";
-        editor.placeholder =
-          "🔒 This note is locked. Press Ctrl/Cmd + = to unlock.";
-        editor.readOnly = true;
+      if (buffer.isGridView) {
+        editor.classList.add("hidden");
+        gridContainer.classList.remove("hidden");
+        renderGridView(buffer);
       } else {
-        editor.value = buffer.content;
-        editor.placeholder = "Right click or Ctrl\\Cmd + K for menu.";
-        editor.readOnly = buffer.name === CALC_BUFFER_NAME;
-        if (buffer.name === CALC_BUFFER_NAME) {
-          editor.readOnly = false;
+        editor.classList.remove("hidden");
+        gridContainer.classList.add("hidden");
+        if (buffer.name === CALENDAR_BUFFER_NAME) {
+          // Handle calendar buffer
+          editor.value = generateCalendarView(buffer.calendarDate);
+          editor.readOnly = true;
+          editor.placeholder = "Calendar View. 'n' for next, 'p' for previous.";
+          calendarInterval = setInterval(() => {
+            if (
+              activeBufferIndex >= buffers.length ||
+              buffers[activeBufferIndex].name !== CALENDAR_BUFFER_NAME
+            ) {
+              clearInterval(calendarInterval);
+              calendarInterval = null;
+              return;
+            }
+            const { scrollTop, scrollLeft } = editor;
+            editor.value = generateCalendarView(
+              buffers[activeBufferIndex].calendarDate,
+            );
+            editor.scrollTop = scrollTop;
+            editor.scrollLeft = scrollLeft;
+          }, 1000);
+        } else if (buffer.isLocked) {
+          editor.value = "";
+          editor.placeholder =
+            "🔒 This note is locked. Press Ctrl/Cmd + = to unlock.";
+          editor.readOnly = true;
+        } else {
+          editor.value = buffer.content;
+          editor.placeholder = "Right click or Ctrl\\Cmd + K for menu.";
+          editor.readOnly = [CALC_BUFFER_NAME, TEXT_TOOLS_BUFFER_NAME].includes(
+            buffer.name,
+          );
+          if (
+            [CALC_BUFFER_NAME, TEXT_TOOLS_BUFFER_NAME].includes(buffer.name)
+          ) {
+            editor.readOnly = false;
+          }
         }
       }
       updateWordCount();
       updateBufferBar();
-      editor.focus();
+      if (!buffer.isGridView) editor.focus();
     }
   }
 
@@ -405,9 +445,158 @@ document.addEventListener("DOMContentLoaded", function () {
       const modifiedText =
         buffer.isModified && !buffer.isLocked ? " (modified)" : "";
       const lockedText = buffer.isLocked ? " 🔒" : "";
+      const viewMode = buffer.isGridView ? " [Grid]" : "";
       currentBuffer.textContent = `Buffer: ${
         activeBufferIndex + 1
-      }/${buffers.length} - ${buffer.name}${lockedText}${modifiedText}`;
+      }/${buffers.length} - ${buffer.name}${lockedText}${modifiedText}${viewMode}`;
+    }
+  }
+
+  // --- Grid View Logic ---
+  function toggleGridView() {
+    const buffer = buffers[activeBufferIndex];
+    if (!buffer || buffer.isSpecial || buffer.isLocked) return;
+
+    buffer.isGridView = !buffer.isGridView;
+
+    if (buffer.isGridView) {
+      // Switching to Grid View
+      buffer.content = editor.value; // Save latest from editor
+      editor.classList.add("hidden");
+      gridContainer.classList.remove("hidden");
+      renderGridView(buffer);
+    } else {
+      // Switching to Text View
+      gridToContent(buffer);
+      editor.classList.remove("hidden");
+      gridContainer.classList.add("hidden");
+      editor.value = buffer.content;
+      editor.focus();
+    }
+    updateBufferBar();
+    saveBuffersToLocalStorage();
+  }
+
+  function parseCsvTsv(text, fileName) {
+    const delimiter = fileName.endsWith(".tsv") ? "\t" : ",";
+    const rows = text.trim().split("\n");
+    return rows.map((row) => row.split(delimiter));
+  }
+
+  function renderGridView(buffer) {
+    const data = parseCsvTsv(buffer.content, buffer.name);
+    if (!data || data.length === 0) {
+      gridContent.innerHTML = "<table></table>";
+      return;
+    }
+
+    let tableHtml = "<table><thead><tr>";
+    const numCols = data.reduce((max, row) => Math.max(max, row.length), 0);
+
+    for (let i = 0; i < numCols; i++) {
+      tableHtml += `<th>${String.fromCharCode(65 + i)}</th>`;
+    }
+    tableHtml += "</tr></thead><tbody>";
+
+    data.forEach((row, rowIndex) => {
+      tableHtml += "<tr>";
+      for (let colIndex = 0; colIndex < numCols; colIndex++) {
+        const cellData = row[colIndex] || "";
+        tableHtml += `<td data-row="${rowIndex}" data-col="${colIndex}" contenteditable="true">${cellData}</td>`;
+      }
+      tableHtml += "</tr>";
+    });
+
+    tableHtml += "</tbody></table>";
+    gridContent.innerHTML = tableHtml;
+  }
+
+  function gridToContent(buffer) {
+    const table = gridContent.querySelector("table");
+    if (!table) return;
+
+    const delimiter = buffer.name.endsWith(".tsv") ? "\t" : ",";
+    let content = "";
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach((tr) => {
+      const cells = Array.from(tr.querySelectorAll("td"));
+      content += cells.map((td) => td.textContent).join(delimiter) + "\n";
+    });
+    buffer.content = content;
+    buffer.markSaved(); // Consider changes in grid as saved to buffer content
+  }
+
+  function addGridRow() {
+    const table = gridContent.querySelector("table tbody");
+    if (!table) return;
+    const numCols = table.rows[0] ? table.rows[0].cells.length : 1;
+    const newRow = table.insertRow();
+    for (let i = 0; i < numCols; i++) {
+      const newCell = newRow.insertCell();
+      newCell.setAttribute("contenteditable", "true");
+      newCell.dataset.row = table.rows.length - 1;
+      newCell.dataset.col = i;
+    }
+  }
+
+  function addGridColumn() {
+    const table = gridContent.querySelector("table");
+    if (!table) return;
+    const header = table.querySelector("thead tr");
+    if (header) {
+      const newTh = document.createElement("th");
+      newTh.textContent = String.fromCharCode(65 + header.cells.length);
+      header.appendChild(newTh);
+    }
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach((row, rowIndex) => {
+      const newCell = row.insertCell();
+      newCell.setAttribute("contenteditable", "true");
+      newCell.dataset.row = rowIndex;
+      newCell.dataset.col = row.cells.length - 1;
+    });
+  }
+
+  function deleteGridRow() {
+    if (!selectedGridCell) return;
+    const rowIndex = parseInt(selectedGridCell.dataset.row, 10);
+    const table = gridContent.querySelector("table tbody");
+    if (table && table.rows.length > rowIndex) {
+      table.deleteRow(rowIndex);
+      selectedGridCell = null;
+      // Re-index rows
+      Array.from(table.rows).forEach((row, rIdx) => {
+        Array.from(row.cells).forEach((cell) => (cell.dataset.row = rIdx));
+      });
+    }
+  }
+
+  function deleteGridColumn() {
+    if (!selectedGridCell) return;
+    const colIndex = parseInt(selectedGridCell.dataset.col, 10);
+    const table = gridContent.querySelector("table");
+    if (!table) return;
+
+    const header = table.querySelector("thead tr");
+    if (header && header.cells.length > colIndex) {
+      header.deleteCell(colIndex);
+    }
+
+    const rows = table.querySelectorAll("tbody tr");
+    rows.forEach((row) => {
+      if (row.cells.length > colIndex) {
+        row.deleteCell(colIndex);
+      }
+    });
+    selectedGridCell = null;
+    // Re-index columns
+    Array.from(table.rows).forEach((row) => {
+      Array.from(row.cells).forEach((cell, cIdx) => (cell.dataset.col = cIdx));
+    });
+    if (header) {
+      Array.from(header.cells).forEach(
+        (th, cIdx) => (th.textContent = String.fromCharCode(65 + cIdx)),
+      );
     }
   }
 
@@ -438,7 +627,17 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function updateWordCount() {
-    const text = editor.value;
+    const buffer = buffers[activeBufferIndex];
+    if (!buffer) return;
+
+    let text;
+    if (buffer.isGridView) {
+      const table = gridContent.querySelector("table");
+      text = table ? table.innerText : "";
+    } else {
+      text = editor.value;
+    }
+
     const words = text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
     const lines = text === "" ? 0 : text.split("\n").length;
     wordCount.textContent = `Words: ${words} | Lines: ${lines}`;
@@ -455,8 +654,13 @@ document.addEventListener("DOMContentLoaded", function () {
       showSaveIndicator("Cannot save a locked note!");
       return;
     }
-    const content = editor.value;
-    buffer.content = content;
+
+    if (buffer.isGridView) {
+      gridToContent(buffer);
+    } else {
+      buffer.content = editor.value;
+    }
+    const content = buffer.content;
 
     // Use File System Access API if available and there's a handle (for overwriting)
     if ("showSaveFilePicker" in window && buffer.fileHandle) {
@@ -482,7 +686,15 @@ document.addEventListener("DOMContentLoaded", function () {
             {
               description: "Text files",
               accept: {
-                "text/plain": [".txt", ".md", ".js", ".html", ".css"],
+                "text/plain": [
+                  ".txt",
+                  ".md",
+                  ".js",
+                  ".html",
+                  ".css",
+                  ".csv",
+                  ".tsv",
+                ],
               },
             },
           ],
@@ -776,7 +988,10 @@ document.addEventListener("DOMContentLoaded", function () {
     const backdrop = document.getElementById("modalBackdrop");
     if (backdrop) backdrop.remove();
     commandPaletteOpen = false;
-    editor.focus();
+    const buffer = buffers[activeBufferIndex];
+    if (buffer && !buffer.isGridView) {
+      editor.focus();
+    }
   }
 
   function showHelp() {
@@ -1023,6 +1238,23 @@ document.addEventListener("DOMContentLoaded", function () {
     switchToBuffer(buffers.length - 1);
   }
 
+  // START OF CHANGE
+  function openTextTools() {
+    const existingIndex = buffers.findIndex(
+      (b) => b.name === TEXT_TOOLS_BUFFER_NAME,
+    );
+    if (existingIndex !== -1) {
+      switchToBuffer(existingIndex);
+      return;
+    }
+    const content = `Welcome to the Text Tools!\n\nPaste your text in this buffer.\nThen, on a new line, type a command and press Enter.\nExample:\n\nHello World\n>> to uppercase\n\n----\n\nAvailable Commands:\n>> count words\n>> count characters\n>> to uppercase\n>> to lowercase\n>> trim lines\n>> reverse lines\n>> sort lines\n>> unique lines\n>> format json\n>> url encode\n>> url decode\n>> base64 encode\n>> base64 decode\n`;
+    const buffer = new FileBuffer(TEXT_TOOLS_BUFFER_NAME, content);
+    buffer.isSpecial = true;
+    buffers.push(buffer);
+    switchToBuffer(buffers.length - 1);
+  }
+  // END OF CHANGE
+
   function generateCalendarView(date) {
     const now = new Date();
     const timeString = now.toLocaleTimeString();
@@ -1063,10 +1295,41 @@ document.addEventListener("DOMContentLoaded", function () {
   // --- End New Feature Functions ---
 
   const staticCommands = [
+    // --- File ---
+    { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
+    { name: "Open File", action: openFile, shortcut: "Ctrl+O" },
+    { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
+    { name: "Find / Replace", action: openFindDialog, shortcut: "Ctrl+F" },
+    // --- Buffer ---
     {
-      name: "Find / Replace",
-      action: openFindDialog,
-      shortcut: "Ctrl+F",
+      name: "Next Buffer",
+      action: () => {
+        const nextIndex =
+          activeBufferIndex < buffers.length - 1 ? activeBufferIndex + 1 : 0;
+        switchToBuffer(nextIndex);
+      },
+      shortcut: "Ctrl+→",
+    },
+    {
+      name: "Previous Buffer",
+      action: () => {
+        const prevIndex =
+          activeBufferIndex > 0 ? activeBufferIndex - 1 : buffers.length - 1;
+        switchToBuffer(prevIndex);
+      },
+      shortcut: "Ctrl+←",
+    },
+    {
+      name: "Close Current Buffer",
+      action: () => closeBuffer(activeBufferIndex),
+      shortcut: "Ctrl+W",
+    },
+    { name: "Email Current Buffer", action: emailBuffer },
+    // --- Tools ---
+    {
+      name: "Lock/Unlock Note",
+      action: toggleLock,
+      shortcut: "Ctrl+=",
     },
     {
       name: "Text Expansions",
@@ -1075,14 +1338,9 @@ document.addEventListener("DOMContentLoaded", function () {
     },
     { name: "Open Calculator", action: openCalculator },
     { name: "Open Calendar", action: openCalendar },
-    { name: "Email Current Buffer", action: emailBuffer },
-    { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
-    {
-      name: "Open File",
-      action: openFile,
-      shortcut: "Ctrl+O",
-    },
-    { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
+    // START OF CHANGE
+    { name: "Open Text Tools", action: openTextTools },
+    // END OF CHANGE
     {
       name: "Export Project",
       action: exportProject,
@@ -1093,25 +1351,13 @@ document.addEventListener("DOMContentLoaded", function () {
       action: importProject,
       shortcut: "Ctrl+Shift+I",
     },
+    { name: "Toggle Grid View", action: toggleGridView },
     {
       name: "Toggle Dark/Light Mode",
       action: toggleDarkMode,
       shortcut: "Ctrl+D",
     },
-    {
-      name: "Toggle Word Wrap",
-      action: toggleWordWrap,
-    },
-    {
-      name: "Lock/Unlock Note",
-      action: toggleLock,
-      shortcut: "Ctrl+=",
-    },
-    {
-      name: "Close Current Buffer",
-      action: () => closeBuffer(activeBufferIndex),
-      shortcut: "Ctrl+W",
-    },
+    { name: "Toggle Word Wrap", action: toggleWordWrap },
     {
       name: "Toggle Fullscreen",
       action: toggleFullscreen,
@@ -1330,6 +1576,86 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   }
 
+  // START OF CHANGE
+  function handleTextToolsEvaluation() {
+    const cursorPos = editor.selectionStart;
+    const textUpToCursor = editor.value.substring(0, cursorPos);
+    const lastNewline = textUpToCursor.lastIndexOf("\n");
+    const commandLine = editor.value
+      .substring(lastNewline + 1, cursorPos)
+      .trim();
+
+    if (!commandLine.startsWith(">>")) return;
+
+    const commandParts = commandLine
+      .substring(2)
+      .trim()
+      .toLowerCase()
+      .split(/\s+/);
+    const command = commandParts.join(" ");
+
+    const textToProcess = editor.value.substring(0, lastNewline).trim();
+    let result = "";
+
+    try {
+      switch (command) {
+        case "count words":
+          result = `Word Count: ${textToProcess.trim() === "" ? 0 : textToProcess.trim().split(/\s+/).length}`;
+          break;
+        case "count characters":
+          result = `Character Count: ${textToProcess.length}`;
+          break;
+        case "to uppercase":
+          result = textToProcess.toUpperCase();
+          break;
+        case "to lowercase":
+          result = textToProcess.toLowerCase();
+          break;
+        case "trim lines":
+          result = textToProcess
+            .split("\n")
+            .map((line) => line.trim())
+            .join("\n");
+          break;
+        case "reverse lines":
+          result = textToProcess.split("\n").reverse().join("\n");
+          break;
+        case "sort lines":
+          result = textToProcess.split("\n").sort().join("\n");
+          break;
+        case "unique lines":
+          result = [...new Set(textToProcess.split("\n"))].join("\n");
+          break;
+        case "format json":
+          result = JSON.stringify(JSON.parse(textToProcess), null, 2);
+          break;
+        case "url encode":
+          result = encodeURIComponent(textToProcess);
+          break;
+        case "url decode":
+          result = decodeURIComponent(textToProcess);
+          break;
+        case "base64 encode":
+          result = btoa(textToProcess);
+          break;
+        case "base64 decode":
+          result = atob(textToProcess);
+          break;
+        default:
+          result = `Unknown command: "${command}"`;
+      }
+    } catch (e) {
+      result = `Error processing command "${command}":\n${e.message}`;
+    }
+
+    // Replace the text block above the command with the result
+    editor.setRangeText(result, 0, lastNewline, "end");
+    // Move cursor to the end
+    editor.selectionStart = editor.selectionEnd = editor.value.length;
+    editor.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+  // END OF CHANGE
+
   function loadFileContent(file) {
     const reader = new FileReader();
     reader.onload = (e) => createNewBuffer(file.name, e.target.result, null);
@@ -1477,6 +1803,13 @@ document.addEventListener("DOMContentLoaded", function () {
       handleCalculatorEvaluation();
       return;
     }
+    // START OF CHANGE
+    if (buffer.name === TEXT_TOOLS_BUFFER_NAME && e.key === "Enter") {
+      e.preventDefault();
+      handleTextToolsEvaluation();
+      return;
+    }
+    // END OF CHANGE
     if (buffer.name === CALENDAR_BUFFER_NAME) {
       if (e.key === "n" || e.key === "p") {
         e.preventDefault();
@@ -1554,6 +1887,43 @@ document.addEventListener("DOMContentLoaded", function () {
   closeHelpBtn.addEventListener("click", closeHelpModal);
 
   document.addEventListener("keydown", async (e) => {
+    // Grid navigation
+    const buffer = buffers[activeBufferIndex];
+    if (buffer && buffer.isGridView && selectedGridCell) {
+      if (e.key.startsWith("Arrow")) {
+        e.preventDefault();
+        const currentRow = parseInt(selectedGridCell.dataset.row, 10);
+        const currentCol = parseInt(selectedGridCell.dataset.col, 10);
+        let nextCell;
+
+        if (e.key === "ArrowUp" && currentRow > 0) {
+          nextCell = gridContent.querySelector(
+            `[data-row="${currentRow - 1}"][data-col="${currentCol}"]`,
+          );
+        } else if (e.key === "ArrowDown") {
+          nextCell = gridContent.querySelector(
+            `[data-row="${currentRow + 1}"][data-col="${currentCol}"]`,
+          );
+        } else if (e.key === "ArrowLeft" && currentCol > 0) {
+          nextCell = gridContent.querySelector(
+            `[data-row="${currentRow}"][data-col="${currentCol - 1}"]`,
+          );
+        } else if (e.key === "ArrowRight") {
+          nextCell = gridContent.querySelector(
+            `[data-row="${currentRow}"][data-col="${currentCol + 1}"]`,
+          );
+        }
+
+        if (nextCell) {
+          selectedGridCell.classList.remove("selected");
+          selectedGridCell = nextCell;
+          selectedGridCell.classList.add("selected");
+          selectedGridCell.focus();
+        }
+        return;
+      }
+    }
+
     if (
       (!findReplaceDialog.classList.contains("hidden") ||
         !expansionsModal.classList.contains("hidden")) &&
@@ -1772,6 +2142,32 @@ document.addEventListener("DOMContentLoaded", function () {
     }
   });
 
+  // Grid event delegation
+  gridContent.addEventListener("focusin", (e) => {
+    if (e.target.tagName === "TD") {
+      if (selectedGridCell) {
+        selectedGridCell.classList.remove("selected");
+      }
+      selectedGridCell = e.target;
+      selectedGridCell.classList.add("selected");
+    }
+  });
+
+  gridContent.addEventListener("input", () => {
+    const buffer = buffers[activeBufferIndex];
+    if (buffer && buffer.isGridView) {
+      gridToContent(buffer);
+      updateBufferBar();
+      saveBuffersToLocalStorage();
+      updateWordCount();
+    }
+  });
+
+  addRowBtn.addEventListener("click", addGridRow);
+  addColBtn.addEventListener("click", addGridColumn);
+  delRowBtn.addEventListener("click", deleteGridRow);
+  delColBtn.addEventListener("click", deleteGridColumn);
+
   // Context menu item event listeners
   document.getElementById("ctxCommandPalette").addEventListener("click", () => {
     openCommandPalette();
@@ -1817,6 +2213,10 @@ document.addEventListener("DOMContentLoaded", function () {
       await toggleLock();
       hideContextMenu();
     });
+  document.getElementById("ctxToggleGridView").addEventListener("click", () => {
+    toggleGridView();
+    hideContextMenu();
+  });
   document.getElementById("ctxToggleDark").addEventListener("click", () => {
     toggleDarkMode();
     hideContextMenu();
@@ -1856,6 +2256,12 @@ document.addEventListener("DOMContentLoaded", function () {
     openCalendar();
     hideContextMenu();
   });
+  // START OF CHANGE
+  document.getElementById("ctxTextTools").addEventListener("click", () => {
+    openTextTools();
+    hideContextMenu();
+  });
+  // END OF CHANGE
   document.getElementById("ctxEmailBuffer").addEventListener("click", () => {
     emailBuffer();
     hideContextMenu();
@@ -1869,5 +2275,5 @@ document.addEventListener("DOMContentLoaded", function () {
   initializeBuffers();
   loadSettings();
   loadExpansions();
-  editor.focus();
+  // editor.focus(); // Initial focus is handled in loadActiveBuffer
 });

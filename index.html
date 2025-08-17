@@ -20,6 +20,16 @@
             spellcheck="false"
         ></textarea>
 
+        <div id="gridContainer" class="hidden">
+            <div id="gridToolbar">
+                <button id="addRowBtn">Add Row</button>
+                <button id="addColBtn">Add Column</button>
+                <button id="delRowBtn">Delete Row</button>
+                <button id="delColBtn">Delete Column</button>
+            </div>
+            <div id="gridContent"></div>
+        </div>
+
         <div id="findReplaceDialog" class="hidden">
             <input
                 type="text"
@@ -172,6 +182,9 @@ Type a shortcut and press Space/Enter.
                     <div class="context-menu-item" id="ctxCalendar">
                         Calendar
                     </div>
+                    <div class="context-menu-item" id="ctxTextTools">
+                        Text Tools
+                    </div>
                     <hr class="context-menu-divider" />
                     <div class="context-menu-item" id="ctxExportProject">
                         Export Project
@@ -180,6 +193,9 @@ Type a shortcut and press Space/Enter.
                         Import Project
                     </div>
                     <hr class="context-menu-divider" />
+                    <div class="context-menu-item" id="ctxToggleGridView">
+                        Toggle Grid View
+                    </div>
                     <div class="context-menu-item" id="ctxToggleDark">
                         Toggle Dark Mode
                     </div>
@@ -202,7 +218,11 @@ Type a shortcut and press Space/Enter.
             </button>
         </div>
 
-        <input type="file" id="fileInput" accept=".txt,.md,.js,.html,.css" />
+        <input
+            type="file"
+            id="fileInput"
+            accept=".txt,.md,.js,.html,.css,.csv,.tsv"
+        />
         <input
             type="file"
             id="importExpansionsInput"
