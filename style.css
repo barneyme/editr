@@ -248,7 +248,7 @@ body.dark-mode #findReplaceDialog button:hover {
     position: fixed;
     top: 10px;
     right: 10px;
-    display: none; /* Hidden by default, shown in media query */
+    display: flex; /* Always visible */
     gap: 8px;
     z-index: 1000;
 }
@@ -302,15 +302,22 @@ body.dark-mode #findReplaceDialog button:hover {
     min-height: 44px;
     display: flex;
     align-items: center;
+    justify-content: space-between;
     -webkit-tap-highlight-color: transparent;
     user-select: none;
     position: relative;
-    color: #000; /* MODIFICATION: Text color black for light mode */
+    color: #000;
 }
 
 .context-menu-item:hover {
     background: #0078d7;
-    color: white; /* MODIFICATION: Text color white on hover */
+    color: white;
+}
+
+.shortcut {
+    font-size: 12px;
+    opacity: 0.7;
+    margin-left: 15px; /* Space between name and shortcut */
 }
 
 .context-menu-divider {
@@ -320,16 +327,12 @@ body.dark-mode #findReplaceDialog button:hover {
 }
 
 /* --- Context Menu Submenus --- */
-.context-menu-item.has-submenu {
-    justify-content: space-between;
-}
-
-/* Default arrow for side-expanding (right-click) menu */
 .context-menu-item.has-submenu::after {
     content: "▶";
     font-size: 10px;
     opacity: 0.7;
     transition: transform 0.2s ease;
+    margin-left: 10px;
 }
 
 .submenu {
@@ -347,9 +350,10 @@ body.dark-mode #findReplaceDialog button:hover {
 }
 
 /* Show submenu on hover for right-click menu */
-.context-menu-item:hover > .submenu {
+#contextMenu:not(.mobile-menu) .context-menu-item:hover > .submenu {
     display: block;
 }
+
 .submenu.open-left {
     left: auto;
     right: 100%;
@@ -357,26 +361,15 @@ body.dark-mode #findReplaceDialog button:hover {
 
 /* --- Hamburger Menu (Mobile) Submenu Overrides --- */
 
-/* Arrow for downward-expanding menu */
+/* Arrow indicates leftward expansion */
 #contextMenu.mobile-menu .context-menu-item.has-submenu::after {
-    content: "▼";
-}
-#contextMenu.mobile-menu .context-menu-item.has-submenu.open::after {
-    transform: rotate(180deg);
+    content: "◀";
 }
 
-/* Reposition and style submenu for vertical expansion */
+/* Reposition and style submenu for leftward expansion */
 #contextMenu.mobile-menu .submenu {
-    position: static;
-    display: none; /* Controlled by JS .open class */
-    width: auto;
-    box-shadow: none;
-    border: none;
-    border-top: 1px solid #e0e0e0;
-    margin: 5px 0 0 15px;
-    padding-top: 5px;
-    background: transparent;
-    z-index: auto;
+    left: auto;
+    right: 100%; /* Expand to the left */
 }
 
 /* Disable hover-to-open for mobile */
@@ -384,18 +377,9 @@ body.dark-mode #findReplaceDialog button:hover {
     display: none;
 }
 
-/* Show submenu when parent has .open class */
+/* Show submenu when parent has .open class (controlled by JS) */
 #contextMenu.mobile-menu .context-menu-item.open > .submenu {
     display: block;
-}
-
-/* Keep it open on hover if it's already open */
-#contextMenu.mobile-menu .context-menu-item.open:hover > .submenu {
-    display: block;
-}
-
-body.dark-mode #contextMenu.mobile-menu .submenu {
-    border-top-color: #555;
 }
 
 /* --- Dark Mode Overrides --- */
@@ -427,85 +411,6 @@ body.dark-mode .context-menu-divider {
 
 body.dark-mode .context-menu-item.has-submenu::after {
     color: #e0e0e0;
-}
-
-/* --- Command Palette --- */
-#commandPalette {
-    position: fixed;
-    top: 20%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 90%;
-    max-width: 500px;
-    background: #f0f0f0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
-    z-index: 3000;
-    overflow: hidden;
-}
-
-body.dark-mode #commandPalette {
-    background: linear-gradient(to bottom, #6a707c, #4a505a);
-    border: 2px outset #888888;
-    border-radius: 0;
-    box-shadow: none;
-}
-
-#commandInput {
-    width: 100%;
-    padding: 8px 10px;
-    border: none;
-    outline: none;
-    font-family: monospace, "Courier New";
-    font-size: 16px;
-    background: #fff;
-    color: #333;
-    border-bottom: 1px solid #ccc;
-}
-
-body.dark-mode #commandInput {
-    background: #222222;
-    color: #e0e0e0;
-    border: 1px inset #888;
-    border-radius: 0;
-    margin: 2px;
-    width: calc(100% - 4px);
-}
-
-#commandList {
-    padding: 2px;
-}
-
-.command-item {
-    padding: 8px 15px;
-    cursor: pointer;
-    font-size: 14px;
-    color: #333;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-body.dark-mode .command-item {
-    color: #e0e0e0;
-}
-
-.command-item:hover,
-.command-item.selected {
-    background-color: #0078d7;
-    color: white;
-}
-
-body.dark-mode .command-item:hover,
-body.dark-mode .command-item.selected {
-    background: linear-gradient(to bottom, #0078d7, #005a9e);
-    color: #ffffff;
-}
-
-.command-item .shortcut {
-    font-size: 12px;
-    opacity: 0.8;
 }
 
 /* --- Base Modal Styles --- */
@@ -555,6 +460,7 @@ body.dark-mode .modal-close-btn {
 /* --- Help Modal --- */
 #helpModal {
     max-width: 600px;
+    max-height: 85vh; /* Ensure modal doesn't exceed viewport height */
 }
 #helpModal pre {
     background: #f8f8f8;
@@ -565,6 +471,7 @@ body.dark-mode .modal-close-btn {
     font-size: 13px;
     color: #333;
     line-height: 1.6;
+    overflow-y: auto; /* Add vertical scrollbar if content overflows */
 }
 body.dark-mode #helpModal pre {
     background: #222222;
@@ -662,10 +569,6 @@ body.dark-mode .expansions-footer button:hover {
 
 /* --- Responsive Design --- */
 @media (max-width: 768px) {
-    #mobileControls {
-        display: flex;
-    }
-
     #editor {
         padding: 15px; /* Reduce padding on mobile */
         font-size: 16px; /* Prevent zoom on iOS */
@@ -687,10 +590,6 @@ body.dark-mode .expansions-footer button:hover {
         width: calc(
             100vw - 20px
         ); /* Full width minus margins on very small screens */
-    }
-
-    #commandPalette {
-        width: calc(100vw - 20px);
     }
 
     .modal-base {

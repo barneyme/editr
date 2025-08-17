@@ -5,9 +5,6 @@ document.addEventListener("DOMContentLoaded", function () {
   const wordCount = document.getElementById("wordCount");
   const currentBuffer = document.getElementById("currentBuffer");
   const contextMenu = document.getElementById("contextMenu");
-  const commandPalette = document.getElementById("commandPalette");
-  const commandInput = document.getElementById("commandInput");
-  const commandList = document.getElementById("commandList");
   const helpModal = document.getElementById("helpModal");
   const closeHelpBtn = document.getElementById("closeHelpBtn");
   const hamburgerBtn = document.getElementById("hamburgerBtn");
@@ -54,8 +51,6 @@ document.addEventListener("DOMContentLoaded", function () {
   let tabId;
   let buffers = [];
   let activeBufferIndex = 0;
-  let commandPaletteOpen = false;
-  let currentCommands = [];
   let expansions = {};
   let calendarInterval = null;
   let selectedGridCell = null;
@@ -419,7 +414,7 @@ document.addEventListener("DOMContentLoaded", function () {
           editor.readOnly = true;
         } else {
           editor.value = buffer.content;
-          editor.placeholder = "Right click or Ctrl\\Cmd + K for menu.";
+          editor.placeholder = "Right click for menu.";
           editor.readOnly = [CALC_BUFFER_NAME, TEXT_TOOLS_BUFFER_NAME].includes(
             buffer.name,
           );
@@ -963,35 +958,6 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-  // --- Command Palette Logic ---
-  function openCommandPalette() {
-    populateCommands();
-    renderCommands(currentCommands);
-    commandPalette.classList.remove("hidden");
-    document.body.insertAdjacentHTML(
-      "beforeend",
-      '<div id="modalBackdrop" class="modal-backdrop"></div>',
-    );
-    commandInput.value = "";
-    commandInput.focus();
-    commandPaletteOpen = true;
-
-    document
-      .getElementById("modalBackdrop")
-      .addEventListener("click", closeCommandPalette);
-  }
-
-  function closeCommandPalette() {
-    commandPalette.classList.add("hidden");
-    const backdrop = document.getElementById("modalBackdrop");
-    if (backdrop) backdrop.remove();
-    commandPaletteOpen = false;
-    const buffer = buffers[activeBufferIndex];
-    if (buffer && !buffer.isGridView) {
-      editor.focus();
-    }
-  }
-
   function showHelp() {
     helpModal.classList.remove("hidden");
     if (!document.getElementById("modalBackdrop")) {
@@ -1326,128 +1292,6 @@ document.addEventListener("DOMContentLoaded", function () {
     return calendar;
   }
   // --- End New Feature Functions ---
-
-  const staticCommands = [
-    // --- File ---
-    { name: "New Tab", action: newTab, shortcut: "Ctrl+N" },
-    { name: "Open File", action: openFile, shortcut: "Ctrl+O" },
-    { name: "Save File", action: saveFile, shortcut: "Ctrl+S" },
-    { name: "Find / Replace", action: openFindDialog, shortcut: "Ctrl+F" },
-    // --- Buffer ---
-    {
-      name: "Next Buffer",
-      action: () => {
-        const nextIndex =
-          activeBufferIndex < buffers.length - 1 ? activeBufferIndex + 1 : 0;
-        switchToBuffer(nextIndex);
-      },
-      shortcut: "Ctrl+→",
-    },
-    {
-      name: "Previous Buffer",
-      action: () => {
-        const prevIndex =
-          activeBufferIndex > 0 ? activeBufferIndex - 1 : buffers.length - 1;
-        switchToBuffer(prevIndex);
-      },
-      shortcut: "Ctrl+←",
-    },
-    {
-      name: "Close Buffer",
-      action: () => closeBuffer(activeBufferIndex),
-      shortcut: "Ctrl+W",
-    },
-    { name: "Email Buffer", action: emailBuffer },
-    // --- Tools ---
-    { name: "Open Link", action: openLinkFromCurrentLine, shortcut: "Ctrl+L" },
-    {
-      name: "Lock/Unlock Note",
-      action: toggleLock,
-      shortcut: "Ctrl+=",
-    },
-    {
-      name: "Text Expansions",
-      action: openExpansionsModal,
-      shortcut: "Ctrl+E",
-    },
-    { name: "Calculator", action: openCalculator },
-    { name: "Calendar", action: openCalendar },
-    { name: "Text Tools", action: openTextTools },
-    {
-      name: "Export Project",
-      action: exportProject,
-      shortcut: "Ctrl+Shift+E",
-    },
-    {
-      name: "Import Project",
-      action: importProject,
-      shortcut: "Ctrl+Shift+I",
-    },
-    { name: "Grid View", action: toggleGridView },
-    {
-      name: "Dark/Light Mode",
-      action: toggleDarkMode,
-      shortcut: "Ctrl+D",
-    },
-    { name: "Word Wrap", action: toggleWordWrap },
-    {
-      name: "Fullscreen",
-      action: toggleFullscreen,
-      shortcut: "F11",
-    },
-  ];
-
-  function populateCommands() {
-    const bufferCommands = buffers.map((buf, index) => ({
-      name: `Switch to: ${buf.name}`,
-      action: () => switchToBuffer(index),
-      shortcut: `Buffer ${index + 1}`,
-    }));
-
-    const helpCommand = {
-      name: "Show Help",
-      action: showHelp,
-      shortcut: "?",
-    };
-
-    currentCommands = [...bufferCommands, ...staticCommands, helpCommand];
-  }
-
-  function renderCommands(commandsToRender) {
-    commandList.innerHTML = "";
-    commandsToRender.forEach((cmd, index) => {
-      const item = document.createElement("div");
-      item.className = "command-item";
-      item.dataset.index = index;
-
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = cmd.name;
-
-      const shortcutSpan = document.createElement("span");
-      shortcutSpan.className = "shortcut";
-      shortcutSpan.textContent = cmd.shortcut || "";
-
-      item.appendChild(nameSpan);
-      item.appendChild(shortcutSpan);
-
-      item.addEventListener("click", () => {
-        cmd.action();
-        closeCommandPalette();
-      });
-      commandList.appendChild(item);
-    });
-    if (commandList.firstChild) {
-      commandList.firstChild.classList.add("selected");
-    }
-  }
-
-  commandInput.addEventListener("input", () => {
-    const searchTerm = commandInput.value.toLowerCase();
-    const filteredCommands = currentCommands.filter((cmd) =>
-      cmd.name.toLowerCase().includes(searchTerm),
-    );
-    renderCommands(filteredCommands);
-  });
 
   // --- Editor Feature Handlers ---
   function handleTextExpansion(e) {
@@ -1970,18 +1814,21 @@ document.addEventListener("DOMContentLoaded", function () {
       }
 
       const buffer = buffers[activeBufferIndex];
-      document.getElementById("ctxToggleLock").textContent =
+      document.getElementById("ctxToggleLock").firstElementChild.textContent =
         buffer && buffer.isLocked ? "Unlock Note" : "Lock Note";
-      document.getElementById("ctxToggleDark").textContent =
+      document.getElementById("ctxToggleDark").firstElementChild.textContent =
         document.body.classList.contains("dark-mode")
           ? "Light Mode"
           : "Dark Mode";
-      document.getElementById("ctxToggleWrap").textContent =
+      document.getElementById("ctxToggleWrap").firstElementChild.textContent =
         editor.classList.contains("no-wrap")
           ? "Enable Word Wrap"
           : "Disable Word Wrap";
-      document.getElementById("ctxToggleFullscreen").textContent =
-        document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
+      document.getElementById(
+        "ctxToggleFullscreen",
+      ).firstElementChild.textContent = document.fullscreenElement
+        ? "Exit Fullscreen"
+        : "Fullscreen";
 
       // Add mobile class for CSS hooks
       contextMenu.classList.add("mobile-menu");
@@ -2041,46 +1888,6 @@ document.addEventListener("DOMContentLoaded", function () {
     ) {
       closeFindDialog();
       closeExpansionsModal();
-      return;
-    }
-    if (commandPaletteOpen) {
-      const items = commandList.querySelectorAll(".command-item");
-      let selected = commandList.querySelector(".selected");
-
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (selected && selected.nextElementSibling) {
-          selected.classList.remove("selected");
-          selected.nextElementSibling.classList.add("selected");
-          selected.nextElementSibling.scrollIntoView({
-            block: "nearest",
-          });
-        }
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (selected && selected.previousElementSibling) {
-          selected.classList.remove("selected");
-          selected.previousElementSibling.classList.add("selected");
-          selected.previousElementSibling.scrollIntoView({
-            block: "nearest",
-          });
-        }
-      } else if (e.key === "Enter") {
-        e.preventDefault();
-        if (selected) selected.click();
-      } else if (e.key === "Tab") {
-        e.preventDefault();
-        if (selected) {
-          const commandName =
-            selected.querySelector("span:first-child").textContent;
-          commandInput.value = commandName.startsWith("Switch to: ")
-            ? commandName.substring(11)
-            : commandName;
-          commandInput.dispatchEvent(new Event("input"));
-        }
-      } else if (e.key === "Escape") {
-        closeCommandPalette();
-      }
       return;
     }
 
@@ -2163,10 +1970,6 @@ document.addEventListener("DOMContentLoaded", function () {
           e.preventDefault();
           await toggleLock();
           break;
-        case "k":
-          e.preventDefault();
-          openCommandPalette();
-          break;
       }
     } else if (e.key === "F11") {
       e.preventDefault();
@@ -2182,9 +1985,6 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   document.addEventListener("contextmenu", (e) => {
-    if (window.innerWidth <= 768) {
-      return;
-    }
     e.preventDefault();
 
     const bufferList = document.getElementById("ctxBufferList");
@@ -2209,18 +2009,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     const buffer = buffers[activeBufferIndex];
-    document.getElementById("ctxToggleLock").textContent =
+    document.getElementById("ctxToggleLock").firstElementChild.textContent =
       buffer && buffer.isLocked ? "Unlock Note" : "Lock Note";
-    document.getElementById("ctxToggleDark").textContent =
+    document.getElementById("ctxToggleDark").firstElementChild.textContent =
       document.body.classList.contains("dark-mode")
         ? "Light Mode"
         : "Dark Mode";
-    document.getElementById("ctxToggleWrap").textContent =
+    document.getElementById("ctxToggleWrap").firstElementChild.textContent =
       editor.classList.contains("no-wrap")
         ? "Enable Word Wrap"
         : "Disable Word Wrap";
-    document.getElementById("ctxToggleFullscreen").textContent =
-      document.fullscreenElement ? "Exit Fullscreen" : "Fullscreen";
+    document.getElementById(
+      "ctxToggleFullscreen",
+    ).firstElementChild.textContent = document.fullscreenElement
+      ? "Exit Fullscreen"
+      : "Fullscreen";
     showContextMenu(e.clientX, e.clientY);
   });
 
@@ -2232,6 +2035,13 @@ document.addEventListener("DOMContentLoaded", function () {
       // If we click a parent menu item, toggle its submenu
       e.preventDefault();
       e.stopPropagation();
+      // Close other open submenus at the same level
+      const siblings = menuItem.parentElement.children;
+      for (const sibling of siblings) {
+        if (sibling !== menuItem && sibling.classList.contains("has-submenu")) {
+          sibling.classList.remove("open");
+        }
+      }
       menuItem.classList.toggle("open");
     }
   });
@@ -2283,10 +2093,6 @@ document.addEventListener("DOMContentLoaded", function () {
   delColBtn.addEventListener("click", deleteGridColumn);
 
   // Context menu item event listeners
-  document.getElementById("ctxCommandPalette").addEventListener("click", () => {
-    openCommandPalette();
-    hideContextMenu();
-  });
   document.getElementById("ctxFindReplace").addEventListener("click", () => {
     openFindDialog();
     hideContextMenu();

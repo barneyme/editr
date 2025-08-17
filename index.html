@@ -50,18 +50,6 @@
             <button id="closeFindBtn" title="Close (Esc)">&times;</button>
         </div>
 
-        <div id="commandPalette" class="hidden">
-            <div class="palette-container">
-                <input
-                    type="text"
-                    id="commandInput"
-                    placeholder="Search commands or files"
-                    autocomplete="off"
-                />
-                <div id="commandList"></div>
-            </div>
-        </div>
-
         <div id="helpModal" class="hidden modal-base">
             <button id="closeHelpBtn" class="modal-close-btn">&times;</button>
             <h3>editr Help & Shortcuts</h3>
@@ -70,7 +58,6 @@ editr : browser editor
 <div id="currentBuffer">Buffer: 1/1 - editr.txt</div>
 <div id="wordCount">Words: 0 | Lines: 0</div>
 HELP
-Ctrl/Cmd + K         : Open command palette
 Right-click          : Context Menu
 Ctrl/Cmd + S         : Save file
 Ctrl/Cmd + O         : Open file
@@ -152,16 +139,31 @@ Type a shortcut and press Space/Enter.
             <div class="context-menu-item has-submenu">
                 <span>File</span>
                 <div class="submenu">
-                    <div class="context-menu-item" id="ctxNewTab">New Tab</div>
+                    <div class="context-menu-item" id="ctxNewTab">
+                        <span>New Tab</span>
+                        <span class="shortcut">Ctrl+N</span>
+                    </div>
                     <div class="context-menu-item" id="ctxOpenFile">
-                        Open File
+                        <span>Open File</span>
+                        <span class="shortcut">Ctrl+O</span>
                     </div>
                     <div class="context-menu-item" id="ctxSaveFile">
-                        Save File As
+                        <span>Save File As</span>
+                        <span class="shortcut">Ctrl+S</span>
                     </div>
                     <hr class="context-menu-divider" />
                     <div class="context-menu-item" id="ctxFindReplace">
-                        Find / Replace
+                        <span>Find / Replace</span>
+                        <span class="shortcut">Ctrl+F</span>
+                    </div>
+                    <hr class="context-menu-divider" />
+                    <div class="context-menu-item" id="ctxExportProject">
+                        <span>Export Project</span>
+                        <span class="shortcut">Ctrl+Shift+E</span>
+                    </div>
+                    <div class="context-menu-item" id="ctxImportProject">
+                        <span>Import Project</span>
+                        <span class="shortcut">Ctrl+Shift+I</span>
                     </div>
                 </div>
             </div>
@@ -170,17 +172,20 @@ Type a shortcut and press Space/Enter.
                 <span>Buffer</span>
                 <div class="submenu">
                     <div class="context-menu-item" id="ctxNextBuffer">
-                        Next Buffer
+                        <span>Next Buffer</span>
+                        <span class="shortcut">Ctrl+→</span>
                     </div>
                     <div class="context-menu-item" id="ctxPrevBuffer">
-                        Previous Buffer
+                        <span>Previous Buffer</span>
+                        <span class="shortcut">Ctrl+←</span>
                     </div>
                     <div class="context-menu-item" id="ctxCloseBuffer">
-                        Close Buffer
+                        <span>Close Buffer</span>
+                        <span class="shortcut">Ctrl+W</span>
                     </div>
                     <hr class="context-menu-divider" />
                     <div class="context-menu-item" id="ctxEmailBuffer">
-                        Email Buffer
+                        <span>Email Buffer</span>
                     </div>
                 </div>
             </div>
@@ -188,52 +193,56 @@ Type a shortcut and press Space/Enter.
             <div class="context-menu-item has-submenu">
                 <span>Tools</span>
                 <div class="submenu">
-                    <div class="context-menu-item" id="ctxCommandPalette">
-                        Command Palette
-                    </div>
                     <div class="context-menu-item" id="ctxOpenLink">
-                        Open Link
+                        <span>Open Link</span>
+                        <span class="shortcut">Ctrl+L</span>
                     </div>
                     <div class="context-menu-item" id="ctxToggleLock">
-                        Lock/Unlock Note
+                        <span>Lock/Unlock Note</span>
+                        <span class="shortcut">Ctrl+=</span>
                     </div>
                     <div class="context-menu-item" id="ctxManageExpansions">
-                        Text Expansions
+                        <span>Text Expansions</span>
+                        <span class="shortcut">Ctrl+E</span>
                     </div>
+                    <hr class="context-menu-divider" />
                     <div class="context-menu-item" id="ctxCalculator">
-                        Calculator
+                        <span>Calculator</span>
                     </div>
                     <div class="context-menu-item" id="ctxCalendar">
-                        Calendar
+                        <span>Calendar</span>
                     </div>
                     <div class="context-menu-item" id="ctxTextTools">
-                        Text Tools
+                        <span>Text Tools</span>
                     </div>
-                    <hr class="context-menu-divider" />
-                    <div class="context-menu-item" id="ctxExportProject">
-                        Export Project
-                    </div>
-                    <div class="context-menu-item" id="ctxImportProject">
-                        Import Project
-                    </div>
-                    <hr class="context-menu-divider" />
+                </div>
+            </div>
+
+            <div class="context-menu-item has-submenu">
+                <span>View</span>
+                <div class="submenu">
                     <div class="context-menu-item" id="ctxToggleGridView">
-                        Toggle Grid View
+                        <span>Toggle Grid View</span>
                     </div>
                     <div class="context-menu-item" id="ctxToggleDark">
-                        Toggle Dark Mode
+                        <span>Toggle Dark Mode</span>
+                        <span class="shortcut">Ctrl+D</span>
                     </div>
                     <div class="context-menu-item" id="ctxToggleWrap">
-                        Toggle Word Wrap
+                        <span>Toggle Word Wrap</span>
                     </div>
                     <div class="context-menu-item" id="ctxToggleFullscreen">
-                        Fullscreen
+                        <span>Fullscreen</span>
+                        <span class="shortcut">F11</span>
                     </div>
                 </div>
             </div>
 
             <hr class="context-menu-divider" />
-            <div class="context-menu-item" id="ctxShowHelp">Help</div>
+            <div class="context-menu-item" id="ctxShowHelp">
+                <span>Help</span>
+                <span class="shortcut">?</span>
+            </div>
         </div>
 
         <div id="mobileControls">
