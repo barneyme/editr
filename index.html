@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>bEdit</title>
+        <title>editr</title>
         
         <!-- PWA Manifest Link -->
         <link rel="manifest" href="manifest.json" />
@@ -13,7 +13,7 @@
 
         <link
             rel="icon"
-            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">b</text></svg>'
+            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">e</text></svg>'
         />
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
@@ -199,7 +199,7 @@
         <textarea
             id="editor"
             spellcheck="false"
-            placeholder="Right-click, click ☰ for menu, or drop a text file here"
+            placeholder="Right-click or ☰ for menu."
         ></textarea>
 
         <div id="top-right-container">
@@ -261,7 +261,7 @@
             </div>
             <div class="menu-separator"></div>
             <div class="menu-item" id="menu-toggle-stats">
-                <span>Stats</span>
+                <span>Toggle Stats</span>
             </div>
         </div>
 
@@ -333,8 +333,8 @@
                     sessionId = generateShortId();
                     history.replaceState(null, "", `#${sessionId}`);
                 }
-                const storageKey = `bEditTextSession-${sessionId}`;
-                const statsStorageKey = `bEditStatsHidden-${sessionId}`;
+                const storageKey = `editrTextSession-${sessionId}`;
+                const statsStorageKey = `editrStatsHidden-${sessionId}`;
 
                 // --- DOM ELEMENTS ---
                 const editor = document.getElementById("editor");
@@ -374,15 +374,15 @@
                 const renderActiveBuffer = () => {
                     if (activeBufferIndex < 0 || activeBufferIndex >= buffers.length) {
                         editor.value = "";
-                        document.title = "bEdit";
+                        document.title = "editr";
                         updateStats();
                         return;
                     }
                     const activeBuffer = buffers[activeBufferIndex];
                     editor.value = activeBuffer.content;
                     document.title = activeBuffer.fileName
-                        ? `${activeBuffer.fileName} - bEdit`
-                        : "bEdit";
+                        ? `${activeBuffer.fileName} - editr`
+                        : "editr";
                     updateStats();
                 };
 
