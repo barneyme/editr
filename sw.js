@@ -1,63 +1,85 @@
-const CACHE_NAME = "bedit-cache-v1";
-const urlsToCache = ["/", "/index.html", "/style.css", "/script.js"];
+// sw.js - Service Worker
 
-// Install the service worker and cache the static assets
-self.addEventListener("install", (event) => {
+// Define a name for the cache
+const CACHE_NAME = 'editr-cache-v1';
+
+// List of essential files to cache for the app shell.
+// We'll only cache local files here to make installation more reliable.
+// External resources like fonts and TailwindCSS will be cached on-the-fly.
+const appShellFiles = [
+    '/',
+    '/index.html' 
+];
+
+/**
+ * Installation event
+ * This is called when the service worker is first installed.
+ * We open a cache and add our essential app shell files to it.
+ */
+self.addEventListener('install', (event) => {
+    console.log('[Service Worker] Install');
     event.waitUntil(
         caches.open(CACHE_NAME).then((cache) => {
-            console.log("Opened cache");
-            return cache.addAll(urlsToCache);
-        }),
+            console.log('[Service Worker] Caching app shell');
+            return cache.addAll(appShellFiles);
+        })
     );
 });
 
-// Serve cached content when offline
-self.addEventListener("fetch", (event) => {
+/**
+ * Fetch event
+ * This is called for every network request.
+ * We're using a "cache-first" strategy.
+ * It checks if the request is in the cache. If so, it serves from the cache.
+ * If not, it fetches from the network, adds the response to the cache, and then returns it.
+ */
+self.addEventListener('fetch', (event) => {
     event.respondWith(
-        caches.match(event.request).then((response) => {
-            // Cache hit - return response
-            if (response) {
-                return response;
+        caches.match(event.request).then((cachedResponse) => {
+            // If the request is in the cache, return it
+            if (cachedResponse) {
+                return cachedResponse;
             }
 
-            // Clone the request because it's a stream and can only be consumed once
-            const fetchRequest = event.request.clone();
-
-            return fetch(fetchRequest).then((response) => {
-                // Check if we received a valid response
-                if (
-                    !response ||
-                    response.status !== 200 ||
-                    response.type !== "basic"
-                ) {
-                    return response;
-                }
-
-                // Clone the response because it's a stream and can only be consumed once
-                const responseToCache = response.clone();
-
-                caches.open(CACHE_NAME).then((cache) => {
-                    cache.put(event.request, responseToCache);
+            // Otherwise, fetch the request from the network
+            return fetch(event.request).then((networkResponse) => {
+                // Open the cache and add the new response for future use
+                return caches.open(CACHE_NAME).then((cache) => {
+                    // Clone the response because a response is a stream and can only be consumed once.
+                    // We need one for the cache and one for the browser.
+                    // We only cache successful GET requests.
+                    if (event.request.method === 'GET' && networkResponse.status === 200) {
+                       cache.put(event.request, networkResponse.clone());
+                    }
+                    return networkResponse;
                 });
-
-                return response;
+            }).catch(error => {
+                // This will be triggered if the network request fails, e.g., when offline.
+                console.log('[Service Worker] Fetch failed; user is likely offline.', error);
+                // Optional: You could return a custom offline fallback page here.
+                // For example: return caches.match('/offline.html');
             });
-        }),
+        })
     );
 });
 
-// Clean up old caches
-self.addEventListener("activate", (event) => {
-    const cacheWhitelist = [CACHE_NAME];
+/**
+ * Activate event
+ * This is where we clean up old, unused caches.
+ */
+self.addEventListener('activate', (event) => {
+    console.log('[Service Worker] Activate');
     event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheWhitelist.indexOf(cacheName) === -1) {
-                        return caches.delete(cacheName);
-                    }
-                }),
-            );
-        }),
+        caches.keys().then((keyList) => {
+            return Promise.all(keyList.map((key) => {
+                // If the cache key is not the current cache name, delete it.
+                if (key !== CACHE_NAME) {
+                    console.log('[Service Worker] Removing old cache', key);
+                    return caches.delete(key);
+                }
+            }));
+        })
     );
+    // Tell the active service worker to take immediate control of all open pages.
+    return self.clients.claim();
 });

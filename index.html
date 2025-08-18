@@ -3,289 +3,774 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>editr</title>
-        <link rel="stylesheet" href="style.css" />
+        <title>bEdit</title>
+        
+        <!-- PWA Manifest Link -->
+        <link rel="manifest" href="manifest.json" />
+        
+        <!-- Theme color for browser UI -->
+        <meta name="theme-color" content="#44475a" />
+
         <link
             rel="icon"
-            href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'><rect width='16' height='16' fill='%23666666'/><text x='8' y='12' font-family='monospace' font-size='12' fill='white' text-anchor='middle'>e</text></svg>"
+            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">b</text></svg>'
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <style>
+            /* Using Inter font from Tailwind's default config */
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: "Inter", sans-serif;
+                background-color: #282a36; /* Dracula background */
+                transition: background-color 0.2s;
+            }
+
+            #editor {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                border: none;
+                outline: none;
+                resize: none;
+                background-color: transparent;
+                color: #f8f8f2; /* Dracula foreground */
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 16px;
+                line-height: 1.6;
+                box-sizing: border-box;
+            }
+
+            /* --- Style for drag-and-drop feedback --- */
+            body.dragover {
+                background-color: #3a3d4e;
+            }
+            #editor {
+                border: 2px dashed transparent;
+                box-sizing: border-box;
+            }
+            body.dragover #editor {
+                 border-color: #bd93f9; /* Dracula purple */
+            }
+
+
+            #editor::placeholder {
+                color: #6272a4; /* Dracula comment */
+                opacity: 1;
+            }
+            
+            #top-right-container {
+                position: fixed;
+                top: 16px;
+                right: 24px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                z-index: 1001;
+            }
+
+            #menu-trigger {
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
+
+            #menu-trigger:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            #context-menu {
+                position: fixed;
+                display: none;
+                z-index: 1000;
+                background-color: #44475a; /* Dracula selection */
+                border: 1px solid #6272a4; /* Dracula comment */
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                min-width: 180px;
+                padding: 8px 0;
+            }
+
+            .menu-item {
+                padding: 10px 20px;
+                cursor: pointer;
+                color: #f8f8f2;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 14px;
+            }
+
+            .menu-item:hover {
+                background-color: #6272a4; /* Dracula comment */
+            }
+
+            .menu-item .shortcut {
+                color: #bd93f9; /* Dracula purple */
+                font-size: 12px;
+            }
+
+            .menu-separator {
+                height: 1px;
+                background-color: #6272a4;
+                margin: 8px 0;
+            }
+
+            #stats-display {
+                color: #6272a4; /* Dracula comment */
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 14px;
+                display: flex;
+                gap: 16px;
+                background-color: rgba(
+                    68,
+                    71,
+                    90,
+                    0.5
+                ); /* Semi-transparent selection */
+                padding: 4px 12px;
+                border-radius: 6px;
+                transition: opacity 0.3s;
+            }
+
+            .hidden {
+                opacity: 0;
+                pointer-events: none;
+            }
+
+            #find-bar {
+                position: fixed;
+                bottom: 16px;
+                right: 16px;
+                background-color: #44475a;
+                border: 1px solid #6272a4;
+                border-radius: 8px;
+                padding: 8px;
+                display: none; /* Initially hidden */
+                align-items: center;
+                gap: 8px;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            #find-input {
+                background-color: #282a36;
+                border: 1px solid #6272a4;
+                color: #f8f8f2;
+                border-radius: 4px;
+                padding: 4px 8px;
+                outline: none;
+                width: 200px;
+            }
+
+            #find-input:focus {
+                border-color: #bd93f9;
+            }
+
+            .find-btn {
+                background-color: transparent;
+                border: none;
+                color: #f8f8f2;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 4px;
+            }
+            .find-btn:hover {
+                background-color: #6272a4;
+            }
+        </style>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap"
+            rel="stylesheet"
         />
     </head>
     <body>
         <textarea
             id="editor"
-            placeholder="Start typing or right-click / click ☰ for menu."
-            autocomplete="off"
-            autocorrect="off"
-            autocapitalize="off"
             spellcheck="false"
+            placeholder="Right-click, click ☰ for menu, or drop a text file here"
         ></textarea>
 
-        <div id="gridContainer" class="hidden">
-            <div id="gridToolbar">
-                <button id="addRowBtn">Add Row</button>
-                <button id="addColBtn">Add Column</button>
-                <button id="delRowBtn">Delete Row</button>
-                <button id="delColBtn">Delete Column</button>
+        <div id="top-right-container">
+            <div id="stats-display">
+                <span id="stats-line">↓ 1</span>
+                <span id="stats-char">→ 1</span>
+                <span id="stats-words">= 0</span>
             </div>
-            <div id="gridContent"></div>
-        </div>
-
-        <div id="findReplaceDialog" class="hidden">
-            <input
-                type="text"
-                id="findInput"
-                placeholder="Find (Enter/Shift+Enter)"
-            />
-            <div class="find-controls">
-                <button id="findPrevBtn" title="Find Previous (Shift+Enter)">
-                    ↑
-                </button>
-                <button id="findNextBtn" title="Find Next (Enter)">↓</button>
-            </div>
-            <input type="text" id="replaceInput" placeholder="Replace" />
-            <div class="replace-controls">
-                <button id="replaceBtn" title="Replace">Replace</button>
-                <button id="replaceAllBtn" title="Replace All">All</button>
-            </div>
-            <button id="closeFindBtn" title="Close (Esc)">&times;</button>
-        </div>
-
-        <div id="helpModal" class="hidden modal-base">
-            <button id="closeHelpBtn" class="modal-close-btn">&times;</button>
-            <h3>editr Help & Shortcuts</h3>
-            <pre id="helpText">
-editr : browser editor
-
-HELP
-Right-click          : Context Menu
-Ctrl/Cmd + S         : Save file
-Ctrl/Cmd + O         : Open file
-Ctrl/Cmd + N         : New tab
-Editr.cc/#NOTE       : Creates 'NOTE'
-Ctrl/Cmd + F         : Find and Replace
-Ctrl/Cmd + L         : Open Link from line
-Ctrl/Cmd + E         : Text expansions
-Ctrl/Cmd + W         : Close buffer
-Ctrl/Cmd + =         : Lock/unlock note
-Ctrl/Cmd + ←/→       : Switch buffers
-
-TOOLS
-Calculator   : Open a simple calculator in a new buffer.
-Calendar     : Open a dynamic calendar and clock in a new buffer.
-Email Buffer : Open default mail client with buffer content.
-Export       : Save all buffers + expansions as JSON project.
-Import       : Load project (replace or merge) from JSON project.
-Text Tools   : Perform actions on text.
-Text Expansion:Expand shortcut to long text.
-
-TEXT TOOLS
-Commands:
->> count words
->> count characters
->> to uppercase
->> to lowercase
->> to title case
->> to sentence case:
->> invert case
->> trim lines
->> reverse lines
->> sort lines
->> sort lines desc
->> shuffle lines
->> unique lines
->> delete blank lines
->> number lines
->> format json
->> prefix lines [text]
->> suffix lines [text]
->> extract emails
->> extract urls
->> strip html
-
-TEXT EXPANSIONS
-Type a shortcut and press Space/Enter.
-.d           : Insert current date (YYYYMMDD)
-.a ~ .z      : User customizable
-            </pre>
-        </div>
-
-        <div id="expansionsModal" class="hidden modal-base">
-            <button id="closeExpansionsBtn" class="modal-close-btn">
-                &times;
-            </button>
-            <h3>Text Expansions</h3>
-            <div id="expansionsList"></div>
-            <div class="expansions-footer">
-                <button
-                    id="importExpansionsBtn"
-                    title="Import from a .txt file"
+    
+            <div id="menu-trigger" title="Menu">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="#f8f8f2"
+                    viewBox="0 0 256 256"
                 >
-                    Import
-                </button>
-                <button id="exportExpansionsBtn" title="Export to a .txt file">
-                    Export
-                </button>
-                <button id="saveExpansionsBtn" title="Save changes and close">
-                    Save & Close
-                </button>
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+                    ></path>
+                </svg>
             </div>
         </div>
 
-        <div id="contextMenu">
-            <div id="ctxBufferList"></div>
-            <hr class="context-menu-divider" id="ctxBufferDivider" />
-
-            <div class="context-menu-item has-submenu">
-                <span>File</span>
-                <div class="submenu">
-                    <div class="context-menu-item" id="ctxNewTab">
-                        <span>New Tab</span>
-                        <span class="shortcut">Ctrl+N</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxOpenFile">
-                        <span>Open File</span>
-                        <span class="shortcut">Ctrl+O</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxSaveFile">
-                        <span>Save File As</span>
-                        <span class="shortcut">Ctrl+S</span>
-                    </div>
-                    <hr class="context-menu-divider" />
-                    <div class="context-menu-item" id="ctxFindReplace">
-                        <span>Find / Replace</span>
-                        <span class="shortcut">Ctrl+F</span>
-                    </div>
-                    <hr class="context-menu-divider" />
-                    <div class="context-menu-item" id="ctxExportProject">
-                        <span>Export Project</span>
-                        <span class="shortcut">Ctrl+Shift+E</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxImportProject">
-                        <span>Import Project</span>
-                        <span class="shortcut">Ctrl+Shift+I</span>
-                    </div>
-                </div>
+        <div id="context-menu">
+            <div class="menu-item" id="menu-new">
+                <span>New</span>
+                <span class="shortcut">Ctrl+N</span>
             </div>
-
-            <div class="context-menu-item has-submenu">
-                <span id="ctxBufferMenuLabel">Buffer</span>
-                <div class="submenu">
-                    <div class="context-menu-item" id="ctxNextBuffer">
-                        <span>Next Buffer</span>
-                        <span class="shortcut">Ctrl+→</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxPrevBuffer">
-                        <span>Previous Buffer</span>
-                        <span class="shortcut">Ctrl+←</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxCloseBuffer">
-                        <span>Close Buffer</span>
-                        <span class="shortcut">Ctrl+W</span>
-                    </div>
-                    <hr class="context-menu-divider" />
-                    <div class="context-menu-item" id="ctxEmailBuffer">
-                        <span>Email Buffer</span>
-                    </div>
-                </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-open">
+                <span>Open...</span>
+                <span class="shortcut">Ctrl+O</span>
             </div>
-
-            <div class="context-menu-item has-submenu">
-                <span>Tools</span>
-                <div class="submenu">
-                    <div class="context-menu-item" id="ctxOpenLink">
-                        <span>Open Link</span>
-                        <span class="shortcut">Ctrl+L</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxToggleLock">
-                        <span>Lock/Unlock Note</span>
-                        <span class="shortcut">Ctrl+=</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxManageExpansions">
-                        <span>Text Expansions</span>
-                        <span class="shortcut">Ctrl+E</span>
-                    </div>
-                    <hr class="context-menu-divider" />
-                    <div class="context-menu-item" id="ctxCalculator">
-                        <span>Calculator</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxCalendar">
-                        <span>Calendar</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxTextTools">
-                        <span>Text Tools</span>
-                    </div>
-                </div>
+            <div class="menu-item" id="menu-save">
+                <span>Save</span>
+                <span class="shortcut">Ctrl+S</span>
             </div>
-
-            <div class="context-menu-item has-submenu">
-                <span>View</span>
-                <div class="submenu">
-                    <div class="context-menu-item" id="ctxToggleGridView">
-                        <span>Toggle Grid View</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxToggleDark">
-                        <span>Toggle Dark Mode</span>
-                        <span class="shortcut">Ctrl+D</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxToggleWrap">
-                        <span>Toggle Word Wrap</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxToggleStats">
-                        <span>Show Stats</span>
-                    </div>
-                    <div class="context-menu-item" id="ctxToggleFullscreen">
-                        <span>Fullscreen</span>
-                        <span class="shortcut">F11</span>
-                    </div>
-                </div>
+            <div class="menu-item" id="menu-save-as">
+                <span>Save As...</span>
             </div>
-
-            <hr class="context-menu-divider" />
-            <div class="context-menu-item" id="ctxShowHelp">
-                <span>Help</span>
-                <span class="shortcut">?</span>
+             <div class="menu-item" id="menu-close-file">
+                <span>Close File</span>
+                <span class="shortcut">Ctrl+W</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-next-file">
+                <span>Next File</span>
+                <span class="shortcut">Ctrl+→</span>
+            </div>
+            <div class="menu-item" id="menu-prev-file">
+                <span>Last File</span>
+                <span class="shortcut">Ctrl+←</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-find">
+                <span>Find</span>
+                <span class="shortcut">Ctrl+F</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-toggle-stats">
+                <span>Stats</span>
             </div>
         </div>
 
-        <div id="mobileControls">
-            <div id="statsDisplay" class="hidden">
-                <span id="lineStat">↓1</span>
-                <span id="charStat">→1</span>
-                <span id="wordStat">=0</span>
-            </div>
-            <button class="mobile-btn" id="hamburgerBtn" title="Menu">
-                ☰
+        <div id="find-bar">
+            <input type="text" id="find-input" placeholder="Find..." />
+            <button
+                id="find-prev"
+                class="find-btn"
+                title="Previous (Shift+Enter)"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-next" class="find-btn" title="Next (Enter)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-close" class="find-btn" title="Close (Esc)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                    ></path>
+                </svg>
             </button>
         </div>
 
-        <input
-            type="file"
-            id="fileInput"
-            accept=".txt,.md,.js,.html,.css,.csv,.tsv"
-        />
-        <input
-            type="file"
-            id="importExpansionsInput"
-            accept=".txt"
-            style="display: none"
-        />
-        <script src="script.js"></script>
         <script>
-            if ("serviceWorker" in navigator) {
-                window.addEventListener("load", () => {
-                    navigator.serviceWorker
-                        .register("/sw.js")
-                        .then((registration) => {
-                            console.log(
-                                "ServiceWorker registration successful with scope: ",
-                                registration.scope,
-                            );
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- HELPER FUNCTION for short IDs ---
+                const generateShortId = (length = 8) => {
+                    const chars =
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    let result = "";
+                    for (let i = 0; i < length; i++) {
+                        result += chars.charAt(
+                            Math.floor(Math.random() * chars.length),
+                        );
+                    }
+                    return result;
+                };
+
+                // --- SESSION MANAGEMENT ---
+                let sessionId = window.location.hash.substring(1);
+                if (!sessionId) {
+                    sessionId = generateShortId();
+                    history.replaceState(null, "", `#${sessionId}`);
+                }
+                const storageKey = `bEditTextSession-${sessionId}`;
+                const statsStorageKey = `bEditStatsHidden-${sessionId}`;
+
+                // --- DOM ELEMENTS ---
+                const editor = document.getElementById("editor");
+                const contextMenu = document.getElementById("context-menu");
+                const menuTrigger = document.getElementById("menu-trigger");
+                const statsDisplay = document.getElementById("stats-display");
+                const statsLine = document.getElementById("stats-line");
+                const statsChar = document.getElementById("stats-char");
+                const statsWords = document.getElementById("stats-words");
+                const findBar = document.getElementById("find-bar");
+                const findInput = document.getElementById("find-input");
+                const findPrev = document.getElementById("find-prev");
+                const findNext = document.getElementById("find-next");
+                const findClose = document.getElementById("find-close");
+                const body = document.body;
+
+                // --- STATE MANAGEMENT ---
+                let buffers = [];
+                let activeBufferIndex = -1;
+                let fileHandles = new Map(); // Store file handles separately as they can't be JSON serialized
+
+                // Find feature state
+                let lastSearchTerm = "";
+                let searchResults = [];
+                let currentResultIndex = -1;
+
+                // --- BUFFER & RENDER LOGIC ---
+                const saveState = () => {
+                    // Don't save file handles, just the buffer data
+                    const stateToSave = {
+                        buffers: buffers,
+                        activeBufferIndex: activeBufferIndex,
+                    };
+                    localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+                };
+
+                const renderActiveBuffer = () => {
+                    if (activeBufferIndex < 0 || activeBufferIndex >= buffers.length) {
+                        editor.value = "";
+                        document.title = "bEdit";
+                        updateStats();
+                        return;
+                    }
+                    const activeBuffer = buffers[activeBufferIndex];
+                    editor.value = activeBuffer.content;
+                    document.title = activeBuffer.fileName
+                        ? `${activeBuffer.fileName} - bEdit`
+                        : "bEdit";
+                    updateStats();
+                };
+
+                const createNewBuffer = (
+                    content = "",
+                    fileName = "Untitled",
+                    fileHandle = null,
+                ) => {
+                    const newBuffer = {
+                        id: generateShortId(),
+                        content,
+                        fileName,
+                    };
+                    buffers.push(newBuffer);
+                    if (fileHandle) {
+                        fileHandles.set(newBuffer.id, fileHandle);
+                    }
+                    activeBufferIndex = buffers.length - 1;
+                    renderActiveBuffer();
+                    saveState();
+                };
+
+                // --- LOCAL STORAGE PERSISTENCE ---
+                const loadState = () => {
+                    const savedStateJSON = localStorage.getItem(storageKey);
+                    if (savedStateJSON) {
+                        try {
+                            const savedState = JSON.parse(savedStateJSON);
+                            buffers = savedState.buffers || [];
+                            activeBufferIndex = savedState.activeBufferIndex || 0;
+                            if (buffers.length === 0) {
+                                createNewBuffer();
+                            } else {
+                                renderActiveBuffer();
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse saved state:", e);
+                            createNewBuffer(); // Start fresh if state is corrupt
+                        }
+                    } else {
+                        createNewBuffer(); // Create a default buffer if nothing is saved
+                    }
+                };
+
+                editor.addEventListener("input", () => {
+                    if (activeBufferIndex !== -1) {
+                        buffers[activeBufferIndex].content = editor.value;
+                        saveState();
+                        updateStats();
+                    }
+                });
+
+                // --- STATS LOGIC ---
+                const updateStats = () => {
+                    const text = editor.value;
+                    const cursorPos = editor.selectionStart;
+                    const words =
+                        text.trim() === "" ? [] : text.trim().split(/\s+/);
+                    statsWords.textContent = `= ${words.length}`;
+                    const textUpToCursor = text.substring(0, cursorPos);
+                    const lines = textUpToCursor.split("\n");
+                    const currentLineNumber = lines.length;
+                    const currentCharNumber =
+                        lines[lines.length - 1].length + 1;
+                    statsLine.textContent = `↓ ${currentLineNumber}`;
+                    statsChar.textContent = `→ ${currentCharNumber}`;
+                };
+                editor.addEventListener("keyup", updateStats);
+                editor.addEventListener("click", updateStats);
+
+                const toggleStats = () => {
+                    const isHidden = statsDisplay.classList.toggle("hidden");
+                    localStorage.setItem(statsStorageKey, isHidden);
+                    hideMenu();
+                };
+                document
+                    .getElementById("menu-toggle-stats")
+                    .addEventListener("click", toggleStats);
+                if (localStorage.getItem(statsStorageKey) === "true") {
+                    statsDisplay.classList.add("hidden");
+                }
+
+                // --- CONTEXT MENU LOGIC ---
+                const showMenu = (x, y) => {
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.display = "block";
+                };
+                const hideMenu = () => (contextMenu.style.display = "none");
+                document.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    showMenu(e.clientX, e.clientY);
+                });
+                menuTrigger.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const rect = menuTrigger.getBoundingClientRect();
+                    contextMenu.style.visibility = "hidden";
+                    contextMenu.style.display = "block";
+                    const menuWidth = contextMenu.offsetWidth;
+                    const x = rect.right - menuWidth;
+                    const y = rect.bottom + 4; // Position below the trigger
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.visibility = "visible";
+                });
+                document.addEventListener("click", () => hideMenu());
+
+                // --- FIND FEATURE LOGIC ---
+                const showFindBar = () => {
+                    hideMenu();
+                    findBar.style.display = "flex";
+                    findInput.focus();
+                    findInput.select();
+                };
+                const hideFindBar = () => {
+                    findBar.style.display = "none";
+                };
+
+                const selectResult = () => {
+                    if (currentResultIndex === -1 || searchResults.length === 0)
+                        return;
+                    const foundPos = searchResults[currentResultIndex];
+                    editor.focus();
+                    editor.setSelectionRange(
+                        foundPos,
+                        foundPos + lastSearchTerm.length,
+                    );
+                    const totalLines = editor.value.split("\n").length;
+                    const currentLine = editor.value
+                        .substring(0, foundPos)
+                        .split("\n").length;
+                    editor.scrollTop =
+                        (currentLine / totalLines) * editor.scrollHeight -
+                        editor.clientHeight / 2;
+                };
+
+                const findNextMatch = () => {
+                    const searchTerm = findInput.value;
+                    if (!searchTerm) return;
+
+                    if (searchTerm !== lastSearchTerm) {
+                        lastSearchTerm = searchTerm;
+                        searchResults = [];
+                        const text = editor.value;
+                        const regex = new RegExp(searchTerm, "gi");
+                        let match;
+                        while ((match = regex.exec(text)) !== null) {
+                            searchResults.push(match.index);
+                        }
+                        currentResultIndex = -1;
+                    }
+
+                    if (searchResults.length === 0) return;
+
+                    currentResultIndex++;
+                    if (currentResultIndex >= searchResults.length)
+                        currentResultIndex = 0;
+                    selectResult();
+                };
+
+                const findPrevMatch = () => {
+                    const searchTerm = findInput.value;
+                    if (!searchTerm) return;
+
+                    if (searchTerm !== lastSearchTerm) {
+                        findNextMatch();
+                        return;
+                    }
+
+                    if (searchResults.length === 0) return;
+
+                    currentResultIndex--;
+                    if (currentResultIndex < 0)
+                        currentResultIndex = searchResults.length - 1;
+                    selectResult();
+                };
+
+                document
+                    .getElementById("menu-find")
+                    .addEventListener("click", showFindBar);
+                findClose.addEventListener("click", hideFindBar);
+                findNext.addEventListener("click", findNextMatch);
+                findPrev.addEventListener("click", findPrevMatch);
+                findInput.addEventListener("keydown", (e) => {
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.shiftKey ? findPrevMatch() : findNextMatch();
+                    }
+                    if (e.key === "Escape") hideFindBar();
+                });
+
+                // --- FILE SYSTEM API & BUFFER NAVIGATION ---
+                const newFile = () => {
+                    hideMenu();
+                    // Open a new tab with a fresh session by navigating to the base URL
+                    window.open(window.location.origin + window.location.pathname, '_blank');
+                };
+
+                const openFile = async () => {
+                    hideMenu();
+                    try {
+                        const [fileHandle] = await window.showOpenFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt", ".md", ".js", ".html", ".css", ".json", ".xml", ".csv"] },
+                                },
+                            ],
+                        });
+                        const file = await fileHandle.getFile();
+                        const content = await file.text();
+                        createNewBuffer(content, file.name, fileHandle);
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error opening file:", err);
+                    }
+                };
+                
+                const saveFile = async () => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const fileHandle = fileHandles.get(activeBuffer.id);
+
+                    if (fileHandle) {
+                        try {
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(activeBuffer.content);
+                            await writable.close();
+                        } catch (err) {
+                            console.error("Error saving file:", err);
+                        }
+                    } else {
+                        saveFileAs();
+                    }
+                };
+
+                const saveFileAs = async () => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    try {
+                        const newFileHandle = await window.showSaveFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
+                        });
+                        const activeBuffer = buffers[activeBufferIndex];
+                        fileHandles.set(activeBuffer.id, newFileHandle);
+                        activeBuffer.fileName = newFileHandle.name;
+                        
+                        const writable = await newFileHandle.createWritable();
+                        await writable.write(activeBuffer.content);
+                        await writable.close();
+                        
+                        renderActiveBuffer();
+                        saveState();
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error saving file as:", err);
+                    }
+                };
+
+                const closeFile = () => {
+                    hideMenu();
+                    if (buffers.length <= 0 || activeBufferIndex < 0) return;
+
+                    const closedBuffer = buffers[activeBufferIndex];
+                    fileHandles.delete(closedBuffer.id);
+                    buffers.splice(activeBufferIndex, 1);
+
+                    if (buffers.length === 0) {
+                        createNewBuffer(); // Create a new empty buffer if all are closed
+                    } else {
+                        // Adjust the active index
+                        if (activeBufferIndex >= buffers.length) {
+                            activeBufferIndex = buffers.length - 1;
+                        }
+                        renderActiveBuffer();
+                    }
+                    saveState();
+                };
+
+
+                const nextFile = () => {
+                    hideMenu();
+                    if (buffers.length > 1) {
+                        activeBufferIndex = (activeBufferIndex + 1) % buffers.length;
+                        renderActiveBuffer();
+                        saveState();
+                    }
+                };
+
+                const prevFile = () => {
+                    hideMenu();
+                    if (buffers.length > 1) {
+                        activeBufferIndex = (activeBufferIndex - 1 + buffers.length) % buffers.length;
+                        renderActiveBuffer();
+                        saveState();
+                    }
+                };
+
+
+                // --- MENU ITEM EVENT LISTENERS ---
+                document.getElementById("menu-new").addEventListener("click", newFile);
+                document.getElementById("menu-open").addEventListener("click", openFile);
+                document.getElementById("menu-save").addEventListener("click", saveFile);
+                document.getElementById("menu-save-as").addEventListener("click", saveFileAs);
+                document.getElementById("menu-close-file").addEventListener("click", closeFile);
+                document.getElementById("menu-next-file").addEventListener("click", nextFile);
+                document.getElementById("menu-prev-file").addEventListener("click", prevFile);
+
+                // --- KEYBOARD SHORTCUTS ---
+                document.addEventListener("keydown", (e) => {
+                    if (findBar.style.display === "flex" && e.target === findInput) return;
+
+                    if (e.ctrlKey || e.metaKey) {
+                        switch (e.key.toLowerCase()) {
+                            case "n": e.preventDefault(); newFile(); break;
+                            case "o": e.preventDefault(); openFile(); break;
+                            case "s": e.preventDefault(); saveFile(); break;
+                            case "f": e.preventDefault(); showFindBar(); break;
+                            case "w": e.preventDefault(); closeFile(); break;
+                            case "arrowright": e.preventDefault(); nextFile(); break;
+                            case "arrowleft": e.preventDefault(); prevFile(); break;
+                        }
+                    }
+                    if (e.key === "Escape") {
+                        hideFindBar();
+                    }
+                });
+
+                // --- DRAG AND DROP FILE LOGIC ---
+                body.addEventListener("dragover", (e) => {
+                    e.preventDefault(); // Prevent default behavior (opening file)
+                    e.stopPropagation();
+                    body.classList.add("dragover");
+                });
+
+                body.addEventListener("dragleave", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    body.classList.remove("dragover");
+                });
+
+                body.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    body.classList.remove("dragover");
+
+                    const files = e.dataTransfer.files;
+                    if (files.length > 0) {
+                        const file = files[0];
+                        // Check if the file is likely a text file
+                        if (file.type.startsWith("text/") || file.type === "" || file.name.match(/\.(txt|md|js|html|css|json|xml|csv)$/)) {
+                            const reader = new FileReader();
+                            reader.onload = (readEvent) => {
+                                const content = readEvent.target.result;
+                                createNewBuffer(content, file.name); // No file handle for dropped files
+                            };
+                            reader.onerror = () => {
+                                console.error("Error reading the dropped file.");
+                                // You could implement a user-facing error message here
+                            };
+                            reader.readAsText(file);
+                        } else {
+                            console.warn("Attempted to drop non-text file:", file.type);
+                            // You could implement a user-facing warning here
+                        }
+                    }
+                });
+
+
+                // --- INITIALIZATION ---
+                loadState();
+            });
+
+            // --- SERVICE WORKER REGISTRATION ---
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js')
+                        .then(registration => {
+                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
                         })
-                        .catch((error) => {
-                            console.log(
-                                "ServiceWorker registration failed: ",
-                                error,
-                            );
+                        .catch(error => {
+                            console.log('ServiceWorker registration failed: ', error);
                         });
                 });
             }

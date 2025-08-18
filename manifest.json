@@ -1,0 +1,45 @@
+{
+    "name": "bEdit",
+    "short_name": "bEdit",
+    "description": "Text editor.",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#282a36",
+    "theme_color": "#44475a",
+    "icons": [
+        {
+            "src": "https://placehold.co/192x192/282a36/f8f8f2?text=b",
+            "sizes": "192x192",
+            "type": "image/png"
+        },
+        {
+            "src": "https://placehold.co/512x512/282a36/f8f8f2?text=b",
+            "sizes": "512x512",
+            "type": "image/png"
+        },
+        {
+            "src": "https://placehold.co/512x512/282a36/f8f8f2?text=b&maskable=true",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "maskable"
+        }
+    ],
+    "file_handlers": [
+        {
+            "action": "/index.html",
+            "accept": {
+                "text/plain": [
+                    ".txt"
+                ]
+            },
+            "icons": [
+                {
+                    "src": "https://placehold.co/192x192/282a36/f8f8f2?text=txt",
+                    "sizes": "192x192",
+                    "type": "image/png"
+                }
+            ],
+            "launch_type": "single-client"
+        }
+    ]
+}
