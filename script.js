@@ -419,7 +419,8 @@ document.addEventListener("DOMContentLoaded", function () {
           editor.readOnly = true;
         } else {
           editor.value = buffer.content;
-          editor.placeholder = "Right click for menu.";
+          editor.placeholder =
+            "Start typing or right-click / click ☰ for menu.";
           editor.readOnly = [CALC_BUFFER_NAME, TEXT_TOOLS_BUFFER_NAME].includes(
             buffer.name,
           );
