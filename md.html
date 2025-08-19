@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Markdown to HTML & PDF Converter</title>
+        <!-- Tailwind CSS for styling -->
+        <script src="https://cdn.tailwindcss.com"></script>
+        <!-- Marked.js for Markdown to HTML conversion -->
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <!-- jsPDF for PDF generation -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+        <!-- html2canvas to capture HTML element as an image -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+        <style>
+            /* Using Inter font from Google Fonts */
+            @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap");
+            body {
+                font-family: "Inter", sans-serif;
+            }
+            /* Basic styling for the generated HTML content in the preview */
+            #preview h1,
+            #preview h2,
+            #preview h3 {
+                font-weight: 600;
+                margin-bottom: 0.5rem;
+                border-bottom: 1px solid #e5e7eb;
+                padding-bottom: 0.5rem;
+            }
+            #preview h1 {
+                font-size: 2em;
+            }
+            #preview h2 {
+                font-size: 1.5em;
+            }
+            #preview h3 {
+                font-size: 1.25em;
+            }
+            #preview p {
+                margin-bottom: 1rem;
+                line-height: 1.6;
+            }
+            #preview a {
+                color: #3b82f6;
+                text-decoration: underline;
+            }
+            #preview ul,
+            #preview ol {
+                margin-left: 1.5rem;
+                margin-bottom: 1rem;
+            }
+            #preview li {
+                margin-bottom: 0.25rem;
+            }
+            #preview code {
+                background-color: #f3f4f6;
+                padding: 0.2rem 0.4rem;
+                border-radius: 0.25rem;
+                font-family: monospace;
+            }
+            #preview pre {
+                background-color: #1f2937;
+                color: #f9fafb;
+                padding: 1rem;
+                border-radius: 0.5rem;
+                overflow-x: auto;
+                margin-bottom: 1rem;
+            }
+            #preview pre code {
+                background-color: transparent;
+                padding: 0;
+            }
+            #preview blockquote {
+                border-left: 4px solid #d1d5db;
+                padding-left: 1rem;
+                color: #6b7280;
+                margin-bottom: 1rem;
+            }
+            #preview table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 1rem;
+            }
+            #preview th,
+            #preview td {
+                border: 1px solid #d1d5db;
+                padding: 0.5rem;
+                text-align: left;
+            }
+            #preview th {
+                background-color: #f9fafb;
+            }
+        </style>
+    </head>
+    <body class="bg-gray-100 text-gray-800">
+        <div class="container mx-auto p-4 md:p-8">
+            <header class="text-center mb-8">
+                <h1 class="text-3xl md:text-4xl font-bold text-gray-900">
+                    Markdown Converter
+                </h1>
+                <p class="text-gray-600 mt-2">
+                    Convert Markdown to HTML and export it as a PDF.
+                </p>
+            </header>
+
+            <main class="grid grid-cols-1 md:grid-cols-2 gap-6 h-[70vh]">
+                <!-- Markdown Input Area -->
+                <div class="flex flex-col h-full">
+                    <label
+                        for="markdown-input"
+                        class="text-lg font-semibold mb-2 text-gray-700"
+                        >Markdown Input</label
+                    >
+                    <textarea
+                        id="markdown-input"
+                        class="w-full h-full p-4 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition duration-150 ease-in-out resize-none"
+                        placeholder="Type your Markdown here..."
+                        onkeyup="convertMarkdown()"
+                    >
+# Hello, World!
+
+This is a simple Markdown to HTML and PDF converter.
+
+- Write **Markdown** on the left.
+- See the `HTML` preview on the right.
+- Click the button to export as PDF.
+
+[Learn more about Markdown](https://www.markdownguide.org/)</textarea
+                    >
+                </div>
+
+                <!-- HTML Preview Area -->
+                <div class="flex flex-col h-full">
+                    <div class="flex justify-between items-center mb-2">
+                        <h2 class="text-lg font-semibold text-gray-700">
+                            HTML Preview
+                        </h2>
+                        <button
+                            id="export-pdf"
+                            class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 active:bg-blue-800 transition-colors shadow-md"
+                        >
+                            Export as PDF
+                        </button>
+                    </div>
+                    <div
+                        id="preview-container"
+                        class="w-full h-full p-4 border border-gray-300 rounded-lg shadow-sm bg-white overflow-y-auto"
+                    >
+                        <div id="preview"></div>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <script>
+            // Ensure jsPDF is accessible from the window object
+            window.jsPDF = window.jspdf.jsPDF;
+
+            const markdownInput = document.getElementById("markdown-input");
+            const preview = document.getElementById("preview");
+            const exportPdfButton = document.getElementById("export-pdf");
+
+            /**
+             * Converts the Markdown from the input textarea to HTML and displays it in the preview pane.
+             */
+            function convertMarkdown() {
+                const markdownText = markdownInput.value;
+                // Using marked.parse() to convert markdown to HTML
+                preview.innerHTML = marked.parse(markdownText);
+            }
+
+            /**
+             * Handles the PDF export functionality.
+             */
+            async function exportToPdf() {
+                // Show a temporary loading message
+                const originalButtonText = exportPdfButton.innerHTML;
+                exportPdfButton.innerHTML = "Generating...";
+                exportPdfButton.disabled = true;
+
+                try {
+                    // Use html2canvas to capture the preview div
+                    const canvas = await html2canvas(
+                        document.getElementById("preview-container"),
+                        {
+                            scale: 2, // Increase scale for better resolution
+                        },
+                    );
+
+                    const imgData = canvas.toDataURL("image/png");
+
+                    // Initialize jsPDF. 'p' for portrait, 'mm' for millimeters, 'a4' for page size.
+                    const pdf = new jsPDF("p", "mm", "a4");
+
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = pdf.internal.pageSize.getHeight();
+
+                    const canvasWidth = canvas.width;
+                    const canvasHeight = canvas.height;
+
+                    // Calculate the aspect ratio to fit the image within the PDF page
+                    const ratio = canvasWidth / canvasHeight;
+                    let imgWidth = pdfWidth - 20; // with some margin
+                    let imgHeight = imgWidth / ratio;
+
+                    // If the calculated height is greater than the page height, recalculate based on height
+                    if (imgHeight > pdfHeight - 20) {
+                        imgHeight = pdfHeight - 20;
+                        imgWidth = imgHeight * ratio;
+                    }
+
+                    const x = (pdfWidth - imgWidth) / 2;
+                    const y = 10; // top margin
+
+                    // Add the captured image to the PDF
+                    pdf.addImage(imgData, "PNG", x, y, imgWidth, imgHeight);
+
+                    // Trigger the download of the PDF
+                    pdf.save("converted-document.pdf");
+                } catch (error) {
+                    console.error("Failed to generate PDF:", error);
+                    // In a real app, you might show an error message to the user
+                } finally {
+                    // Restore the button state
+                    exportPdfButton.innerHTML = originalButtonText;
+                    exportPdfButton.disabled = false;
+                }
+            }
+
+            // Add event listener for the PDF export button
+            exportPdfButton.addEventListener("click", exportToPdf);
+
+            // Perform an initial conversion on page load with the default content
+            convertMarkdown();
+        </script>
+    </body>
+</html>
