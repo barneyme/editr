@@ -13,9 +13,10 @@
             rel="icon"
             href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">b</text></svg>'
         />
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
-            /* Using Inter font from Tailwind's default config */
+            /* --- bEdit Base Styles --- */
             body,
             html {
                 margin: 0;
@@ -43,7 +44,6 @@
                 box-sizing: border-box;
             }
 
-            /* --- Style for drag-and-drop feedback --- */
             body.dragover {
                 background-color: #3a3d4e;
             }
@@ -184,40 +184,363 @@
             .find-btn:hover {
                 background-color: #6272a4;
             }
+
+            /* --- Integrated Notes (SNO) Styles (Dracula Themed) --- */
+            #sno-container {
+                min-height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+            }
+
+            .sno-main-container {
+                width: 100%;
+                max-width: 1200px;
+                margin: 0 auto;
+            }
+
+            .login-screen,
+            .app-screen {
+                background: #282a36;
+                border-radius: 8px;
+                padding: 30px;
+                border: 1px solid #6272a4;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            .app-screen {
+                max-width: 1200px;
+                display: none;
+            }
+
+            .app-screen.active {
+                display: block;
+            }
+
+            .sno-main-container h1 {
+                color: #f8f8f2;
+                margin-bottom: 25px;
+                font-size: 1.8em;
+                font-weight: 600;
+                text-align: center;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            .sno-main-container label {
+                display: block;
+                margin-bottom: 5px;
+                color: #f8f8f2;
+                font-weight: 500;
+                font-size: 14px;
+            }
+
+            #sno-container input[type="password"],
+            #sno-container input[type="text"],
+            #sno-container textarea {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #6272a4;
+                border-radius: 4px;
+                font-size: 14px;
+                background: #44475a;
+                color: #f8f8f2;
+            }
+
+            #sno-container input[type="password"]:focus,
+            #sno-container input[type="text"]:focus,
+            #sno-container textarea:focus {
+                outline: none;
+                border-color: #bd93f9;
+            }
+
+            #sno-container textarea {
+                resize: vertical;
+                min-height: 300px;
+                font-family: inherit;
+            }
+
+            .btn {
+                background: #bd93f9;
+                color: #282a36;
+                border: 1px solid #bd93f9;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s ease;
+                font-weight: 600;
+            }
+
+            .btn:hover {
+                background: #a978e8;
+            }
+
+            .btn-secondary {
+                background: #6272a4;
+                border-color: #6272a4;
+                color: #f8f8f2;
+                margin-left: 8px;
+            }
+            .btn-secondary:hover {
+                background: #7688c2;
+            }
+
+            .btn-danger {
+                background: #ff5555;
+                border-color: #ff5555;
+                color: #f8f8f2;
+            }
+            .btn-danger:hover {
+                background: #ff7070;
+            }
+
+            .header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+                flex-wrap: wrap;
+                gap: 15px;
+            }
+            .header h1 {
+                margin-bottom: 0;
+                text-align: left;
+            }
+
+            .search-box {
+                flex: 1;
+                min-width: 200px;
+            }
+
+            .notes-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+                gap: 15px;
+                margin-top: 20px;
+            }
+
+            .note-card {
+                background: #44475a;
+                border-radius: 6px;
+                padding: 15px;
+                border: 1px solid #6272a4;
+                transition: border-color 0.2s ease;
+                cursor: pointer;
+            }
+
+            .note-card:hover {
+                border-color: #bd93f9;
+            }
+
+            .note-title {
+                font-size: 1.1em;
+                font-weight: 600;
+                color: #f8f8f2;
+                margin-bottom: 8px;
+                word-break: break-word;
+            }
+
+            .note-preview {
+                color: #c5c8de;
+                font-size: 0.9em;
+                line-height: 1.4;
+                margin-bottom: 12px;
+                max-height: 80px;
+                overflow: hidden;
+                word-break: break-word;
+            }
+
+            .note-meta {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 0.75em;
+                color: #929ece;
+            }
+
+            .note-actions {
+                display: flex;
+                gap: 8px;
+            }
+
+            .btn-small {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 4px;
+            }
+
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                z-index: 1000;
+            }
+
+            .modal.active {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background: #282a36;
+                border-radius: 8px;
+                padding: 25px;
+                max-width: 700px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                border: 1px solid #bd93f9;
+            }
+
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .modal-header h2 {
+                font-size: 1.4em;
+                color: #f8f8f2;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 22px;
+                cursor: pointer;
+                color: #929ece;
+            }
+
+            .empty-state {
+                text-align: center;
+                padding: 50px 20px;
+                color: #929ece;
+            }
+
+            .empty-state h3 {
+                margin-bottom: 10px;
+                color: #c5c8de;
+            }
+
+            .error-message {
+                color: #ff5555;
+                font-size: 13px;
+                margin-top: 5px;
+                text-align: left;
+            }
+
+            .storage-info {
+                font-size: 12px;
+                color: #929ece;
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            @media (max-width: 768px) {
+                .header {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .header h1 {
+                    text-align: center;
+                }
+                .notes-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600&display=swap"
             rel="stylesheet"
         />
     </head>
     <body>
-        <textarea
-            id="editor"
-            spellcheck="false"
-            placeholder="Right-click or ☰ for menu."
-        ></textarea>
+        <div id="bedit-container">
+            <textarea
+                id="editor"
+                spellcheck="false"
+                placeholder="Right-click or ☰ for menu."
+            ></textarea>
 
-        <div id="top-right-container">
-            <div id="stats-display">
-                <span id="stats-line">↓ 1</span>
-                <span id="stats-char">→ 1</span>
-                <span id="stats-words">= 0</span>
+            <div id="top-right-container">
+                <div id="stats-display">
+                    <span id="stats-line">↓ 1</span>
+                    <span id="stats-char">→ 1</span>
+                    <span id="stats-words">= 0</span>
+                </div>
+
+                <div id="menu-trigger" title="Menu">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="#f8f8f2"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+                        ></path>
+                    </svg>
+                </div>
             </div>
-
-            <div id="menu-trigger" title="Menu">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="#f8f8f2"
-                    viewBox="0 0 256 256"
+            <div id="find-bar">
+                <input type="text" id="find-input" placeholder="Find..." />
+                <button
+                    id="find-prev"
+                    class="find-btn"
+                    title="Previous (Shift+Enter)"
                 >
-                    <path
-                        d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
-                    ></path>
-                </svg>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
+                        ></path>
+                    </svg>
+                </button>
+                <button id="find-next" class="find-btn" title="Next (Enter)">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
+                        ></path>
+                    </svg>
+                </button>
+                <button id="find-close" class="find-btn" title="Close (Esc)">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                        ></path>
+                    </svg>
+                </button>
             </div>
         </div>
 
@@ -257,119 +580,463 @@
                 <span class="shortcut">Ctrl+F</span>
             </div>
             <div class="menu-separator"></div>
-            <div
-                class="menu-item"
-                style="justify-content: space-around; cursor: default"
-            >
-                <a
-                    href="csv.html"
-                    target="_blank"
-                    style="
-                        color: inherit;
-                        text-decoration: none;
-                        cursor: pointer;
-                    "
-                    >CSV</a
-                >
-                <span style="color: #6272a4">|</span>
-                <a
-                    href="md.html"
-                    target="_blank"
-                    style="
-                        color: inherit;
-                        text-decoration: none;
-                        cursor: pointer;
-                    "
-                    >MD</a
-                >
-                <span style="color: #6272a4">|</span>
-                <a
-                    href="sno.html"
-                    target="_blank"
-                    style="
-                        color: inherit;
-                        text-decoration: none;
-                        cursor: pointer;
-                    "
-                    >SNO</a
-                >
+            <div class="menu-item" id="menu-notes">
+                <span>Notes</span>
+                <span class="shortcut">Ctrl+=</span>
             </div>
             <div class="menu-separator"></div>
-            <div
-                class="menu-item"
-                style="justify-content: space-around; cursor: default"
-            >
-                <a
-                    id="menu-toggle-stats"
-                    style="
-                        color: inherit;
-                        text-decoration: none;
-                        cursor: pointer;
-                    "
-                    >Stats</a
-                >
-                <span style="color: #6272a4">|</span>
-                <a
-                    href="/help"
-                    target="_blank"
-                    style="
-                        color: inherit;
-                        text-decoration: none;
-                        cursor: pointer;
-                    "
-                    >Help</a
-                >
+            <div class="menu-item" id="menu-toggle-stats">
+                <span>Stats</span>
             </div>
         </div>
 
-        <div id="find-bar">
-            <input type="text" id="find-input" placeholder="Find..." />
-            <button
-                id="find-prev"
-                class="find-btn"
-                title="Previous (Shift+Enter)"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-next" class="find-btn" title="Next (Enter)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-close" class="find-btn" title="Close (Esc)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
-                    ></path>
-                </svg>
-            </button>
+        <div id="sno-container" style="display: none">
+            <div class="sno-main-container">
+                <div id="loginScreen" class="login-screen">
+                    <h1>Notes</h1>
+                    <div class="input-group">
+                        <label for="masterPassword">Password</label>
+                        <input
+                            type="password"
+                            id="masterPassword"
+                            placeholder="Enter your password"
+                        />
+                        <div id="loginError" class="error-message"></div>
+                    </div>
+                    <button class="btn" onclick="login()">Unlock</button>
+                    <div class="storage-info">
+                        Data is encrypted and stored locally in your browser.
+                    </div>
+                </div>
+
+                <div id="appScreen" class="app-screen">
+                    <div class="header">
+                        <h1>Notes</h1>
+                        <div class="search-box">
+                            <input
+                                type="text"
+                                id="searchInput"
+                                placeholder="Search notes..."
+                                oninput="searchNotes()"
+                            />
+                        </div>
+                        <div>
+                            <button class="btn" onclick="showNewNoteModal()">
+                                + New Note
+                            </button>
+                            <button
+                                class="btn btn-secondary"
+                                onclick="logout()"
+                            >
+                                Logout & Close
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="notesContainer">
+                        <div class="empty-state">
+                            <h3>No notes yet</h3>
+                            <p>Create your first secure note to get started!</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="noteModal" class="modal">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 id="modalTitle">New Note</h2>
+                        <button class="close-btn" onclick="closeModal()">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="input-group">
+                        <label for="noteTitle">Title</label>
+                        <input
+                            type="text"
+                            id="noteTitle"
+                            placeholder="Enter note title"
+                        />
+                    </div>
+                    <div class="input-group">
+                        <label for="noteContent">Content</label>
+                        <textarea
+                            id="noteContent"
+                            placeholder="Write your note content here..."
+                        ></textarea>
+                    </div>
+                    <div style="text-align: right; margin-top: 20px">
+                        <button
+                            class="btn btn-secondary"
+                            onclick="closeModal()"
+                        >
+                            Cancel
+                        </button>
+                        <button class="btn" onclick="saveNote()">
+                            Save Note
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <script>
+            // --- SNO (NOTES) SCRIPT ---
+            let masterKey = null;
+            let notes = [];
+            let currentEditingId = null;
+            let currentPasswordHash = null;
+            const STORAGE_KEY = "sno_secure_note_vault";
+            const VAULT_VERSION = "1.0";
+
+            function sno_init() {
+                if (!isLocalStorageAvailable()) {
+                    showError(
+                        "This application requires local storage to function. Please enable it in your browser settings.",
+                    );
+                    return;
+                }
+            }
+
+            function showError(message) {
+                const loginScreen = document.getElementById("loginScreen");
+                let errorDiv = document.getElementById("criticalError");
+                if (!errorDiv) {
+                    errorDiv = document.createElement("div");
+                    errorDiv.id = "criticalError";
+                    errorDiv.style.color = "#ff5555";
+                    errorDiv.style.marginTop = "15px";
+                    errorDiv.style.fontWeight = "bold";
+                    loginScreen.appendChild(errorDiv);
+                }
+                errorDiv.textContent = message;
+            }
+
+            function isLocalStorageAvailable() {
+                try {
+                    const test = "__storage_test__";
+                    localStorage.setItem(test, test);
+                    localStorage.removeItem(test);
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            }
+
+            function loadVaultsFromStorage() {
+                try {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const data = JSON.parse(stored);
+                        if (data.version === VAULT_VERSION) {
+                            return data.vaults || {};
+                        }
+                    }
+                } catch (e) {
+                    console.error("Error loading vaults from storage:", e);
+                }
+                return {};
+            }
+
+            function saveVaultsToStorage(vaults) {
+                try {
+                    const data = {
+                        version: VAULT_VERSION,
+                        vaults: vaults,
+                        lastUpdated: new Date().toISOString(),
+                    };
+                    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                    return true;
+                } catch (e) {
+                    console.error("Error saving vaults to storage:", e);
+                    if (e.name === "QuotaExceededError") {
+                        showError(
+                            "Storage quota exceeded. Please delete some notes.",
+                        );
+                    }
+                    return false;
+                }
+            }
+
+            function hashPassword(password) {
+                return CryptoJS.SHA256(password + "sno-salt-v1").toString();
+            }
+
+            function login() {
+                const password =
+                    document.getElementById("masterPassword").value;
+                const errorElement = document.getElementById("loginError");
+
+                if (!password) {
+                    errorElement.textContent = "Please enter a password";
+                    return;
+                }
+
+                masterKey = CryptoJS.PBKDF2(password, "sno-salt-v1", {
+                    keySize: 256 / 32,
+                    iterations: 10000,
+                });
+                currentPasswordHash = hashPassword(password);
+                const userVaults = loadVaultsFromStorage();
+
+                if (userVaults[currentPasswordHash]) {
+                    try {
+                        const encryptedNotes = userVaults[currentPasswordHash];
+                        const decryptedData = CryptoJS.AES.decrypt(
+                            encryptedNotes,
+                            masterKey.toString(),
+                        ).toString(CryptoJS.enc.Utf8);
+
+                        if (!decryptedData)
+                            throw new Error("Decryption failed");
+
+                        notes = JSON.parse(decryptedData);
+                    } catch (e) {
+                        console.error("Decryption error:", e);
+                        errorElement.textContent =
+                            "Invalid password - unable to decrypt notes.";
+                        return;
+                    }
+                } else {
+                    notes = [];
+                }
+
+                errorElement.textContent = "";
+                document.getElementById("loginScreen").style.display = "none";
+                document.getElementById("appScreen").classList.add("active");
+                document.getElementById("masterPassword").value = "";
+                renderNotes();
+            }
+
+            function logout() {
+                if (masterKey) {
+                    saveNotesToStorage();
+                }
+                masterKey = null;
+                notes = [];
+                currentEditingId = null;
+                currentPasswordHash = null;
+                document.getElementById("sno-container").style.display = "none";
+                document.getElementById("loginScreen").style.display = "block";
+                document.getElementById("appScreen").classList.remove("active");
+                document.getElementById("searchInput").value = "";
+
+                document.getElementById("bedit-container").style.display =
+                    "block";
+                document.getElementById("editor").focus();
+            }
+
+            function saveNotesToStorage() {
+                if (!masterKey || !currentPasswordHash) return false;
+                try {
+                    const userVaults = loadVaultsFromStorage();
+                    const notesJson = JSON.stringify(notes);
+                    const encryptedNotes = CryptoJS.AES.encrypt(
+                        notesJson,
+                        masterKey.toString(),
+                    ).toString();
+                    userVaults[currentPasswordHash] = encryptedNotes;
+                    return saveVaultsToStorage(userVaults);
+                } catch (e) {
+                    console.error("Failed to save notes:", e);
+                    return false;
+                }
+            }
+
+            function encrypt(text) {
+                if (!masterKey) return text;
+                return CryptoJS.AES.encrypt(
+                    text,
+                    masterKey.toString(),
+                ).toString();
+            }
+
+            function decrypt(encryptedText) {
+                if (!masterKey) return encryptedText;
+                try {
+                    const bytes = CryptoJS.AES.decrypt(
+                        encryptedText,
+                        masterKey.toString(),
+                    );
+                    return (
+                        bytes.toString(CryptoJS.enc.Utf8) ||
+                        "[Decryption Error]"
+                    );
+                } catch (e) {
+                    return "[Unable to decrypt]";
+                }
+            }
+
+            function showNewNoteModal() {
+                currentEditingId = null;
+                document.getElementById("modalTitle").textContent = "New Note";
+                document.getElementById("noteTitle").value = "";
+                document.getElementById("noteContent").value = "";
+                document.getElementById("noteModal").classList.add("active");
+                document.getElementById("noteTitle").focus();
+            }
+
+            function editNote(id) {
+                const note = notes.find((n) => n.id === id);
+                if (!note) return;
+
+                currentEditingId = id;
+                document.getElementById("modalTitle").textContent = "Edit Note";
+                document.getElementById("noteTitle").value = decrypt(
+                    note.title,
+                );
+                document.getElementById("noteContent").value = decrypt(
+                    note.content,
+                );
+                document.getElementById("noteModal").classList.add("active");
+                document.getElementById("noteTitle").focus();
+            }
+
+            function saveNote() {
+                const title = document.getElementById("noteTitle").value.trim();
+                const content = document
+                    .getElementById("noteContent")
+                    .value.trim();
+
+                if (!title) {
+                    alert("Please enter a title.");
+                    return;
+                }
+
+                const now = new Date().toISOString();
+                const noteData = {
+                    title: encrypt(title),
+                    content: encrypt(content),
+                    lastModified: now,
+                };
+
+                if (currentEditingId) {
+                    const noteIndex = notes.findIndex(
+                        (n) => n.id === currentEditingId,
+                    );
+                    if (noteIndex !== -1) {
+                        notes[noteIndex] = { ...notes[noteIndex], ...noteData };
+                    }
+                } else {
+                    noteData.id = Date.now().toString();
+                    noteData.created = now;
+                    notes.unshift(noteData);
+                }
+
+                if (!saveNotesToStorage()) {
+                    alert("Failed to save note. Storage might be full.");
+                    return;
+                }
+                closeModal();
+                renderNotes();
+            }
+
+            function deleteNote(id) {
+                if (
+                    window.confirm("Are you sure you want to delete this note?")
+                ) {
+                    notes = notes.filter((n) => n.id !== id);
+                    saveNotesToStorage();
+                    renderNotes();
+                }
+            }
+
+            function closeModal() {
+                document.getElementById("noteModal").classList.remove("active");
+                currentEditingId = null;
+            }
+
+            function searchNotes() {
+                const query = document
+                    .getElementById("searchInput")
+                    .value.toLowerCase();
+                const filteredNotes = notes.filter((note) => {
+                    const title = decrypt(note.title).toLowerCase();
+                    const content = decrypt(note.content).toLowerCase();
+                    return title.includes(query) || content.includes(query);
+                });
+                renderNotes(filteredNotes);
+            }
+
+            function renderNotes(notesToRender = notes) {
+                const container = document.getElementById("notesContainer");
+                const searchInput =
+                    document.getElementById("searchInput").value;
+
+                if (notesToRender.length === 0) {
+                    const isEmptySearch = searchInput.length > 0;
+                    container.innerHTML = `
+                <div class="empty-state">
+                    <h3>${notes.length === 0 ? "No notes yet" : "No notes found"}</h3>
+                    <p>${notes.length === 0 ? "Create your first secure note to get started!" : `Your search for "${escapeHtml(searchInput)}" did not match any notes.`}</p>
+                </div>`;
+                    return;
+                }
+
+                const notesHTML = notesToRender
+                    .map((note) => {
+                        const title = decrypt(note.title);
+                        const content = decrypt(note.content);
+                        const preview =
+                            content.length > 100
+                                ? content.substring(0, 100) + "..."
+                                : content;
+                        const date = new Date(
+                            note.lastModified,
+                        ).toLocaleDateString();
+
+                        return `
+                <div class="note-card" onclick="editNote('${note.id}')">
+                    <div class="note-title">${escapeHtml(title)}</div>
+                    <div class="note-preview">${escapeHtml(preview)}</div>
+                    <div class="note-meta">
+                        <span>Modified: ${date}</span>
+                        <div class="note-actions" onclick="event.stopPropagation()">
+                            <button class="btn btn-small btn-danger" onclick="deleteNote('${note.id}')">Delete</button>
+                        </div>
+                    </div>
+                </div>`;
+                    })
+                    .join("");
+
+                container.innerHTML = `<div class="notes-grid">${notesHTML}</div>`;
+            }
+
+            function escapeHtml(text) {
+                const div = document.createElement("div");
+                div.textContent = text;
+                return div.innerHTML;
+            }
+            // --- SNO Event Listeners ---
+            document
+                .getElementById("masterPassword")
+                .addEventListener("keypress", (e) => {
+                    if (e.key === "Enter") login();
+                });
+
+            document
+                .getElementById("noteModal")
+                .addEventListener("click", (e) => {
+                    if (e.target === e.currentTarget) closeModal();
+                });
+
+            document.addEventListener("keydown", (e) => {
+                if (
+                    e.key === "Escape" &&
+                    document.querySelector(".modal.active")
+                ) {
+                    closeModal();
+                }
+            });
+
+            window.addEventListener("beforeunload", () => {
+                if (masterKey && currentPasswordHash) {
+                    saveNotesToStorage();
+                }
+            });
+            sno_init();
+
+            // --- bEDIT SCRIPT ---
             document.addEventListener("DOMContentLoaded", () => {
                 // --- HELPER FUNCTION for short IDs ---
                 const generateShortId = (length = 8) => {
@@ -411,16 +1078,14 @@
                 // --- STATE MANAGEMENT ---
                 let buffers = [];
                 let activeBufferIndex = -1;
-                let fileHandles = new Map(); // Store file handles separately as they can't be JSON serialized
+                let fileHandles = new Map(); // Store file handles separately
 
-                // Find feature state
                 let lastSearchTerm = "";
                 let searchResults = [];
                 let currentResultIndex = -1;
 
                 // --- BUFFER & RENDER LOGIC ---
                 const saveState = () => {
-                    // Don't save file handles, just the buffer data
                     const stateToSave = {
                         buffers: buffers,
                         activeBufferIndex: activeBufferIndex,
@@ -484,10 +1149,10 @@
                             }
                         } catch (e) {
                             console.error("Failed to parse saved state:", e);
-                            createNewBuffer(); // Start fresh if state is corrupt
+                            createNewBuffer();
                         }
                     } else {
-                        createNewBuffer(); // Create a default buffer if nothing is saved
+                        createNewBuffer();
                     }
                 };
 
@@ -529,14 +1194,12 @@
                 const openChars = Object.keys(pairMap);
 
                 editor.addEventListener("keydown", (e) => {
-                    // Handle Tab key to insert a tab character
                     if (e.key === "Tab") {
                         e.preventDefault();
                         document.execCommand("insertText", false, "\t");
                         return;
                     }
 
-                    // Handle auto-indent on Enter key
                     if (e.key === "Enter") {
                         e.preventDefault();
                         const cursorPos = editor.selectionStart;
@@ -558,7 +1221,6 @@
                         return;
                     }
 
-                    // Handle auto-pairing of brackets and quotes
                     if (openChars.includes(e.key)) {
                         e.preventDefault();
                         const start = editor.selectionStart;
@@ -582,7 +1244,7 @@
                 });
 
                 const toggleStats = (e) => {
-                    e.stopPropagation(); // Prevent the menu from closing immediately
+                    e.stopPropagation();
                     const isHidden = statsDisplay.classList.toggle("hidden");
                     localStorage.setItem(statsStorageKey, isHidden);
                     hideMenu();
@@ -612,7 +1274,7 @@
                     contextMenu.style.display = "block";
                     const menuWidth = contextMenu.offsetWidth;
                     const x = rect.right - menuWidth;
-                    const y = rect.bottom + 4; // Position below the trigger
+                    const y = rect.bottom + 4;
                     contextMenu.style.left = `${x}px`;
                     contextMenu.style.top = `${y}px`;
                     contextMenu.style.visibility = "visible";
@@ -651,7 +1313,6 @@
                 const findNextMatch = () => {
                     const searchTerm = findInput.value;
                     if (!searchTerm) return;
-
                     if (searchTerm !== lastSearchTerm) {
                         lastSearchTerm = searchTerm;
                         searchResults = [];
@@ -663,9 +1324,7 @@
                         }
                         currentResultIndex = -1;
                     }
-
                     if (searchResults.length === 0) return;
-
                     currentResultIndex++;
                     if (currentResultIndex >= searchResults.length)
                         currentResultIndex = 0;
@@ -675,14 +1334,11 @@
                 const findPrevMatch = () => {
                     const searchTerm = findInput.value;
                     if (!searchTerm) return;
-
                     if (searchTerm !== lastSearchTerm) {
                         findNextMatch();
                         return;
                     }
-
                     if (searchResults.length === 0) return;
-
                     currentResultIndex--;
                     if (currentResultIndex < 0)
                         currentResultIndex = searchResults.length - 1;
@@ -706,7 +1362,6 @@
                 // --- FILE SYSTEM API & BUFFER NAVIGATION ---
                 const newFile = () => {
                     hideMenu();
-                    // Open a new tab with a fresh session by navigating to the base URL
                     window.open(
                         window.location.origin + window.location.pathname,
                         "_blank",
@@ -778,11 +1433,9 @@
                         const activeBuffer = buffers[activeBufferIndex];
                         fileHandles.set(activeBuffer.id, newFileHandle);
                         activeBuffer.fileName = newFileHandle.name;
-
                         const writable = await newFileHandle.createWritable();
                         await writable.write(activeBuffer.content);
                         await writable.close();
-
                         renderActiveBuffer();
                         saveState();
                     } catch (err) {
@@ -794,15 +1447,12 @@
                 const closeFile = () => {
                     hideMenu();
                     if (buffers.length <= 0 || activeBufferIndex < 0) return;
-
                     const closedBuffer = buffers[activeBufferIndex];
                     fileHandles.delete(closedBuffer.id);
                     buffers.splice(activeBufferIndex, 1);
-
                     if (buffers.length === 0) {
-                        createNewBuffer(); // Create a new empty buffer if all are closed
+                        createNewBuffer();
                     } else {
-                        // Adjust the active index
                         if (activeBufferIndex >= buffers.length) {
                             activeBufferIndex = buffers.length - 1;
                         }
@@ -831,6 +1481,35 @@
                         saveState();
                     }
                 };
+
+                // --- INTEGRATION: NOTES TOGGLE ---
+                const showNotesPanel = () => {
+                    hideMenu();
+                    document.getElementById("bedit-container").style.display =
+                        "none";
+                    document.getElementById("sno-container").style.display =
+                        "block";
+
+                    if (masterKey) {
+                        document.getElementById("loginScreen").style.display =
+                            "none";
+                        document
+                            .getElementById("appScreen")
+                            .classList.add("active");
+                        renderNotes(); // Re-render in case notes changed
+                    } else {
+                        document.getElementById("loginScreen").style.display =
+                            "block";
+                        document
+                            .getElementById("appScreen")
+                            .classList.remove("active");
+                        document.getElementById("masterPassword").focus();
+                    }
+                };
+
+                document
+                    .getElementById("menu-notes")
+                    .addEventListener("click", showNotesPanel);
 
                 // --- MENU ITEM EVENT LISTENERS ---
                 document
@@ -885,6 +1564,10 @@
                                 e.preventDefault();
                                 closeFile();
                                 break;
+                            case "=":
+                                e.preventDefault();
+                                showNotesPanel();
+                                break;
                             case "arrowright":
                                 e.preventDefault();
                                 nextFile();
@@ -902,7 +1585,7 @@
 
                 // --- DRAG AND DROP FILE LOGIC ---
                 body.addEventListener("dragover", (e) => {
-                    e.preventDefault(); // Prevent default behavior (opening file)
+                    e.preventDefault();
                     e.stopPropagation();
                     body.classList.add("dragover");
                 });
@@ -921,7 +1604,6 @@
                     const files = e.dataTransfer.files;
                     if (files.length > 0) {
                         const file = files[0];
-                        // Check if the file is likely a text file
                         if (
                             file.type.startsWith("text/") ||
                             file.type === "" ||
@@ -932,13 +1614,12 @@
                             const reader = new FileReader();
                             reader.onload = (readEvent) => {
                                 const content = readEvent.target.result;
-                                createNewBuffer(content, file.name); // No file handle for dropped files
+                                createNewBuffer(content, file.name);
                             };
                             reader.onerror = () => {
                                 console.error(
                                     "Error reading the dropped file.",
                                 );
-                                // You could implement a user-facing error message here
                             };
                             reader.readAsText(file);
                         } else {
@@ -946,7 +1627,6 @@
                                 "Attempted to drop non-text file:",
                                 file.type,
                             );
-                            // You could implement a user-facing warning here
                         }
                     }
                 });
