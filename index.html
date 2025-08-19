@@ -4,11 +4,9 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>editr</title>
-        
-        <!-- PWA Manifest Link -->
+
         <link rel="manifest" href="manifest.json" />
-        
-        <!-- Theme color for browser UI -->
+
         <meta name="theme-color" content="#44475a" />
 
         <link
@@ -54,15 +52,14 @@
                 box-sizing: border-box;
             }
             body.dragover #editor {
-                 border-color: #bd93f9; /* Dracula purple */
+                border-color: #bd93f9; /* Dracula purple */
             }
-
 
             #editor::placeholder {
                 color: #6272a4; /* Dracula comment */
                 opacity: 1;
             }
-            
+
             #top-right-container {
                 position: fixed;
                 top: 16px;
@@ -208,7 +205,7 @@
                 <span id="stats-char">→ 1</span>
                 <span id="stats-words">= 0</span>
             </div>
-    
+
             <div id="menu-trigger" title="Menu">
                 <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -241,7 +238,7 @@
             <div class="menu-item" id="menu-save-as">
                 <span>Save As...</span>
             </div>
-             <div class="menu-item" id="menu-close-file">
+            <div class="menu-item" id="menu-close-file">
                 <span>Close File</span>
                 <span class="shortcut">Ctrl+W</span>
             </div>
@@ -261,7 +258,7 @@
             </div>
             <div class="menu-separator"></div>
             <div class="menu-item" id="menu-toggle-stats">
-                <span>Toggle Stats</span>
+                <span>Stats</span>
             </div>
         </div>
 
@@ -368,11 +365,17 @@
                         buffers: buffers,
                         activeBufferIndex: activeBufferIndex,
                     };
-                    localStorage.setItem(storageKey, JSON.stringify(stateToSave));
+                    localStorage.setItem(
+                        storageKey,
+                        JSON.stringify(stateToSave),
+                    );
                 };
 
                 const renderActiveBuffer = () => {
-                    if (activeBufferIndex < 0 || activeBufferIndex >= buffers.length) {
+                    if (
+                        activeBufferIndex < 0 ||
+                        activeBufferIndex >= buffers.length
+                    ) {
                         editor.value = "";
                         document.title = "editr";
                         updateStats();
@@ -388,7 +391,7 @@
 
                 const createNewBuffer = (
                     content = "",
-                    fileName = "Untitled",
+                    fileName = "New",
                     fileHandle = null,
                 ) => {
                     const newBuffer = {
@@ -412,7 +415,8 @@
                         try {
                             const savedState = JSON.parse(savedStateJSON);
                             buffers = savedState.buffers || [];
-                            activeBufferIndex = savedState.activeBufferIndex || 0;
+                            activeBufferIndex =
+                                savedState.activeBufferIndex || 0;
                             if (buffers.length === 0) {
                                 createNewBuffer();
                             } else {
@@ -452,6 +456,136 @@
                 };
                 editor.addEventListener("keyup", updateStats);
                 editor.addEventListener("click", updateStats);
+
+                // --- HELPER FUNCTION to call after programmatic changes to the editor ---
+                const updateEditorState = () => {
+                    if (activeBufferIndex !== -1) {
+                        buffers[activeBufferIndex].content = editor.value;
+                        saveState();
+                        updateStats();
+                    }
+                };
+
+                // --- NEW --- Editor enhancements (Tab, Enter, Auto-pairing) ---
+                editor.addEventListener("keydown", (e) => {
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const text = editor.value;
+                    const tab = "  "; // 2 spaces for tab
+
+                    // 1. Handle Tab and Shift+Tab for indentation
+                    if (e.key === "Tab") {
+                        e.preventDefault();
+
+                        if (e.shiftKey) {
+                            // Outdent: Find start of the current line
+                            let lineStart =
+                                text.lastIndexOf("\n", start - 1) + 1;
+                            // Check if line starts with a tab and remove it
+                            if (
+                                text.substring(
+                                    lineStart,
+                                    lineStart + tab.length,
+                                ) === tab
+                            ) {
+                                editor.value =
+                                    text.substring(0, lineStart) +
+                                    text.substring(lineStart + tab.length);
+                                editor.selectionStart = editor.selectionEnd =
+                                    Math.max(lineStart, start - tab.length);
+                                updateEditorState();
+                            }
+                        } else {
+                            // Indent: Insert tab at cursor
+                            editor.value =
+                                text.substring(0, start) +
+                                tab +
+                                text.substring(end);
+                            editor.selectionStart = editor.selectionEnd =
+                                start + tab.length;
+                            updateEditorState();
+                        }
+                        return; // Stop further processing for this keydown
+                    }
+
+                    // 2. Handle smart indentation on Enter
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+
+                        // Find leading whitespace of current line
+                        const lineStart = text.lastIndexOf("\n", start - 1) + 1;
+                        // Slice from line start to cursor to get current line's content so far
+                        const currentLinePrefix = text.substring(
+                            lineStart,
+                            start,
+                        );
+                        const indentMatch = currentLinePrefix.match(/^\s*/);
+                        const indent = indentMatch ? indentMatch[0] : "";
+
+                        // Insert newline and the same indent
+                        const newText = "\n" + indent;
+                        editor.value =
+                            text.substring(0, start) +
+                            newText +
+                            text.substring(end);
+                        editor.selectionStart = editor.selectionEnd =
+                            start + newText.length;
+                        updateEditorState();
+                        return;
+                    }
+
+                    // 3. Handle auto-pairing of brackets and quotes
+                    const pairs = {
+                        "(": ")",
+                        "[": "]",
+                        "{": "}",
+                        '"': '"',
+                        "'": "'",
+                        "`": "`",
+                    };
+                    if (pairs[e.key]) {
+                        e.preventDefault();
+
+                        const open = e.key;
+                        const close = pairs[open];
+                        const selectedText = text.substring(start, end);
+
+                        editor.value =
+                            text.substring(0, start) +
+                            open +
+                            selectedText +
+                            close +
+                            text.substring(end);
+
+                        if (selectedText) {
+                            editor.selectionStart = start + 1;
+                            editor.selectionEnd = end + 1;
+                        } else {
+                            editor.selectionStart = editor.selectionEnd =
+                                start + 1;
+                        }
+                        updateEditorState();
+                        return;
+                    }
+
+                    // 4. Handle 'Backspace' to delete an empty pair
+                    if (e.key === "Backspace" && start === end) {
+                        const pairsToDelete = { "(": ")", "[": "]", "{": "}" };
+                        const charBefore = text.substring(start - 1, start);
+                        const charAfter = text.substring(start, start + 1);
+
+                        if (pairsToDelete[charBefore] === charAfter) {
+                            e.preventDefault();
+                            editor.value =
+                                text.substring(0, start - 1) +
+                                text.substring(start + 1);
+                            editor.selectionStart = editor.selectionEnd =
+                                start - 1;
+                            updateEditorState();
+                            return;
+                        }
+                    }
+                });
 
                 const toggleStats = () => {
                     const isHidden = statsDisplay.classList.toggle("hidden");
@@ -578,7 +712,10 @@
                 const newFile = () => {
                     hideMenu();
                     // Open a new tab with a fresh session by navigating to the base URL
-                    window.open(window.location.origin + window.location.pathname, '_blank');
+                    window.open(
+                        window.location.origin + window.location.pathname,
+                        "_blank",
+                    );
                 };
 
                 const openFile = async () => {
@@ -588,7 +725,18 @@
                             types: [
                                 {
                                     description: "Text Files",
-                                    accept: { "text/plain": [".txt", ".md", ".js", ".html", ".css", ".json", ".xml", ".csv"] },
+                                    accept: {
+                                        "text/plain": [
+                                            ".txt",
+                                            ".md",
+                                            ".js",
+                                            ".html",
+                                            ".css",
+                                            ".json",
+                                            ".xml",
+                                            ".csv",
+                                        ],
+                                    },
                                 },
                             ],
                         });
@@ -600,7 +748,7 @@
                             console.error("Error opening file:", err);
                     }
                 };
-                
+
                 const saveFile = async () => {
                     hideMenu();
                     if (activeBufferIndex === -1) return;
@@ -635,11 +783,11 @@
                         const activeBuffer = buffers[activeBufferIndex];
                         fileHandles.set(activeBuffer.id, newFileHandle);
                         activeBuffer.fileName = newFileHandle.name;
-                        
+
                         const writable = await newFileHandle.createWritable();
                         await writable.write(activeBuffer.content);
                         await writable.close();
-                        
+
                         renderActiveBuffer();
                         saveState();
                     } catch (err) {
@@ -668,11 +816,11 @@
                     saveState();
                 };
 
-
                 const nextFile = () => {
                     hideMenu();
                     if (buffers.length > 1) {
-                        activeBufferIndex = (activeBufferIndex + 1) % buffers.length;
+                        activeBufferIndex =
+                            (activeBufferIndex + 1) % buffers.length;
                         renderActiveBuffer();
                         saveState();
                     }
@@ -681,35 +829,75 @@
                 const prevFile = () => {
                     hideMenu();
                     if (buffers.length > 1) {
-                        activeBufferIndex = (activeBufferIndex - 1 + buffers.length) % buffers.length;
+                        activeBufferIndex =
+                            (activeBufferIndex - 1 + buffers.length) %
+                            buffers.length;
                         renderActiveBuffer();
                         saveState();
                     }
                 };
 
-
                 // --- MENU ITEM EVENT LISTENERS ---
-                document.getElementById("menu-new").addEventListener("click", newFile);
-                document.getElementById("menu-open").addEventListener("click", openFile);
-                document.getElementById("menu-save").addEventListener("click", saveFile);
-                document.getElementById("menu-save-as").addEventListener("click", saveFileAs);
-                document.getElementById("menu-close-file").addEventListener("click", closeFile);
-                document.getElementById("menu-next-file").addEventListener("click", nextFile);
-                document.getElementById("menu-prev-file").addEventListener("click", prevFile);
+                document
+                    .getElementById("menu-new")
+                    .addEventListener("click", newFile);
+                document
+                    .getElementById("menu-open")
+                    .addEventListener("click", openFile);
+                document
+                    .getElementById("menu-save")
+                    .addEventListener("click", saveFile);
+                document
+                    .getElementById("menu-save-as")
+                    .addEventListener("click", saveFileAs);
+                document
+                    .getElementById("menu-close-file")
+                    .addEventListener("click", closeFile);
+                document
+                    .getElementById("menu-next-file")
+                    .addEventListener("click", nextFile);
+                document
+                    .getElementById("menu-prev-file")
+                    .addEventListener("click", prevFile);
 
                 // --- KEYBOARD SHORTCUTS ---
                 document.addEventListener("keydown", (e) => {
-                    if (findBar.style.display === "flex" && e.target === findInput) return;
+                    if (
+                        findBar.style.display === "flex" &&
+                        e.target === findInput
+                    )
+                        return;
 
                     if (e.ctrlKey || e.metaKey) {
                         switch (e.key.toLowerCase()) {
-                            case "n": e.preventDefault(); newFile(); break;
-                            case "o": e.preventDefault(); openFile(); break;
-                            case "s": e.preventDefault(); saveFile(); break;
-                            case "f": e.preventDefault(); showFindBar(); break;
-                            case "w": e.preventDefault(); closeFile(); break;
-                            case "arrowright": e.preventDefault(); nextFile(); break;
-                            case "arrowleft": e.preventDefault(); prevFile(); break;
+                            case "n":
+                                e.preventDefault();
+                                newFile();
+                                break;
+                            case "o":
+                                e.preventDefault();
+                                openFile();
+                                break;
+                            case "s":
+                                e.preventDefault();
+                                saveFile();
+                                break;
+                            case "f":
+                                e.preventDefault();
+                                showFindBar();
+                                break;
+                            case "w":
+                                e.preventDefault();
+                                closeFile();
+                                break;
+                            case "arrowright":
+                                e.preventDefault();
+                                nextFile();
+                                break;
+                            case "arrowleft":
+                                e.preventDefault();
+                                prevFile();
+                                break;
                         }
                     }
                     if (e.key === "Escape") {
@@ -739,38 +927,55 @@
                     if (files.length > 0) {
                         const file = files[0];
                         // Check if the file is likely a text file
-                        if (file.type.startsWith("text/") || file.type === "" || file.name.match(/\.(txt|md|js|html|css|json|xml|csv)$/)) {
+                        if (
+                            file.type.startsWith("text/") ||
+                            file.type === "" ||
+                            file.name.match(
+                                /\.(txt|md|js|html|css|json|xml|csv)$/,
+                            )
+                        ) {
                             const reader = new FileReader();
                             reader.onload = (readEvent) => {
                                 const content = readEvent.target.result;
                                 createNewBuffer(content, file.name); // No file handle for dropped files
                             };
                             reader.onerror = () => {
-                                console.error("Error reading the dropped file.");
+                                console.error(
+                                    "Error reading the dropped file.",
+                                );
                                 // You could implement a user-facing error message here
                             };
                             reader.readAsText(file);
                         } else {
-                            console.warn("Attempted to drop non-text file:", file.type);
+                            console.warn(
+                                "Attempted to drop non-text file:",
+                                file.type,
+                            );
                             // You could implement a user-facing warning here
                         }
                     }
                 });
-
 
                 // --- INITIALIZATION ---
                 loadState();
             });
 
             // --- SERVICE WORKER REGISTRATION ---
-            if ('serviceWorker' in navigator) {
-                window.addEventListener('load', () => {
-                    navigator.serviceWorker.register('/sw.js')
-                        .then(registration => {
-                            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register("/sw.js")
+                        .then((registration) => {
+                            console.log(
+                                "ServiceWorker registration successful with scope: ",
+                                registration.scope,
+                            );
                         })
-                        .catch(error => {
-                            console.log('ServiceWorker registration failed: ', error);
+                        .catch((error) => {
+                            console.log(
+                                "ServiceWorker registration failed: ",
+                                error,
+                            );
                         });
                 });
             }
