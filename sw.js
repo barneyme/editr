@@ -8,7 +8,10 @@ const CACHE_NAME = 'editr-cache-v1';
 // External resources like fonts and TailwindCSS will be cached on-the-fly.
 const appShellFiles = [
     '/',
-    '/index.html' 
+    '/index.html'
+     '/csv.html'
+     '/md.html'
+     '/sno.html'
 ];
 
 /**
