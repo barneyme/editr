@@ -3,7 +3,7 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>editr</title>
+        <title>bEdit</title>
 
         <link rel="manifest" href="manifest.json" />
 
@@ -11,7 +11,7 @@
 
         <link
             rel="icon"
-            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">e</text></svg>'
+            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">b</text></svg>'
         />
         <script src="https://cdn.tailwindcss.com"></script>
         <style>
@@ -259,43 +259,64 @@
             <div class="menu-separator"></div>
             <div
                 class="menu-item"
-                id="menu-format-links"
-                style="justify-content: flex-start; gap: 8px"
+                style="justify-content: space-around; cursor: default"
             >
                 <a
                     href="csv.html"
                     target="_blank"
-                    style="color: inherit; text-decoration: none"
+                    style="
+                        color: inherit;
+                        text-decoration: none;
+                        cursor: pointer;
+                    "
                     >CSV</a
                 >
-                <span>|</span>
+                <span style="color: #6272a4">|</span>
                 <a
                     href="md.html"
                     target="_blank"
-                    style="color: inherit; text-decoration: none"
+                    style="
+                        color: inherit;
+                        text-decoration: none;
+                        cursor: pointer;
+                    "
                     >MD</a
                 >
-                <span>|</span>
+                <span style="color: #6272a4">|</span>
                 <a
                     href="sno.html"
                     target="_blank"
-                    style="color: inherit; text-decoration: none"
+                    style="
+                        color: inherit;
+                        text-decoration: none;
+                        cursor: pointer;
+                    "
                     >SNO</a
                 >
             </div>
             <div class="menu-separator"></div>
             <div
                 class="menu-item"
-                id="menu-toggle-stats"
-                style="justify-content: flex-start; gap: 8px"
+                style="justify-content: space-around; cursor: default"
             >
-                <span>Stats</span>
-                <span>|</span>
                 <a
-                    href="help.html"
+                    id="menu-toggle-stats"
+                    style="
+                        color: inherit;
+                        text-decoration: none;
+                        cursor: pointer;
+                    "
+                    >Stats</a
+                >
+                <span style="color: #6272a4">|</span>
+                <a
+                    href="/help"
                     target="_blank"
-                    style="color: inherit; text-decoration: none"
-                    onclick="event.stopPropagation()"
+                    style="
+                        color: inherit;
+                        text-decoration: none;
+                        cursor: pointer;
+                    "
                     >Help</a
                 >
             </div>
@@ -342,7 +363,7 @@
                     viewBox="0 0 256 256"
                 >
                     <path
-                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111,63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
                     ></path>
                 </svg>
             </button>
@@ -369,8 +390,8 @@
                     sessionId = generateShortId();
                     history.replaceState(null, "", `#${sessionId}`);
                 }
-                const storageKey = `editrTextSession-${sessionId}`;
-                const statsStorageKey = `editrStatsHidden-${sessionId}`;
+                const storageKey = `bEditTextSession-${sessionId}`;
+                const statsStorageKey = `bEditStatsHidden-${sessionId}`;
 
                 // --- DOM ELEMENTS ---
                 const editor = document.getElementById("editor");
@@ -416,15 +437,15 @@
                         activeBufferIndex >= buffers.length
                     ) {
                         editor.value = "";
-                        document.title = "editr";
+                        document.title = "bEdit";
                         updateStats();
                         return;
                     }
                     const activeBuffer = buffers[activeBufferIndex];
                     editor.value = activeBuffer.content;
                     document.title = activeBuffer.fileName
-                        ? `${activeBuffer.fileName} - editr`
-                        : "editr";
+                        ? `${activeBuffer.fileName} - bEdit`
+                        : "bEdit";
                     updateStats();
                 };
 
@@ -496,137 +517,72 @@
                 editor.addEventListener("keyup", updateStats);
                 editor.addEventListener("click", updateStats);
 
-                // --- HELPER FUNCTION to call after programmatic changes to the editor ---
-                const updateEditorState = () => {
-                    if (activeBufferIndex !== -1) {
-                        buffers[activeBufferIndex].content = editor.value;
-                        saveState();
-                        updateStats();
-                    }
+                // --- Editor Typing Enhancements ---
+                const pairMap = {
+                    "(": ")",
+                    "[": "]",
+                    "{": "}",
+                    '"': '"',
+                    "'": "'",
+                    "`": "`",
                 };
+                const openChars = Object.keys(pairMap);
 
-                // --- NEW --- Editor enhancements (Tab, Enter, Auto-pairing) ---
                 editor.addEventListener("keydown", (e) => {
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const text = editor.value;
-                    const tab = "  "; // 2 spaces for tab
-
-                    // 1. Handle Tab and Shift+Tab for indentation
+                    // Handle Tab key to insert a tab character
                     if (e.key === "Tab") {
                         e.preventDefault();
-
-                        if (e.shiftKey) {
-                            // Outdent: Find start of the current line
-                            let lineStart =
-                                text.lastIndexOf("\n", start - 1) + 1;
-                            // Check if line starts with a tab and remove it
-                            if (
-                                text.substring(
-                                    lineStart,
-                                    lineStart + tab.length,
-                                ) === tab
-                            ) {
-                                editor.value =
-                                    text.substring(0, lineStart) +
-                                    text.substring(lineStart + tab.length);
-                                editor.selectionStart = editor.selectionEnd =
-                                    Math.max(lineStart, start - tab.length);
-                                updateEditorState();
-                            }
-                        } else {
-                            // Indent: Insert tab at cursor
-                            editor.value =
-                                text.substring(0, start) +
-                                tab +
-                                text.substring(end);
-                            editor.selectionStart = editor.selectionEnd =
-                                start + tab.length;
-                            updateEditorState();
-                        }
-                        return; // Stop further processing for this keydown
+                        document.execCommand("insertText", false, "\t");
+                        return;
                     }
 
-                    // 2. Handle smart indentation on Enter
+                    // Handle auto-indent on Enter key
                     if (e.key === "Enter") {
                         e.preventDefault();
-
-                        // Find leading whitespace of current line
-                        const lineStart = text.lastIndexOf("\n", start - 1) + 1;
-                        // Slice from line start to cursor to get current line's content so far
-                        const currentLinePrefix = text.substring(
-                            lineStart,
-                            start,
+                        const cursorPos = editor.selectionStart;
+                        const textBeforeCursor = editor.value.substring(
+                            0,
+                            cursorPos,
                         );
-                        const indentMatch = currentLinePrefix.match(/^\s*/);
-                        const indent = indentMatch ? indentMatch[0] : "";
-
-                        // Insert newline and the same indent
-                        const newText = "\n" + indent;
-                        editor.value =
-                            text.substring(0, start) +
-                            newText +
-                            text.substring(end);
-                        editor.selectionStart = editor.selectionEnd =
-                            start + newText.length;
-                        updateEditorState();
+                        const currentLineStart =
+                            textBeforeCursor.lastIndexOf("\n") + 1;
+                        const currentLine =
+                            textBeforeCursor.substring(currentLineStart);
+                        const leadingWhitespaceMatch =
+                            currentLine.match(/^\s*/);
+                        const indent = leadingWhitespaceMatch
+                            ? leadingWhitespaceMatch[0]
+                            : "";
+                        const textToInsert = "\n" + indent;
+                        document.execCommand("insertText", false, textToInsert);
                         return;
                     }
 
-                    // 3. Handle auto-pairing of brackets and quotes
-                    const pairs = {
-                        "(": ")",
-                        "[": "]",
-                        "{": "}",
-                        '"': '"',
-                        "'": "'",
-                        "`": "`",
-                    };
-                    if (pairs[e.key]) {
+                    // Handle auto-pairing of brackets and quotes
+                    if (openChars.includes(e.key)) {
                         e.preventDefault();
+                        const start = editor.selectionStart;
+                        const end = editor.selectionEnd;
+                        const selectedText = editor.value.substring(start, end);
+                        const openChar = e.key;
+                        const closeChar = pairMap[openChar];
+                        const textToInsert =
+                            openChar + selectedText + closeChar;
+                        document.execCommand("insertText", false, textToInsert);
 
-                        const open = e.key;
-                        const close = pairs[open];
-                        const selectedText = text.substring(start, end);
-
-                        editor.value =
-                            text.substring(0, start) +
-                            open +
-                            selectedText +
-                            close +
-                            text.substring(end);
-
-                        if (selectedText) {
+                        if (start === end) {
+                            editor.selectionStart = start + 1;
+                            editor.selectionEnd = start + 1;
+                        } else {
                             editor.selectionStart = start + 1;
                             editor.selectionEnd = end + 1;
-                        } else {
-                            editor.selectionStart = editor.selectionEnd =
-                                start + 1;
                         }
-                        updateEditorState();
                         return;
-                    }
-
-                    // 4. Handle 'Backspace' to delete an empty pair
-                    if (e.key === "Backspace" && start === end) {
-                        const pairsToDelete = { "(": ")", "[": "]", "{": "}" };
-                        const charBefore = text.substring(start - 1, start);
-                        const charAfter = text.substring(start, start + 1);
-
-                        if (pairsToDelete[charBefore] === charAfter) {
-                            e.preventDefault();
-                            editor.value =
-                                text.substring(0, start - 1) +
-                                text.substring(start + 1);
-                            editor.selectionStart = editor.selectionEnd =
-                                start - 1;
-                            updateEditorState();
-                            return;
-                        }
                     }
                 });
 
-                const toggleStats = () => {
+                const toggleStats = (e) => {
+                    e.stopPropagation(); // Prevent the menu from closing immediately
                     const isHidden = statsDisplay.classList.toggle("hidden");
                     localStorage.setItem(statsStorageKey, isHidden);
                     hideMenu();
