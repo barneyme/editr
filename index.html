@@ -123,6 +123,14 @@
                 font-size: 12px;
             }
 
+            .menu-item a {
+                color: inherit;
+                text-decoration: none;
+                cursor: pointer;
+                display: block;
+                width: 100%;
+            }
+
             .menu-separator {
                 height: 1px;
                 background-color: #6272a4;
@@ -451,6 +459,66 @@
                 text-align: center;
             }
 
+            /* Text Expander Modal Styles */
+            #text-expander-modal .modal-content {
+                max-width: 800px;
+            }
+            #expansions-list {
+                max-height: 30vh;
+                overflow-y: auto;
+                border: 1px solid #44475a;
+                border-radius: 4px;
+                margin-bottom: 15px;
+            }
+            .expansion-item {
+                display: flex;
+                align-items: center;
+                padding: 8px 12px;
+                border-bottom: 1px solid #44475a;
+            }
+            .expansion-item:last-child {
+                border-bottom: none;
+            }
+            .expansion-item-shortcut {
+                font-family: "Fira Code", monospace;
+                color: #8be9fd; /* Cyan */
+                width: 100px;
+                flex-shrink: 0;
+            }
+            .expansion-item-value {
+                flex-grow: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: #f8f8f2;
+            }
+            .expansion-item-actions {
+                margin-left: 15px;
+            }
+            #new-expansion-form {
+                display: grid;
+                grid-template-columns: 150px 1fr;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #new-expansion-form input,
+            #new-expansion-form textarea {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #6272a4;
+                border-radius: 4px;
+                font-size: 14px;
+                background: #282a36;
+                color: #f8f8f2;
+                font-family: inherit;
+            }
+            #new-expansion-form textarea {
+                grid-column: 1 / -1;
+                resize: vertical;
+                min-height: 80px;
+            }
+
             @media (max-width: 768px) {
                 .header {
                     flex-direction: column;
@@ -542,14 +610,15 @@
                     <span class="shortcut">Ctrl+=</span>
                 </div>
                 <div class="menu-separator"></div>
-                <div class="menu-item">
-                    <span
-                        id="menu-toggle-stats"
-                        style="cursor: pointer; flex-grow: 1"
-                        >Stats</span
+                <div
+                    class="menu-item"
+                    style="display: flex; gap: 1rem; padding: 0"
+                >
+                    <a id="menu-toggle-stats" style="padding: 10px 20px"
+                        >Stats</a
                     >
-                    <span id="menu-expander-settings" style="cursor: pointer"
-                        >Text</span
+                    <a id="menu-text-expander" style="padding: 10px 20px"
+                        >Text</a
                     >
                 </div>
             </div>
@@ -595,92 +664,12 @@
                         viewBox="0 0 256 256"
                     >
                         <path
-                            d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111l63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                            d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111,191.51,47.51a12,12,0,0,1,17,17L145,128Z"
                         ></path>
                     </svg>
                 </button>
             </div>
         </div>
-
-        <!-- Text Expander Modal -->
-        <div id="expander-modal" class="modal">
-            <div class="modal-content" style="max-width: 800px">
-                <div class="modal-header">
-                    <h2>Text Expander Settings</h2>
-                    <button id="expander-close-btn" class="close-btn">
-                        &times;
-                    </button>
-                </div>
-                <p
-                    style="
-                        color: #6272a4;
-                        font-size: 14px;
-                        margin-top: -10px;
-                        margin-bottom: 20px;
-                    "
-                >
-                    Define snippets for .a through .z. Type the trigger (e.g.,
-                    .d) followed by a space or Enter in the editor to expand.
-                </p>
-                <div
-                    id="expansions-grid"
-                    style="
-                        display: grid;
-                        grid-template-columns: repeat(
-                            auto-fill,
-                            minmax(200px, 1fr)
-                        );
-                        gap: 15px;
-                        max-height: 50vh;
-                        overflow-y: auto;
-                        padding-right: 10px;
-                    "
-                ></div>
-                <div
-                    style="
-                        text-align: right;
-                        margin-top: 20px;
-                        border-top: 1px solid #6272a4;
-                        padding-top: 20px;
-                        display: flex;
-                        justify-content: space-between;
-                        align-items: center;
-                    "
-                >
-                    <div>
-                        <button
-                            id="expander-import-btn"
-                            class="btn btn-secondary"
-                        >
-                            Import
-                        </button>
-                        <button
-                            id="expander-export-btn"
-                            class="btn btn-secondary"
-                        >
-                            Export
-                        </button>
-                    </div>
-                    <div>
-                        <button
-                            id="expander-cancel-btn"
-                            class="btn btn-secondary"
-                        >
-                            Cancel
-                        </button>
-                        <button id="expander-save-btn" class="btn">
-                            Save & Close
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-        <input
-            type="file"
-            id="expander-import-input"
-            class="hidden"
-            accept=".txt"
-        />
 
         <div id="sno-container" class="hidden">
             <div class="sno-container">
@@ -769,6 +758,65 @@
             </div>
         </div>
 
+        <div id="text-expander-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Text Expander</h2>
+                    <button id="close-expander-modal" class="close-btn">
+                        &times;
+                    </button>
+                </div>
+
+                <h3>My Shortcuts</h3>
+                <div id="expansions-list"></div>
+
+                <h3>Add/Edit Shortcut</h3>
+                <div id="new-expansion-form">
+                    <input
+                        type="text"
+                        id="expansion-shortcut-input"
+                        placeholder=".letter (EG .a)"
+                    />
+                    <button id="add-expansion-btn" class="btn">
+                        Add/Update
+                    </button>
+                    <textarea
+                        id="expansion-value-input"
+                        placeholder="Enter the text to expand to..."
+                    ></textarea>
+                </div>
+
+                <div
+                    style="
+                        text-align: right;
+                        margin-top: 20px;
+                        display: flex;
+                        justify-content: flex-end;
+                        gap: 10px;
+                    "
+                >
+                    <button
+                        id="import-expansions-btn"
+                        class="btn btn-secondary"
+                    >
+                        Import
+                    </button>
+                    <button
+                        id="export-expansions-btn"
+                        class="btn btn-secondary"
+                    >
+                        Export
+                    </button>
+                </div>
+                <input
+                    type="file"
+                    id="import-expansions-input"
+                    class="hidden"
+                    accept=".txt"
+                />
+            </div>
+        </div>
+
         <script>
             document.addEventListener("DOMContentLoaded", () => {
                 // --- DOM ELEMENTS ---
@@ -788,11 +836,29 @@
                 const editrContainer =
                     document.getElementById("editr-container");
                 const snoContainer = document.getElementById("sno-container");
-                const expanderModal = document.getElementById("expander-modal");
-                const expansionsGrid =
-                    document.getElementById("expansions-grid");
-                const expanderImportInput = document.getElementById(
-                    "expander-import-input",
+
+                // Text Expander DOM Elements
+                const textExpanderModal = document.getElementById(
+                    "text-expander-modal",
+                );
+                const expansionsList =
+                    document.getElementById("expansions-list");
+                const shortcutInput = document.getElementById(
+                    "expansion-shortcut-input",
+                );
+                const valueInput = document.getElementById(
+                    "expansion-value-input",
+                );
+                const addExpansionBtn =
+                    document.getElementById("add-expansion-btn");
+                const importBtn = document.getElementById(
+                    "import-expansions-btn",
+                );
+                const exportBtn = document.getElementById(
+                    "export-expansions-btn",
+                );
+                const importFileInput = document.getElementById(
+                    "import-expansions-input",
                 );
 
                 // --- ================================== ---
@@ -1191,180 +1257,194 @@
                 const storageKey = `editrTextSession-${sessionId}`;
                 const statsStorageKey = `editrStatsHidden-${sessionId}`;
 
-                // --- TEXT EXPANDER CODE ---
+                // --- ======================= ---
+                // --- TEXT EXPANDER CODE      ---
+                // --- ======================= ---
+                const EXPANSIONS_STORAGE_KEY = "bEditTextExpansions";
                 let textExpansions = {};
-                const EXPANSIONS_STORAGE_KEY = `editrTextExpansions-${sessionId}`;
 
-                const saveExpansions = () => {
+                const loadTextExpansions = () => {
+                    const stored = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
+                    if (stored) {
+                        try {
+                            textExpansions = JSON.parse(stored);
+                        } catch (e) {
+                            console.error("Could not parse text expansions", e);
+                            textExpansions = {};
+                        }
+                    }
+                    renderExpansionsList();
+                };
+
+                const saveTextExpansions = () => {
                     localStorage.setItem(
                         EXPANSIONS_STORAGE_KEY,
                         JSON.stringify(textExpansions),
                     );
                 };
 
-                const loadExpansions = () => {
-                    const saved = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
-                    const defaults = { d: "{{DATE_YYYYMMDD}}" };
-                    try {
-                        textExpansions = saved ? JSON.parse(saved) : {};
-                    } catch (e) {
-                        console.error("Could not parse text expansions", e);
-                        textExpansions = {};
-                    }
-                    // Merge defaults with loaded expansions, ensuring defaults don't overwrite user settings unless they are absent
-                    for (const key in defaults) {
-                        if (!textExpansions.hasOwnProperty(key)) {
-                            textExpansions[key] = defaults[key];
-                        }
+                const renderExpansionsList = () => {
+                    expansionsList.innerHTML = "";
+                    if (Object.keys(textExpansions).length === 0) {
+                        expansionsList.innerHTML = `<div class="expansion-item" style="color: #6272a4;">No custom shortcuts defined.</div>`;
+                        return;
                     }
 
-                    // Ensure all letters a-z have a key
-                    for (let i = 97; i <= 122; i++) {
-                        const char = String.fromCharCode(i);
-                        if (!textExpansions.hasOwnProperty(char)) {
-                            textExpansions[char] = "";
-                        }
-                    }
-                    saveExpansions();
-                };
-
-                const populateExpanderModal = () => {
-                    expansionsGrid.innerHTML = "";
                     const sortedKeys = Object.keys(textExpansions).sort();
 
-                    for (const key of sortedKeys) {
-                        if (key.length !== 1) continue;
-                        const value = textExpansions[key];
-                        const wrapper = document.createElement("div");
-                        const label = document.createElement("label");
-                        label.htmlFor = `expander-input-${key}`;
-                        label.textContent = `.${key}`;
-                        label.style.fontFamily = '"Fira Code", monospace';
-                        label.style.marginBottom = "4px";
-                        label.style.display = "block";
-                        const input = document.createElement("input");
-                        input.type = "text";
-                        input.id = `expander-input-${key}`;
-                        input.value = value;
-                        input.dataset.key = key;
-                        input.style.width = "100%";
-                        input.style.backgroundColor = "#282a36";
-                        input.style.border = "1px solid #6272a4";
-                        input.style.color = "#f8f8f2";
-                        input.style.borderRadius = "4px";
-                        input.style.padding = "4px 8px";
-                        if (key === "d" && value === "{{DATE_YYYYMMDD}}") {
-                            input.title =
-                                "Special value for current date in YYYYMMDD format. You can replace this.";
-                        }
-                        wrapper.appendChild(label);
-                        wrapper.appendChild(input);
-                        expansionsGrid.appendChild(wrapper);
+                    for (const shortcut of sortedKeys) {
+                        const value = textExpansions[shortcut];
+                        const item = document.createElement("div");
+                        item.className = "expansion-item";
+                        item.innerHTML = `
+                            <span class="expansion-item-shortcut">${sno_escapeHtml(shortcut)}</span>
+                            <span class="expansion-item-value">${sno_escapeHtml(value)}</span>
+                            <div class="expansion-item-actions">
+                                <button class="btn btn-small" data-shortcut="${shortcut}">Edit</button>
+                                <button class="btn btn-small btn-danger" data-shortcut="${shortcut}">Del</button>
+                            </div>
+                        `;
+                        expansionsList.appendChild(item);
                     }
                 };
 
-                const showExpanderModal = () => {
+                const showTextExpanderModal = () => {
                     hideMenu();
-                    populateExpanderModal();
-                    expanderModal.classList.add("active");
+                    renderExpansionsList();
+                    textExpanderModal.classList.add("active");
                 };
 
-                const closeExpanderModal = () => {
-                    expanderModal.classList.remove("active");
+                const hideTextExpanderModal = () => {
+                    textExpanderModal.classList.remove("active");
+                    shortcutInput.value = "";
+                    valueInput.value = "";
                 };
 
-                const saveExpansionsFromModal = () => {
-                    const inputs =
-                        expansionsGrid.querySelectorAll('input[type="text"]');
-                    const newExpansions = {};
-                    inputs.forEach((input) => {
-                        const key = input.dataset.key;
-                        newExpansions[key] = input.value;
-                    });
-                    textExpansions = newExpansions;
-                    saveExpansions();
-                    closeExpanderModal();
+                const addOrUpdateExpansion = () => {
+                    const shortcut = shortcutInput.value.trim();
+                    const value = valueInput.value;
+
+                    if (!shortcut.startsWith(".") || shortcut.length < 2) {
+                        alert(
+                            "Shortcut must start with '.' and be at least 2 characters long.",
+                        );
+                        return;
+                    }
+                    if (shortcut === ".d") {
+                        alert(
+                            "'.d' is a reserved shortcut for the current date and cannot be modified.",
+                        );
+                        return;
+                    }
+                    if (!value) {
+                        alert("Expansion value cannot be empty.");
+                        return;
+                    }
+
+                    textExpansions[shortcut] = value;
+                    saveTextExpansions();
+                    renderExpansionsList();
+                    shortcutInput.value = "";
+                    valueInput.value = "";
+                    shortcutInput.focus();
+                };
+
+                expansionsList.addEventListener("click", (e) => {
+                    const shortcut = e.target.dataset.shortcut;
+                    if (!shortcut) return;
+
+                    if (e.target.textContent === "Edit") {
+                        shortcutInput.value = shortcut;
+                        valueInput.value = textExpansions[shortcut];
+                        valueInput.focus();
+                    } else if (e.target.textContent === "Del") {
+                        if (
+                            confirm(
+                                `Are you sure you want to delete the shortcut "${shortcut}"?`,
+                            )
+                        ) {
+                            delete textExpansions[shortcut];
+                            saveTextExpansions();
+                            renderExpansionsList();
+                        }
+                    }
+                });
+
+                const handleTextExpansion = (shortcut, event) => {
+                    let expansion = null;
+                    if (shortcut === ".d") {
+                        const d = new Date();
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const day = String(d.getDate()).padStart(2, "0");
+                        expansion = `${year}${month}${day}`;
+                    } else if (textExpansions[shortcut]) {
+                        expansion = textExpansions[shortcut];
+                    }
+
+                    if (expansion !== null) {
+                        event.preventDefault();
+                        const startPos =
+                            editor.selectionStart - shortcut.length;
+                        const endPos = editor.selectionStart;
+
+                        // Replace the shortcut with the expansion
+                        editor.setSelectionRange(startPos, endPos);
+                        document.execCommand("insertText", false, expansion);
+
+                        return true; // Indicate that an expansion happened
+                    }
+                    return false;
                 };
 
                 const exportExpansions = () => {
-                    const exportData = {};
-                    for (const key in textExpansions) {
-                        if (textExpansions[key]) {
-                            // Only export non-empty expansions
-                            exportData[key] = textExpansions[key];
-                        }
-                    }
-                    const dataStr = JSON.stringify(exportData, null, 2);
-                    const blob = new Blob([dataStr], {
-                        type: "text/plain",
-                    });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    a.href = url;
-                    a.download = "editr-expansions.txt";
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    URL.revokeObjectURL(url);
+                    const dataStr =
+                        "data:text/json;charset=utf-8," +
+                        encodeURIComponent(
+                            JSON.stringify(textExpansions, null, 2),
+                        );
+                    const downloadAnchorNode = document.createElement("a");
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute(
+                        "download",
+                        "editr-expansions.txt",
+                    );
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
                 };
 
-                const importExpansions = () => {
-                    expanderImportInput.onchange = (e) => {
-                        const file = e.target.files[0];
-                        if (!file) return;
-                        const reader = new FileReader();
-                        reader.onload = (re) => {
-                            try {
-                                const content = re.target.result;
-                                const importedData = JSON.parse(content);
-                                if (
-                                    typeof importedData !== "object" ||
-                                    importedData === null
-                                ) {
-                                    throw new Error("Invalid format");
-                                }
-                                // Merge imported data with existing data
-                                for (const key in importedData) {
-                                    if (
-                                        key.length === 1 &&
-                                        key.match(/[a-z]/i)
-                                    ) {
-                                        textExpansions[key.toLowerCase()] =
-                                            importedData[key];
-                                    }
-                                }
-                                saveExpansions();
-                                populateExpanderModal();
-                            } catch (err) {
-                                alert(
-                                    "Import failed. Please select a valid text file exported from editr.",
-                                );
+                const importExpansions = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            if (
+                                typeof imported !== "object" ||
+                                imported === null
+                            ) {
+                                throw new Error("Invalid format");
                             }
-                        };
-                        reader.readAsText(file);
-                        e.target.value = ""; // Reset input for next import
+                            // Simple merge: imported keys overwrite existing ones
+                            textExpansions = { ...textExpansions, ...imported };
+                            saveTextExpansions();
+                            renderExpansionsList();
+                            alert("Shortcuts imported successfully!");
+                        } catch (err) {
+                            alert(
+                                "Error importing file. Please make sure it's a valid JSON file.",
+                            );
+                            console.error("Import error:", err);
+                        } finally {
+                            // Reset file input to allow importing the same file again
+                            importFileInput.value = "";
+                        }
                     };
-                    expanderImportInput.click();
+                    reader.readAsText(file);
                 };
-
-                document
-                    .getElementById("menu-expander-settings")
-                    .addEventListener("click", showExpanderModal);
-                document
-                    .getElementById("expander-close-btn")
-                    .addEventListener("click", closeExpanderModal);
-                document
-                    .getElementById("expander-cancel-btn")
-                    .addEventListener("click", closeExpanderModal);
-                document
-                    .getElementById("expander-save-btn")
-                    .addEventListener("click", saveExpansionsFromModal);
-                document
-                    .getElementById("expander-export-btn")
-                    .addEventListener("click", exportExpansions);
-                document
-                    .getElementById("expander-import-btn")
-                    .addEventListener("click", importExpansions);
 
                 // --- STATE MANAGEMENT ---
                 let buffers = [];
@@ -1480,73 +1560,24 @@
                 };
                 const openChars = Object.keys(pairMap);
 
-                const handleTextExpansion = (e) => {
-                    if (
-                        expanderModal.classList.contains("active") ||
-                        !snoContainer.classList.contains("hidden")
-                    ) {
-                        return false;
-                    }
-                    if (e.key === " " || e.key === "Enter") {
-                        const cursorPos = editor.selectionStart;
-                        if (cursorPos < 2) return false;
-                        const textBefore = editor.value.substring(0, cursorPos);
-                        const triggerMatch = textBefore.match(/\.([a-zA-Z])$/);
-                        if (triggerMatch) {
-                            const key = triggerMatch[1].toLowerCase();
-                            let expansion = textExpansions[key];
-                            if (expansion) {
-                                e.preventDefault();
-                                if (
-                                    key === "d" &&
-                                    expansion === "{{DATE_YYYYMMDD}}"
-                                ) {
-                                    const d = new Date();
-                                    const year = d.getFullYear();
-                                    const month = String(
-                                        d.getMonth() + 1,
-                                    ).padStart(2, "0");
-                                    const day = String(d.getDate()).padStart(
-                                        2,
-                                        "0",
-                                    );
-                                    expansion = `${year}${month}${day}`;
-                                }
-                                editor.selectionStart = cursorPos - 2;
-                                editor.selectionEnd = cursorPos;
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    expansion,
-                                );
-                                if (activeBufferIndex !== -1) {
-                                    buffers[activeBufferIndex].content =
-                                        editor.value;
-                                    saveState();
-                                    updateStats();
-                                }
-                                return true;
-                            }
-                        }
-                    }
-                    return false;
-                };
-
                 editor.addEventListener("keydown", (e) => {
-                    if (handleTextExpansion(e)) return;
-
                     if (e.key === "Tab") {
                         e.preventDefault();
                         document.execCommand("insertText", false, "\t");
                         return;
                     }
                     if (e.key === "Enter") {
-                        e.preventDefault();
                         const cursorPos = editor.selectionStart;
                         const textBeforeCursor = editor.value.substring(
                             0,
                             cursorPos,
                         );
+
+                        // Check for text expansion on Enter
+                        const lastWord = textBeforeCursor.split(/\s+/).pop();
+                        if (handleTextExpansion(lastWord, e)) return;
+
+                        e.preventDefault();
                         const currentLineStart =
                             textBeforeCursor.lastIndexOf("\n") + 1;
                         const currentLine =
@@ -1562,6 +1593,15 @@
                             "\n" + indent,
                         );
                         return;
+                    }
+                    if (e.key === " ") {
+                        const cursorPos = editor.selectionStart;
+                        const textBeforeCursor = editor.value.substring(
+                            0,
+                            cursorPos,
+                        );
+                        const lastWord = textBeforeCursor.split(/\s+/).pop();
+                        if (handleTextExpansion(lastWord, e)) return;
                     }
                     if (openChars.includes(e.key)) {
                         e.preventDefault();
@@ -1849,6 +1889,21 @@
                 document
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
+                document
+                    .getElementById("menu-text-expander")
+                    .addEventListener("click", showTextExpanderModal);
+                document
+                    .getElementById("close-expander-modal")
+                    .addEventListener("click", hideTextExpanderModal);
+                textExpanderModal.addEventListener("click", (e) => {
+                    if (e.target === e.currentTarget) hideTextExpanderModal();
+                });
+                addExpansionBtn.addEventListener("click", addOrUpdateExpansion);
+                exportBtn.addEventListener("click", exportExpansions);
+                importBtn.addEventListener("click", () =>
+                    importFileInput.click(),
+                );
+                importFileInput.addEventListener("change", importExpansions);
 
                 document.addEventListener("keydown", (e) => {
                     if (
@@ -1866,6 +1921,18 @@
                         }
                         return;
                     }
+                    if (textExpanderModal.classList.contains("active")) {
+                        if (e.key === "Escape") hideTextExpanderModal();
+                        if (
+                            e.key === "Enter" &&
+                            (e.target === shortcutInput ||
+                                e.target === valueInput)
+                        ) {
+                            addOrUpdateExpansion();
+                        }
+                        return;
+                    }
+
                     if (e.ctrlKey || e.metaKey) {
                         switch (e.key.toLowerCase()) {
                             case "n":
@@ -1946,7 +2013,7 @@
 
                 // --- INITIALIZATION ---
                 loadState();
-                loadExpansions();
+                loadTextExpansions();
             });
 
             // --- SERVICE WORKER REGISTRATION ---
