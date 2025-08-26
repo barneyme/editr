@@ -34,6 +34,20 @@
             #editr-container {
                 width: 100%;
                 height: 100vh;
+                position: relative; /* Added for line indicator positioning */
+            }
+
+            #line-indicator {
+                position: absolute;
+                top: 2rem; /* Initial position matches editor's top padding */
+                left: 0;
+                width: 4px;
+                height: 25.6px; /* Corresponds to 16px font-size * 1.6 line-height */
+                background-color: #8be9fd; /* Dracula Cyan */
+                z-index: 1;
+                transition: top 0.1s ease-out;
+                opacity: 0.5;
+                pointer-events: none; /* Make it non-interactive */
             }
 
             #editor {
@@ -541,6 +555,7 @@
     </head>
     <body>
         <div id="editr-container">
+            <div id="line-indicator"></div>
             <textarea
                 id="editor"
                 spellcheck="false"
@@ -845,6 +860,7 @@
             document.addEventListener("DOMContentLoaded", () => {
                 // --- DOM ELEMENTS ---
                 const editor = document.getElementById("editor");
+                const lineIndicator = document.getElementById("line-indicator");
                 const contextMenu = document.getElementById("context-menu");
                 const menuTrigger = document.getElementById("menu-trigger");
                 const statsDisplay = document.getElementById("stats-display");
@@ -1549,6 +1565,20 @@
                     }
                 };
 
+                const updateLineIndicator = (currentLineNumber) => {
+                    const editorStyles = window.getComputedStyle(editor);
+                    const paddingTop = parseFloat(editorStyles.paddingTop);
+                    const lineHeight = parseFloat(editorStyles.lineHeight);
+                    const scrollTop = editor.scrollTop;
+
+                    const topPosition =
+                        paddingTop +
+                        (currentLineNumber - 1) * lineHeight -
+                        scrollTop;
+
+                    lineIndicator.style.top = `${topPosition}px`;
+                };
+
                 editor.addEventListener("input", () => {
                     if (activeBufferIndex !== -1) {
                         buffers[activeBufferIndex].content = editor.value;
@@ -1570,9 +1600,11 @@
                         lines[lines.length - 1].length + 1;
                     statsLine.textContent = `↓ ${currentLineNumber}`;
                     statsChar.textContent = `→ ${currentCharNumber}`;
+                    updateLineIndicator(currentLineNumber);
                 };
                 editor.addEventListener("keyup", updateStats);
                 editor.addEventListener("click", updateStats);
+                editor.addEventListener("scroll", updateStats);
 
                 const pairMap = {
                     "(": ")",
