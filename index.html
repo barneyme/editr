@@ -624,6 +624,11 @@
                     <span class="shortcut">Ctrl+F</span>
                 </div>
                 <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-open-link">
+                    <span>Open Link</span>
+                    <span class="shortcut">Ctrl+U</span>
+                </div>
+                <div class="menu-separator"></div>
                 <div class="menu-item" id="menu-sno">
                     <span>Notes</span>
                     <span class="shortcut">Ctrl+=</span>
@@ -1876,6 +1881,65 @@
                     }
                 };
 
+                const openLink = () => {
+                    hideMenu();
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const fullText = editor.value;
+                    const urlRegex = /https?:\/\/[^\s]+/; // Finds the first URL
+                    const urlRegexGlobal = /https?:\/\/[^\s]+/g; // Finds all URLs
+
+                    let textToScan = "";
+                    let urlsToOpen = [];
+
+                    // Case 1: User has selected/highlighted text
+                    if (start !== end) {
+                        textToScan = fullText.substring(start, end);
+                        urlsToOpen = textToScan.match(urlRegexGlobal);
+                    }
+                    // Case 2: No selection, just a cursor on a line
+                    else {
+                        // Find the boundaries of the current line
+                        const lineStart =
+                            fullText.lastIndexOf("\n", start - 1) + 1;
+                        let lineEnd = fullText.indexOf("\n", start);
+                        if (lineEnd === -1) {
+                            lineEnd = fullText.length;
+                        }
+                        textToScan = fullText.substring(lineStart, lineEnd);
+
+                        // Find the first URL on that line
+                        const singleUrlMatch = textToScan.match(urlRegex);
+                        if (singleUrlMatch) {
+                            urlsToOpen = [singleUrlMatch[0]];
+                        }
+                    }
+
+                    if (urlsToOpen && urlsToOpen.length > 0) {
+                        if (urlsToOpen.length > 1) {
+                            alert(
+                                `Found ${urlsToOpen.length} links. Your browser's pop-up blocker may prevent some from opening.`,
+                            );
+                        }
+                        urlsToOpen.forEach((url) => {
+                            try {
+                                new URL(url);
+                                window.open(
+                                    url,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                );
+                            } catch (e) {
+                                console.warn(`Skipping invalid URL: ${url}`);
+                            }
+                        });
+                    } else {
+                        alert(
+                            "No valid URL found in the current selection or on the current line.",
+                        );
+                    }
+                };
+
                 const showSnoView = () => {
                     hideMenu();
                     editrContainer.style.display = "none";
@@ -1905,6 +1969,9 @@
                 document
                     .getElementById("menu-prev-file")
                     .addEventListener("click", prevFile);
+                document
+                    .getElementById("menu-open-link")
+                    .addEventListener("click", openLink);
                 document
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
@@ -1965,6 +2032,10 @@
                             case "s":
                                 e.preventDefault();
                                 saveFile();
+                                break;
+                            case "u":
+                                e.preventDefault();
+                                openLink();
                                 break;
                             case "f":
                                 e.preventDefault();
