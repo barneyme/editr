@@ -15,6 +15,7 @@
         />
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
         <style>
             /* --- editr Base Styles --- */
@@ -211,6 +212,91 @@
             }
             .find-btn:hover {
                 background-color: #6272a4;
+            }
+
+            /* --- PREVIEW STYLES --- */
+            .preview-container {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                box-sizing: border-box;
+                overflow-y: auto;
+                background-color: #282a36;
+                color: #f8f8f2;
+            }
+
+            /* --- CSV PREVIEW --- */
+            #csv-preview-container table {
+                width: 100%;
+                border-collapse: collapse;
+                font-family: "Inter", sans-serif;
+            }
+            #csv-preview-container th,
+            #csv-preview-container td {
+                border: 1px solid #44475a;
+                padding: 10px 12px;
+                text-align: left;
+            }
+            #csv-preview-container th {
+                background-color: #44475a;
+                font-weight: bold;
+                color: #f8f8f2;
+            }
+            #csv-preview-container tr:nth-child(even) {
+                background-color: #2f313e;
+            }
+
+            /* --- MARKDOWN PREVIEW --- */
+            .markdown-preview {
+                line-height: 1.7;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .markdown-preview h1,
+            .markdown-preview h2,
+            .markdown-preview h3 {
+                color: #f8f8f2;
+                border-bottom: 1px solid #44475a;
+                padding-bottom: 0.3em;
+                margin-top: 24px;
+                margin-bottom: 16px;
+            }
+            .markdown-preview h1 { font-size: 2em; }
+            .markdown-preview h2 { font-size: 1.5em; }
+            .markdown-preview h3 { font-size: 1.2em; }
+            .markdown-preview p { margin-bottom: 16px; }
+            .markdown-preview a { color: #8be9fd; text-decoration: none; }
+            .markdown-preview a:hover { text-decoration: underline; }
+            .markdown-preview code {
+                background-color: #44475a;
+                padding: 0.2em 0.4em;
+                margin: 0;
+                font-size: 85%;
+                border-radius: 3px;
+                font-family: "Fira Code", monospace;
+            }
+            .markdown-preview pre {
+                background-color: #1e1f29;
+                padding: 16px;
+                border-radius: 6px;
+                overflow-x: auto;
+            }
+            .markdown-preview pre code {
+                background-color: transparent;
+                padding: 0;
+            }
+            .markdown-preview blockquote {
+                padding: 0 1em;
+                color: #bd93f9;
+                border-left: 0.25em solid #bd93f9;
+                margin-left: 0;
+            }
+            .markdown-preview ul, .markdown-preview ol {
+                padding-left: 2em;
+                margin-bottom: 16px;
+            }
+            .markdown-preview li {
+                margin-bottom: 0.25em;
             }
 
             /* --- Integrated SNO Styles (Dracula Themed) --- */
@@ -545,6 +631,67 @@
                     grid-template-columns: 1fr;
                 }
             }
+            
+            /* --- PRINT STYLES --- */
+            @media print {
+                /* Reset body for printing */
+                body {
+                    background-color: white !important;
+                    color: black !important;
+                }
+
+                /* Hide all UI elements except the markdown preview container */
+                #editor,
+                #line-indicator,
+                #top-right-container,
+                #context-menu,
+                #find-bar,
+                #sno-container,
+                #text-expander-modal,
+                #csv-preview-container {
+                    display: none !important;
+                }
+
+                /* Ensure the markdown container is visible and styled for printing */
+                #md-preview-container {
+                    display: block !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    overflow: visible !important;
+                    background-color: transparent !important;
+                    padding: 0 !important;
+                }
+
+                /* Format the content inside for readability */
+                .markdown-preview {
+                    max-width: 100% !important;
+                    margin: 0 1in !important; /* Add standard print margins */
+                }
+                
+                .markdown-preview a {
+                    color: #0000FF !important;
+                    text-decoration: underline !important;
+                }
+                
+                .markdown-preview h1,
+                .markdown-preview h2,
+                .markdown-preview h3,
+                .markdown-preview blockquote {
+                    color: black !important;
+                    border-color: #ccc !important;
+                    page-break-after: avoid;
+                }
+
+                .markdown-preview pre, 
+                .markdown-preview code {
+                    background-color: #f0f0f0 !important;
+                    color: black !important;
+                    border: 1px solid #ccc !important;
+                    page-break-inside: avoid;
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                }
+            }
         </style>
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -561,6 +708,8 @@
                 spellcheck="false"
                 placeholder="Right-click or ☰ for menu."
             ></textarea>
+            <div id="csv-preview-container" class="preview-container hidden"></div>
+            <div id="md-preview-container" class="preview-container hidden"></div>
 
             <div id="top-right-container">
                 <div id="stats-display">
@@ -649,16 +798,13 @@
                     <span class="shortcut">Ctrl+=</span>
                 </div>
                 <div class="menu-separator"></div>
-                <div
-                    class="menu-item"
-                    style="display: flex; gap: 1rem; padding: 0"
-                >
-                    <a id="menu-toggle-stats" style="padding: 10px 20px"
-                        >Stats</a
-                    >
-                    <a id="menu-text-expander" style="padding: 10px 20px"
-                        >Text</a
-                    >
+                <div class="menu-item" style="display: flex; gap: 1rem; padding: 0">
+                    <a id="menu-toggle-stats" style="padding: 10px 20px">Stats</a>
+                    <a id="menu-text-expander" style="padding: 10px 20px">Text</a>
+                </div>
+                <div class="menu-item" style="display: flex; gap: 1rem; padding: 0">
+                     <a id="menu-csv-preview" style="padding: 10px 20px">CSV</a>
+                     <a id="menu-md-preview" style="padding: 10px 20px">MD</a>
                 </div>
             </div>
 
@@ -873,9 +1019,11 @@
                 const findNext = document.getElementById("find-next");
                 const findClose = document.getElementById("find-close");
                 const body = document.body;
-                const editrContainer =
-                    document.getElementById("editr-container");
+                const editrContainer = document.getElementById("editr-container");
                 const snoContainer = document.getElementById("sno-container");
+                const csvPreviewContainer = document.getElementById("csv-preview-container");
+                const mdPreviewContainer = document.getElementById("md-preview-container");
+
 
                 // Text Expander DOM Elements
                 const textExpanderModal = document.getElementById(
@@ -1490,6 +1638,7 @@
                 let buffers = [];
                 let activeBufferIndex = -1;
                 let fileHandles = new Map();
+                let currentViewMode = 'editor'; // 'editor', 'csv', 'md'
 
                 let lastSearchTerm = "";
                 let searchResults = [];
@@ -1506,7 +1655,17 @@
                     );
                 };
 
+                // --- VIEW MANAGEMENT ---
+                const showEditorView = () => {
+                    csvPreviewContainer.classList.add("hidden");
+                    mdPreviewContainer.classList.add("hidden");
+                    editor.classList.remove("hidden");
+                    lineIndicator.classList.remove("hidden");
+                    currentViewMode = 'editor';
+                };
+
                 const renderActiveBuffer = () => {
+                    showEditorView(); // Always return to editor view when changing buffers
                     if (
                         activeBufferIndex < 0 ||
                         activeBufferIndex >= buffers.length
@@ -1564,6 +1723,61 @@
                         createNewBuffer();
                     }
                 };
+                
+                // --- PREVIEW TOGGLE LOGIC ---
+                const toggleCsvPreview = () => {
+                    hideMenu();
+                    if (currentViewMode === 'csv') {
+                        showEditorView();
+                        return;
+                    }
+
+                    const text = editor.value.trim();
+                    const rows = text.split('\n').map(row => row.split(','));
+                    if (rows.length === 0 || (rows.length === 1 && rows[0].length <= 1 && rows[0][0] === '')) {
+                         csvPreviewContainer.innerHTML = '<p style="color: #6272a4;">No CSV data to display.</p>';
+                    } else {
+                        let tableHTML = '<table>';
+                        // Header
+                        tableHTML += '<thead><tr>';
+                        rows[0].forEach(header => tableHTML += `<th>${sno_escapeHtml(header)}</th>`);
+                        tableHTML += '</tr></thead>';
+                        // Body
+                        tableHTML += '<tbody>';
+                        rows.slice(1).forEach(row => {
+                            tableHTML += '<tr>';
+                            row.forEach(cell => tableHTML += `<td>${sno_escapeHtml(cell)}</td>`);
+                            tableHTML += '</tr>';
+                        });
+                        tableHTML += '</tbody></table>';
+                        csvPreviewContainer.innerHTML = tableHTML;
+                    }
+                    
+                    mdPreviewContainer.classList.add("hidden");
+                    editor.classList.add("hidden");
+                    lineIndicator.classList.add("hidden");
+                    csvPreviewContainer.classList.remove("hidden");
+                    currentViewMode = 'csv';
+                };
+
+                const toggleMdPreview = () => {
+                    hideMenu();
+                     if (currentViewMode === 'md') {
+                        showEditorView();
+                        return;
+                    }
+                    
+                    const markdownText = editor.value;
+                    const html = marked.parse(markdownText);
+                    mdPreviewContainer.innerHTML = `<div class="markdown-preview">${html}</div>`;
+                    
+                    csvPreviewContainer.classList.add("hidden");
+                    editor.classList.add("hidden");
+                    lineIndicator.classList.add("hidden");
+                    mdPreviewContainer.classList.remove("hidden");
+                    currentViewMode = 'md';
+                };
+
 
                 const updateLineIndicator = (currentLineNumber) => {
                     const editorStyles = window.getComputedStyle(editor);
@@ -2008,6 +2222,12 @@
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
                 document
+                    .getElementById("menu-csv-preview")
+                    .addEventListener("click", toggleCsvPreview);
+                document
+                    .getElementById("menu-md-preview")
+                    .addEventListener("click", toggleMdPreview);
+                document
                     .getElementById("menu-text-expander")
                     .addEventListener("click", showTextExpanderModal);
                 document
@@ -2092,7 +2312,11 @@
                         }
                     }
                     if (e.key === "Escape") {
-                        hideFindBar();
+                        if (currentViewMode !== 'editor') {
+                           showEditorView();
+                        } else {
+                           hideFindBar();
+                        }
                     }
                 });
 
