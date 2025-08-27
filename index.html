@@ -7,15 +7,15 @@
 
         <link rel="manifest" href="manifest.json" />
 
-        <meta name="theme-color" content="#3d3d3d" />
+        <meta name="theme-color" content="#44475a" />
 
         <link
             rel="icon"
-            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">b</text></svg>'
+            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">e</text></svg>'
         />
         <script src="https://cdn.tailwindcss.com"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
         <style>
             /* --- editr Base Styles --- */
@@ -27,28 +27,28 @@
                 height: 100%;
                 overflow: hidden;
                 font-family: "Inter", sans-serif;
-                background-color: #2d2d2d; /* New Orange Theme background */
+                background-color: #282a36; /* Dracula background */
                 transition: background-color 0.2s;
-                color: #f0f0f0;
+                color: #f8f8f2;
             }
 
             #editr-container {
                 width: 100%;
-                height: 100%;
-                position: relative;
+                height: 100vh;
+                position: relative; /* Added for line indicator positioning */
             }
 
             #line-indicator {
                 position: absolute;
-                top: 2rem;
+                top: 2rem; /* Initial position matches editor's top padding */
                 left: 0;
                 width: 4px;
-                height: 25.6px;
-                background-color: #ffb74d; /* Light Orange */
+                height: 25.6px; /* Corresponds to 16px font-size * 1.6 line-height */
+                background-color: #8be9fd; /* Dracula Cyan */
                 z-index: 1;
                 transition: top 0.1s ease-out;
                 opacity: 0.5;
-                pointer-events: none;
+                pointer-events: none; /* Make it non-interactive */
             }
 
             #editor {
@@ -59,7 +59,7 @@
                 outline: none;
                 resize: none;
                 background-color: transparent;
-                color: #f8f8f2; /* <<< KEPT THIS COLOR AS REQUESTED */
+                color: #f8f8f2; /* Dracula foreground */
                 font-family: "Fira Code", "Courier New", monospace;
                 font-size: 16px;
                 line-height: 1.6;
@@ -67,198 +67,19 @@
             }
 
             body.dragover {
-                background-color: #383838;
+                background-color: #3a3d4e;
             }
             #editor {
                 border: 2px dashed transparent;
                 box-sizing: border-box;
             }
             body.dragover #editor {
-                border-color: #ff9800; /* Main Orange */
+                border-color: #bd93f9; /* Dracula purple */
             }
 
             #editor::placeholder {
-                color: #888888; /* Subtle */
+                color: #6272a4; /* Dracula comment */
                 opacity: 1;
-            }
-
-            /* --- Markdown Preview Styles --- */
-            #markdown-preview {
-                padding: 2rem 4rem;
-                height: 100vh;
-                overflow-y: auto;
-                box-sizing: border-box;
-                color: #f0f0f0;
-                max-width: 800px;
-                margin: 0 auto;
-                line-height: 1.7;
-            }
-            #markdown-preview h1 {
-                font-size: 2.5em;
-                font-weight: 600;
-                margin-top: 0;
-                margin-bottom: 0.7em;
-                color: #ff9800; /* Main Orange */
-                border-bottom: 1px solid #888888;
-                padding-bottom: 0.3em;
-            }
-            #markdown-preview h2 {
-                font-size: 2em;
-                font-weight: 600;
-                margin-top: 1.5em;
-                margin-bottom: 0.6em;
-                color: #ff9800; /* Main Orange */
-                border-bottom: 1px solid #888888;
-                padding-bottom: 0.3em;
-            }
-            #markdown-preview h3 {
-                font-size: 1.5em;
-                font-weight: 600;
-                margin-top: 1.5em;
-                margin-bottom: 0.5em;
-                color: #ff9800; /* Main Orange */
-            }
-            #markdown-preview h4 {
-                font-size: 1.2em;
-                font-weight: 600;
-                margin-top: 1.5em;
-                margin-bottom: 0.5em;
-                color: #ff9800; /* Main Orange */
-            }
-            #markdown-preview p {
-                margin-bottom: 1.2em;
-            }
-            #markdown-preview a {
-                color: #ffb74d;
-                text-decoration: none;
-            } /* Light Orange */
-            #markdown-preview a:hover {
-                text-decoration: underline;
-            }
-            #markdown-preview code {
-                background-color: #3d3d3d;
-                padding: 0.2em 0.4em;
-                border-radius: 4px;
-                font-family: "Fira Code", monospace;
-                font-size: 0.9em;
-            }
-            #markdown-preview pre {
-                background-color: #262626;
-                padding: 1em;
-                border-radius: 5px;
-                border: 1px solid #3d3d3d;
-                overflow-x: auto;
-                margin-bottom: 1.2em;
-            }
-            #markdown-preview pre code {
-                background-color: transparent;
-                padding: 0;
-                font-size: 1em;
-            }
-            #markdown-preview blockquote {
-                border-left: 4px solid #888888;
-                padding-left: 1em;
-                color: #a9b1d6;
-                margin-left: 0;
-                margin-bottom: 1.2em;
-            }
-            #markdown-preview ul,
-            #markdown-preview ol {
-                padding-left: 2em;
-                margin-bottom: 1.2em;
-            }
-            #markdown-preview li {
-                margin-bottom: 0.5em;
-            }
-            #markdown-preview table {
-                border-collapse: collapse;
-                width: 100%;
-                margin: 1.5em 0;
-            }
-            #markdown-preview th,
-            #markdown-preview td {
-                border: 1px solid #888888;
-                padding: 0.6em 0.8em;
-            }
-            #markdown-preview th {
-                background-color: #3d3d3d;
-                font-weight: 600;
-            }
-            #markdown-preview hr {
-                border: 0;
-                height: 1px;
-                background-color: #888888;
-                margin: 2.5em 0;
-            }
-
-            /* --- CSV Grid Styles --- */
-            #csv-grid {
-                padding: 2rem;
-                height: 100vh;
-                overflow: auto;
-                box-sizing: border-box;
-                display: flex;
-                flex-direction: column;
-            }
-            #csv-grid-table-container {
-                flex-grow: 1;
-                overflow: auto;
-            }
-            #csv-grid table {
-                width: 100%;
-                border-collapse: collapse;
-                font-family: "Fira Code", monospace;
-                font-size: 14px;
-            }
-            #csv-grid th,
-            #csv-grid td {
-                border: 1px solid #3d3d3d;
-                padding: 8px 12px;
-                text-align: left;
-                white-space: nowrap;
-            }
-            #csv-grid thead {
-                background-color: #3d3d3d;
-                color: #f0f0f0;
-                position: sticky;
-                top: 0;
-                z-index: 10;
-            }
-            #csv-grid tbody tr:nth-child(even) {
-                background-color: #383838;
-            }
-            #csv-grid td[contenteditable="true"],
-            #csv-grid th span[contenteditable="true"] {
-                background-color: #2d2d2d;
-                outline: none;
-            }
-            #csv-grid td[contenteditable="true"]:focus,
-            #csv-grid th span[contenteditable="true"]:focus {
-                background-color: #3d3d3d;
-                outline: 2px solid #ff9800;
-                box-shadow: 0 0 0 2px #2d2d2d;
-            }
-            .csv-action-btn {
-                background: none;
-                border: none;
-                cursor: pointer;
-                padding: 2px;
-                font-size: 14px;
-                color: #ff5555;
-                opacity: 0.5;
-                transition: opacity 0.2s;
-            }
-            .csv-action-btn:hover {
-                opacity: 1;
-            }
-            #csv-grid th .csv-action-btn {
-                color: #ff9800; /* Main Orange */
-            }
-            #csv-controls {
-                padding-top: 1rem;
-                flex-shrink: 0;
-                display: flex;
-                gap: 0.5rem;
             }
 
             #top-right-container {
@@ -290,8 +111,8 @@
                 position: fixed;
                 display: none;
                 z-index: 1000;
-                background-color: #3d3d3d;
-                border: 1px solid #888888;
+                background-color: #44475a; /* Dracula selection */
+                border: 1px solid #6272a4; /* Dracula comment */
                 border-radius: 8px;
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
                 min-width: 180px;
@@ -301,7 +122,7 @@
             .menu-item {
                 padding: 10px 20px;
                 cursor: pointer;
-                color: #f0f0f0;
+                color: #f8f8f2;
                 display: flex;
                 justify-content: space-between;
                 align-items: center;
@@ -309,31 +130,12 @@
             }
 
             .menu-item:hover {
-                background-color: #888888;
+                background-color: #6272a4; /* Dracula comment */
             }
 
             .menu-item .shortcut {
-                color: #ff9800; /* Main Orange */
+                color: #bd93f9; /* Dracula purple */
                 font-size: 12px;
-            }
-
-            .menu-item .view-btn {
-                padding: 4px 10px;
-                border: 1px solid #888888;
-                border-radius: 4px;
-                background-color: transparent;
-                color: #f0f0f0;
-                cursor: pointer;
-                font-size: 12px;
-                transition: background-color 0.2s;
-            }
-            .menu-item .view-btn:hover {
-                background-color: #ff9800;
-                border-color: #ff9800;
-            }
-            .menu-item .view-btn.active {
-                background-color: #ffd600; /* Yellow */
-                border-color: #ffd600;
             }
 
             .menu-item a {
@@ -346,17 +148,22 @@
 
             .menu-separator {
                 height: 1px;
-                background-color: #888888;
+                background-color: #6272a4;
                 margin: 8px 0;
             }
 
             #stats-display {
-                color: #888888;
+                color: #6272a4; /* Dracula comment */
                 font-family: "Fira Code", "Courier New", monospace;
                 font-size: 14px;
                 display: flex;
                 gap: 16px;
-                background-color: rgba(61, 61, 61, 0.5);
+                background-color: rgba(
+                    68,
+                    71,
+                    90,
+                    0.5
+                ); /* Semi-transparent selection */
                 padding: 4px 12px;
                 border-radius: 6px;
                 transition: opacity 0.3s;
@@ -370,11 +177,11 @@
                 position: fixed;
                 bottom: 16px;
                 right: 16px;
-                background-color: #3d3d3d;
-                border: 1px solid #888888;
+                background-color: #44475a;
+                border: 1px solid #6272a4;
                 border-radius: 8px;
                 padding: 8px;
-                display: none;
+                display: none; /* Initially hidden */
                 align-items: center;
                 gap: 8px;
                 z-index: 1001;
@@ -382,9 +189,9 @@
             }
 
             #find-input {
-                background-color: #2d2d2d;
-                border: 1px solid #888888;
-                color: #f0f0f0;
+                background-color: #282a36;
+                border: 1px solid #6272a4;
+                color: #f8f8f2;
                 border-radius: 4px;
                 padding: 4px 8px;
                 outline: none;
@@ -392,22 +199,107 @@
             }
 
             #find-input:focus {
-                border-color: #ff9800;
+                border-color: #bd93f9;
             }
 
             .find-btn {
                 background-color: transparent;
                 border: none;
-                color: #f0f0f0;
+                color: #f8f8f2;
                 cursor: pointer;
                 padding: 4px;
                 border-radius: 4px;
             }
             .find-btn:hover {
-                background-color: #888888;
+                background-color: #6272a4;
             }
 
-            /* --- Integrated SNO Styles (Orange Themed) --- */
+            /* --- PREVIEW STYLES --- */
+            .preview-container {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                box-sizing: border-box;
+                overflow-y: auto;
+                background-color: #282a36;
+                color: #f8f8f2;
+            }
+
+            /* --- CSV PREVIEW --- */
+            #csv-preview-container table {
+                width: 100%;
+                border-collapse: collapse;
+                font-family: "Inter", sans-serif;
+            }
+            #csv-preview-container th,
+            #csv-preview-container td {
+                border: 1px solid #44475a;
+                padding: 10px 12px;
+                text-align: left;
+            }
+            #csv-preview-container th {
+                background-color: #44475a;
+                font-weight: bold;
+                color: #f8f8f2;
+            }
+            #csv-preview-container tr:nth-child(even) {
+                background-color: #2f313e;
+            }
+
+            /* --- MARKDOWN PREVIEW --- */
+            .markdown-preview {
+                line-height: 1.7;
+                max-width: 800px;
+                margin: 0 auto;
+            }
+            .markdown-preview h1,
+            .markdown-preview h2,
+            .markdown-preview h3 {
+                color: #f8f8f2;
+                border-bottom: 1px solid #44475a;
+                padding-bottom: 0.3em;
+                margin-top: 24px;
+                margin-bottom: 16px;
+            }
+            .markdown-preview h1 { font-size: 2em; }
+            .markdown-preview h2 { font-size: 1.5em; }
+            .markdown-preview h3 { font-size: 1.2em; }
+            .markdown-preview p { margin-bottom: 16px; }
+            .markdown-preview a { color: #8be9fd; text-decoration: none; }
+            .markdown-preview a:hover { text-decoration: underline; }
+            .markdown-preview code {
+                background-color: #44475a;
+                padding: 0.2em 0.4em;
+                margin: 0;
+                font-size: 85%;
+                border-radius: 3px;
+                font-family: "Fira Code", monospace;
+            }
+            .markdown-preview pre {
+                background-color: #1e1f29;
+                padding: 16px;
+                border-radius: 6px;
+                overflow-x: auto;
+            }
+            .markdown-preview pre code {
+                background-color: transparent;
+                padding: 0;
+            }
+            .markdown-preview blockquote {
+                padding: 0 1em;
+                color: #bd93f9;
+                border-left: 0.25em solid #bd93f9;
+                margin-left: 0;
+            }
+            .markdown-preview ul, .markdown-preview ol {
+                padding-left: 2em;
+                margin-bottom: 16px;
+            }
+            .markdown-preview li {
+                margin-bottom: 0.25em;
+            }
+
+            /* --- Integrated SNO Styles (Dracula Themed) --- */
             #sno-container {
                 display: flex;
                 align-items: center;
@@ -424,10 +316,10 @@
 
             .login-screen,
             .app-screen {
-                background: #2d2d2d;
+                background: #282a36;
                 border-radius: 8px;
                 padding: 30px;
-                border: 1px solid #888888;
+                border: 1px solid #6272a4;
                 max-width: 400px;
                 margin: 0 auto;
             }
@@ -441,7 +333,7 @@
             }
 
             #sno-container h1 {
-                color: #f0f0f0;
+                color: #f8f8f2;
                 margin-bottom: 25px;
                 font-size: 1.8em;
                 font-weight: 600;
@@ -456,7 +348,7 @@
             #sno-container label {
                 display: block;
                 margin-bottom: 5px;
-                color: #f0f0f0;
+                color: #f8f8f2;
                 font-weight: 500;
                 font-size: 14px;
             }
@@ -466,18 +358,18 @@
             #sno-container textarea {
                 width: 100%;
                 padding: 8px 12px;
-                border: 1px solid #888888;
+                border: 1px solid #6272a4;
                 border-radius: 4px;
                 font-size: 14px;
-                background: #2d2d2d;
-                color: #f0f0f0;
+                background: #282a36;
+                color: #f8f8f2;
             }
 
             #sno-container input[type="password"]:focus,
             #sno-container input[type="text"]:focus,
             #sno-container textarea:focus {
                 outline: none;
-                border-color: #ff9800; /* Main Orange */
+                border-color: #bd93f9; /* Purple */
             }
 
             #sno-container textarea {
@@ -487,9 +379,9 @@
             }
 
             .btn {
-                background: #ff9800; /* Main Orange */
-                color: #2d2d2d;
-                border: 1px solid #ff9800;
+                background: #bd93f9; /* Purple */
+                color: #f8f8f2;
+                border: 1px solid #bd93f9;
                 padding: 8px 16px;
                 border-radius: 4px;
                 font-size: 14px;
@@ -499,17 +391,17 @@
             }
 
             .btn:hover {
-                background: #ffb74d;
+                background: #caa9fa;
             }
 
             .btn-secondary {
-                background: #ffb74d; /* Light Orange */
-                border-color: #ffb74d;
-                color: #2d2d2d;
+                background: #8be9fd; /* Cyan */
+                border-color: #8be9fd;
+                color: #282a36;
                 margin-left: 8px;
             }
             .btn-secondary:hover {
-                background: #ffcc80;
+                background: #a1ecfe;
             }
 
             .btn-danger {
@@ -546,28 +438,28 @@
             }
 
             .note-card {
-                background: #3d3d3d;
+                background: #44475a;
                 border-radius: 6px;
                 padding: 15px;
-                border: 1px solid #888888;
+                border: 1px solid #6272a4;
                 transition: border-color 0.2s ease;
                 cursor: pointer;
             }
 
             .note-card:hover {
-                border-color: #ff9800; /* Main Orange */
+                border-color: #bd93f9; /* Purple */
             }
 
             .note-title {
                 font-size: 1.1em;
                 font-weight: 600;
-                color: #f0f0f0;
+                color: #f8f8f2;
                 margin-bottom: 8px;
                 word-break: break-word;
             }
 
             .note-preview {
-                color: #e0e0e0;
+                color: #f1f1f1;
                 font-size: 0.9em;
                 line-height: 1.4;
                 margin-bottom: 12px;
@@ -581,7 +473,7 @@
                 justify-content: space-between;
                 align-items: center;
                 font-size: 0.75em;
-                color: #888888;
+                color: #6272a4;
             }
 
             .note-actions {
@@ -613,14 +505,14 @@
             }
 
             .modal-content {
-                background: #2d2d2d;
+                background: #282a36;
                 border-radius: 8px;
                 padding: 25px;
                 max-width: 700px;
                 width: 90%;
                 max-height: 80vh;
                 overflow-y: auto;
-                border: 1px solid #ff9800;
+                border: 1px solid #bd93f9;
             }
 
             .modal-header {
@@ -631,7 +523,7 @@
             }
             .modal-header h2 {
                 font-size: 1.4em;
-                color: #f0f0f0;
+                color: #f8f8f2;
             }
 
             .close-btn {
@@ -639,18 +531,18 @@
                 border: none;
                 font-size: 22px;
                 cursor: pointer;
-                color: #888888;
+                color: #6272a4;
             }
 
             .empty-state {
                 text-align: center;
                 padding: 50px 20px;
-                color: #888888;
+                color: #6272a4;
             }
 
             .empty-state h3 {
                 margin-bottom: 10px;
-                color: #f0f0f0;
+                color: #f8f8f2;
             }
 
             .error-message {
@@ -662,7 +554,7 @@
 
             .storage-info {
                 font-size: 12px;
-                color: #888888;
+                color: #6272a4;
                 margin-top: 20px;
                 text-align: center;
             }
@@ -674,7 +566,7 @@
             #expansions-list {
                 max-height: 30vh;
                 overflow-y: auto;
-                border: 1px solid #3d3d3d;
+                border: 1px solid #44475a;
                 border-radius: 4px;
                 margin-bottom: 15px;
             }
@@ -682,14 +574,14 @@
                 display: flex;
                 align-items: center;
                 padding: 8px 12px;
-                border-bottom: 1px solid #3d3d3d;
+                border-bottom: 1px solid #44475a;
             }
             .expansion-item:last-child {
                 border-bottom: none;
             }
             .expansion-item-shortcut {
                 font-family: "Fira Code", monospace;
-                color: #ffb74d; /* Light Orange */
+                color: #8be9fd; /* Cyan */
                 width: 100px;
                 flex-shrink: 0;
             }
@@ -698,7 +590,7 @@
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
-                color: #f0f0f0;
+                color: #f8f8f2;
             }
             .expansion-item-actions {
                 margin-left: 15px;
@@ -714,11 +606,11 @@
             #new-expansion-form textarea {
                 width: 100%;
                 padding: 8px 12px;
-                border: 1px solid #888888;
+                border: 1px solid #6272a4;
                 border-radius: 4px;
                 font-size: 14px;
-                background: #2d2d2d;
-                color: #f0f0f0;
+                background: #282a36;
+                color: #f8f8f2;
                 font-family: inherit;
             }
             #new-expansion-form textarea {
@@ -739,41 +631,72 @@
                     grid-template-columns: 1fr;
                 }
             }
-        </style>
+            
+            /* --- PRINT STYLES --- */
+            @media print {
+                /* Reset body for printing */
+                body {
+                    background-color: white !important;
+                    color: black !important;
+                }
 
-        <style media="print">
-            /* --- Print Styles --- */
-            body * {
-                visibility: hidden;
-            }
-            #markdown-preview,
-            #markdown-preview * {
-                visibility: visible;
-            }
-            #markdown-preview {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: auto;
-                padding: 2cm;
-                color: #000 !important;
-                background-color: #fff !important;
-                max-width: 100%;
-            }
-            #markdown-preview h1,
-            #markdown-preview h2,
-            #markdown-preview h3,
-            #markdown-preview h4,
-            #markdown-preview a {
-                color: #000 !important;
+                /* Hide all UI elements except the markdown preview container */
+                #editor,
+                #line-indicator,
+                #top-right-container,
+                #context-menu,
+                #find-bar,
+                #sno-container,
+                #text-expander-modal,
+                #csv-preview-container {
+                    display: none !important;
+                }
+
+                /* Ensure the markdown container is visible and styled for printing */
+                #md-preview-container {
+                    display: block !important;
+                    width: 100% !important;
+                    height: auto !important;
+                    overflow: visible !important;
+                    background-color: transparent !important;
+                    padding: 0 !important;
+                }
+
+                /* Format the content inside for readability */
+                .markdown-preview {
+                    max-width: 100% !important;
+                    margin: 0 1in !important; /* Add standard print margins */
+                }
+                
+                .markdown-preview a {
+                    color: #0000FF !important;
+                    text-decoration: underline !important;
+                }
+                
+                .markdown-preview h1,
+                .markdown-preview h2,
+                .markdown-preview h3,
+                .markdown-preview blockquote {
+                    color: black !important;
+                    border-color: #ccc !important;
+                    page-break-after: avoid;
+                }
+
+                .markdown-preview pre, 
+                .markdown-preview code {
+                    background-color: #f0f0f0 !important;
+                    color: black !important;
+                    border: 1px solid #ccc !important;
+                    page-break-inside: avoid;
+                    white-space: pre-wrap !important;
+                    word-wrap: break-word !important;
+                }
             }
         </style>
-
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
         <link
-            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600&display=swap"
+            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500&display=swap"
             rel="stylesheet"
         />
     </head>
@@ -785,151 +708,152 @@
                 spellcheck="false"
                 placeholder="Right-click or ☰ for menu."
             ></textarea>
-        </div>
+            <div id="csv-preview-container" class="preview-container hidden"></div>
+            <div id="md-preview-container" class="preview-container hidden"></div>
 
-        <div id="markdown-preview" class="hidden"></div>
-        <div id="csv-grid" class="hidden"></div>
-
-        <div id="top-right-container">
-            <div id="stats-display">
-                <span id="stats-line">↓ 1</span>
-                <span id="stats-char">→ 1</span>
-                <span id="stats-words">= 0</span>
-            </div>
-
-            <div id="menu-trigger" title="Menu">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="#f0f0f0"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
-                    ></path>
-                </svg>
-            </div>
-        </div>
-
-        <div id="context-menu">
-            <div class="menu-item" id="menu-new">
-                <span>New</span>
-                <span class="shortcut">Ctrl+N</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-open">
-                <span>Open</span>
-                <span class="shortcut">Ctrl+O</span>
-            </div>
-            <div
-                class="menu-item"
-                style="
-                    padding: 0;
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                "
-            >
-                <div
-                    style="
-                        display: flex;
-                        gap: 0.5rem;
-                        align-items: center;
-                        padding: 10px 20px;
-                    "
-                >
-                    <a id="menu-save" style="cursor: pointer">Save</a>
-                    <a id="menu-save-as" style="cursor: pointer">(As)</a>
+            <div id="top-right-container">
+                <div id="stats-display">
+                    <span id="stats-line">↓ 1</span>
+                    <span id="stats-char">→ 1</span>
+                    <span id="stats-words">= 0</span>
                 </div>
-                <span class="shortcut" style="padding-right: 20px">Ctrl+S</span>
-            </div>
-            <div class="menu-item" id="menu-close-file">
-                <span>Close File</span>
-                <span class="shortcut">Ctrl+W</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-next-file">
-                <span>Next File</span>
-                <span class="shortcut">Ctrl+→</span>
-            </div>
-            <div class="menu-item" id="menu-prev-file">
-                <span>Last File</span>
-                <span class="shortcut">Ctrl+←</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-find">
-                <span>Find</span>
-                <span class="shortcut">Ctrl+F</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-open-link">
-                <span>Open Link</span>
-                <span class="shortcut">Ctrl+U</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-sno">
-                <span>Notes</span>
-                <span class="shortcut">Ctrl+=</span>
-            </div>
-            <div class="menu-separator"></div>
-            <div
-                class="menu-item"
-                style="display: flex; gap: 1rem; padding: 10px 20px"
-            >
-                <a id="menu-toggle-stats" style="cursor: pointer">Stats</a>
-                <a id="menu-text-expander" style="cursor: pointer">Text</a>
-                <div style="flex-grow: 1"></div>
-                <button id="menu-md-view" class="view-btn">MD</button>
-                <button id="menu-csv-view" class="view-btn">CSV</button>
-            </div>
-        </div>
 
-        <div id="find-bar">
-            <input type="text" id="find-input" placeholder="Find..." />
-            <button
-                id="find-prev"
-                class="find-btn"
-                title="Previous (Shift+Enter)"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
+                <div id="menu-trigger" title="Menu">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="#f8f8f2"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+                        ></path>
+                    </svg>
+                </div>
+            </div>
+
+            <div id="context-menu">
+                <div class="menu-item" id="menu-new">
+                    <span>New</span>
+                    <span class="shortcut">Ctrl+N</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-open">
+                    <span>Open</span>
+                    <span class="shortcut">Ctrl+O</span>
+                </div>
+                <div class="menu-item">
+                    <span style="white-space: nowrap">
+                        <a
+                            id="menu-save"
+                            style="
+                                display: inline;
+                                text-decoration: none;
+                                color: inherit;
+                                cursor: pointer;
+                            "
+                            >Save</a
+                        >
+                        <a
+                            id="menu-save-as"
+                            style="
+                                display: inline;
+                                text-decoration: none;
+                                color: #bd93f9;
+                                margin-left: 0.5rem;
+                                cursor: pointer;
+                            "
+                            >(As)</a
+                        >
+                    </span>
+                    <span class="shortcut">Ctrl+S</span>
+                </div>
+                <div class="menu-item" id="menu-close-file">
+                    <span>Close File</span>
+                    <span class="shortcut">Ctrl+W</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-next-file">
+                    <span>Next File</span>
+                    <span class="shortcut">Ctrl+→</span>
+                </div>
+                <div class="menu-item" id="menu-prev-file">
+                    <span>Last File</span>
+                    <span class="shortcut">Ctrl+←</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-find">
+                    <span>Find</span>
+                    <span class="shortcut">Ctrl+F</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-open-link">
+                    <span>Open Link</span>
+                    <span class="shortcut">Ctrl+U</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" id="menu-sno">
+                    <span>Notes</span>
+                    <span class="shortcut">Ctrl+=</span>
+                </div>
+                <div class="menu-separator"></div>
+                <div class="menu-item" style="display: flex; gap: 1rem; padding: 0">
+                    <a id="menu-toggle-stats" style="padding: 10px 20px">Stats</a>
+                    <a id="menu-text-expander" style="padding: 10px 20px">Text</a>
+                </div>
+                <div class="menu-item" style="display: flex; gap: 1rem; padding: 0">
+                     <a id="menu-csv-preview" style="padding: 10px 20px">CSV</a>
+                     <a id="menu-md-preview" style="padding: 10px 20px">MD</a>
+                </div>
+            </div>
+
+            <div id="find-bar">
+                <input type="text" id="find-input" placeholder="Find..." />
+                <button
+                    id="find-prev"
+                    class="find-btn"
+                    title="Previous (Shift+Enter)"
                 >
-                    <path
-                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-next" class="find-btn" title="Next (Enter)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
-                    ></path>
-                </svg>
-            </button>
-            <button id="find-close" class="find-btn" title="Close (Esc)">
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    fill="currentColor"
-                    viewBox="0 0 256 256"
-                >
-                    <path
-                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111,63.51-63.52a12,12,0,0,1,17,17L145,128Z"
-                    ></path>
-                </svg>
-            </button>
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
+                        ></path>
+                    </svg>
+                </button>
+                <button id="find-next" class="find-btn" title="Next (Enter)">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
+                        ></path>
+                    </svg>
+                </button>
+                <button id="find-close" class="find-btn" title="Close (Esc)">
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        width="16"
+                        height="16"
+                        fill="currentColor"
+                        viewBox="0 0 256 256"
+                    >
+                        <path
+                            d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111,191.51,47.51a12,12,0,0,1,17,17L145,128Z"
+                        ></path>
+                    </svg>
+                </button>
+            </div>
         </div>
 
         <div id="sno-container" class="hidden">
@@ -1095,14 +1019,35 @@
                 const findNext = document.getElementById("find-next");
                 const findClose = document.getElementById("find-close");
                 const body = document.body;
-                const editrContainer =
-                    document.getElementById("editr-container");
+                const editrContainer = document.getElementById("editr-container");
                 const snoContainer = document.getElementById("sno-container");
-                const markdownPreview =
-                    document.getElementById("markdown-preview");
-                const csvGrid = document.getElementById("csv-grid");
-                const mdViewBtn = document.getElementById("menu-md-view");
-                const csvViewBtn = document.getElementById("menu-csv-view");
+                const csvPreviewContainer = document.getElementById("csv-preview-container");
+                const mdPreviewContainer = document.getElementById("md-preview-container");
+
+
+                // Text Expander DOM Elements
+                const textExpanderModal = document.getElementById(
+                    "text-expander-modal",
+                );
+                const expansionsList =
+                    document.getElementById("expansions-list");
+                const shortcutInput = document.getElementById(
+                    "expansion-shortcut-input",
+                );
+                const valueInput = document.getElementById(
+                    "expansion-value-input",
+                );
+                const addExpansionBtn =
+                    document.getElementById("add-expansion-btn");
+                const importBtn = document.getElementById(
+                    "import-expansions-btn",
+                );
+                const exportBtn = document.getElementById(
+                    "export-expansions-btn",
+                );
+                const importFileInput = document.getElementById(
+                    "import-expansions-input",
+                );
 
                 // --- ================================== ---
                 // --- SNO (Secure Note) INTEGRATION CODE ---
@@ -1478,17 +1423,6 @@
                 // --- editr CORE CODE ---
                 // --- ================= ---
 
-                // --- VIEW STATE MANAGEMENT ---
-                let isMarkdownView = false;
-                let isCsvView = false;
-                const mdConverter = new showdown.Converter({
-                    tables: true,
-                    strikethrough: true,
-                    tasklists: true,
-                    emoji: true,
-                });
-                let csvData = [];
-
                 // --- HELPER FUNCTION for short IDs ---
                 const generateShortId = (length = 8) => {
                     const chars =
@@ -1511,10 +1445,200 @@
                 const storageKey = `editrTextSession-${sessionId}`;
                 const statsStorageKey = `editrStatsHidden-${sessionId}`;
 
+                // --- ======================= ---
+                // --- TEXT EXPANDER CODE      ---
+                // --- ======================= ---
+                const EXPANSIONS_STORAGE_KEY = "bEditTextExpansions";
+                let textExpansions = {};
+
+                const loadTextExpansions = () => {
+                    const stored = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
+                    if (stored) {
+                        try {
+                            textExpansions = JSON.parse(stored);
+                        } catch (e) {
+                            console.error("Could not parse text expansions", e);
+                            textExpansions = {};
+                        }
+                    }
+                    renderExpansionsList();
+                };
+
+                const saveTextExpansions = () => {
+                    localStorage.setItem(
+                        EXPANSIONS_STORAGE_KEY,
+                        JSON.stringify(textExpansions),
+                    );
+                };
+
+                const renderExpansionsList = () => {
+                    expansionsList.innerHTML = "";
+                    if (Object.keys(textExpansions).length === 0) {
+                        expansionsList.innerHTML = `<div class="expansion-item" style="color: #6272a4;">No custom shortcuts defined.</div>`;
+                        return;
+                    }
+
+                    const sortedKeys = Object.keys(textExpansions).sort();
+
+                    for (const shortcut of sortedKeys) {
+                        const value = textExpansions[shortcut];
+                        const item = document.createElement("div");
+                        item.className = "expansion-item";
+                        item.innerHTML = `
+                            <span class="expansion-item-shortcut">${sno_escapeHtml(shortcut)}</span>
+                            <span class="expansion-item-value">${sno_escapeHtml(value)}</span>
+                            <div class="expansion-item-actions">
+                                <button class="btn btn-small" data-shortcut="${shortcut}">Edit</button>
+                                <button class="btn btn-small btn-danger" data-shortcut="${shortcut}">Del</button>
+                            </div>
+                        `;
+                        expansionsList.appendChild(item);
+                    }
+                };
+
+                const showTextExpanderModal = () => {
+                    hideMenu();
+                    renderExpansionsList();
+                    textExpanderModal.classList.add("active");
+                };
+
+                const hideTextExpanderModal = () => {
+                    textExpanderModal.classList.remove("active");
+                    shortcutInput.value = "";
+                    valueInput.value = "";
+                };
+
+                const addOrUpdateExpansion = () => {
+                    const shortcut = shortcutInput.value.trim();
+                    const value = valueInput.value;
+
+                    if (!shortcut.startsWith(".") || shortcut.length < 2) {
+                        alert(
+                            "Shortcut must start with '.' and be at least 2 characters long.",
+                        );
+                        return;
+                    }
+                    if (shortcut === ".d") {
+                        alert(
+                            "'.d' is a reserved shortcut for the current date and cannot be modified.",
+                        );
+                        return;
+                    }
+                    if (!value) {
+                        alert("Expansion value cannot be empty.");
+                        return;
+                    }
+
+                    textExpansions[shortcut] = value;
+                    saveTextExpansions();
+                    renderExpansionsList();
+                    shortcutInput.value = "";
+                    valueInput.value = "";
+                    shortcutInput.focus();
+                };
+
+                expansionsList.addEventListener("click", (e) => {
+                    const shortcut = e.target.dataset.shortcut;
+                    if (!shortcut) return;
+
+                    if (e.target.textContent === "Edit") {
+                        shortcutInput.value = shortcut;
+                        valueInput.value = textExpansions[shortcut];
+                        valueInput.focus();
+                    } else if (e.target.textContent === "Del") {
+                        if (
+                            confirm(
+                                `Are you sure you want to delete the shortcut "${shortcut}"?`,
+                            )
+                        ) {
+                            delete textExpansions[shortcut];
+                            saveTextExpansions();
+                            renderExpansionsList();
+                        }
+                    }
+                });
+
+                const handleTextExpansion = (shortcut, event) => {
+                    let expansion = null;
+                    if (shortcut === ".d") {
+                        const d = new Date();
+                        const year = d.getFullYear();
+                        const month = String(d.getMonth() + 1).padStart(2, "0");
+                        const day = String(d.getDate()).padStart(2, "0");
+                        expansion = `${year}${month}${day}`;
+                    } else if (textExpansions[shortcut]) {
+                        expansion = textExpansions[shortcut];
+                    }
+
+                    if (expansion !== null) {
+                        event.preventDefault();
+                        const startPos =
+                            editor.selectionStart - shortcut.length;
+                        const endPos = editor.selectionStart;
+
+                        // Replace the shortcut with the expansion
+                        editor.setSelectionRange(startPos, endPos);
+                        document.execCommand("insertText", false, expansion);
+
+                        return true; // Indicate that an expansion happened
+                    }
+                    return false;
+                };
+
+                const exportExpansions = () => {
+                    const dataStr =
+                        "data:text/json;charset=utf-8," +
+                        encodeURIComponent(
+                            JSON.stringify(textExpansions, null, 2),
+                        );
+                    const downloadAnchorNode = document.createElement("a");
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute(
+                        "download",
+                        "editr-expansions.txt",
+                    );
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                };
+
+                const importExpansions = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            if (
+                                typeof imported !== "object" ||
+                                imported === null
+                            ) {
+                                throw new Error("Invalid format");
+                            }
+                            // Simple merge: imported keys overwrite existing ones
+                            textExpansions = { ...textExpansions, ...imported };
+                            saveTextExpansions();
+                            renderExpansionsList();
+                            alert("Shortcuts imported successfully!");
+                        } catch (err) {
+                            alert(
+                                "Error importing file. Please make sure it's a valid JSON file.",
+                            );
+                            console.error("Import error:", err);
+                        } finally {
+                            // Reset file input to allow importing the same file again
+                            importFileInput.value = "";
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
                 // --- STATE MANAGEMENT ---
                 let buffers = [];
                 let activeBufferIndex = -1;
                 let fileHandles = new Map();
+                let currentViewMode = 'editor'; // 'editor', 'csv', 'md'
 
                 let lastSearchTerm = "";
                 let searchResults = [];
@@ -1531,7 +1655,17 @@
                     );
                 };
 
+                // --- VIEW MANAGEMENT ---
+                const showEditorView = () => {
+                    csvPreviewContainer.classList.add("hidden");
+                    mdPreviewContainer.classList.add("hidden");
+                    editor.classList.remove("hidden");
+                    lineIndicator.classList.remove("hidden");
+                    currentViewMode = 'editor';
+                };
+
                 const renderActiveBuffer = () => {
+                    showEditorView(); // Always return to editor view when changing buffers
                     if (
                         activeBufferIndex < 0 ||
                         activeBufferIndex >= buffers.length
@@ -1589,6 +1723,61 @@
                         createNewBuffer();
                     }
                 };
+                
+                // --- PREVIEW TOGGLE LOGIC ---
+                const toggleCsvPreview = () => {
+                    hideMenu();
+                    if (currentViewMode === 'csv') {
+                        showEditorView();
+                        return;
+                    }
+
+                    const text = editor.value.trim();
+                    const rows = text.split('\n').map(row => row.split(','));
+                    if (rows.length === 0 || (rows.length === 1 && rows[0].length <= 1 && rows[0][0] === '')) {
+                         csvPreviewContainer.innerHTML = '<p style="color: #6272a4;">No CSV data to display.</p>';
+                    } else {
+                        let tableHTML = '<table>';
+                        // Header
+                        tableHTML += '<thead><tr>';
+                        rows[0].forEach(header => tableHTML += `<th>${sno_escapeHtml(header)}</th>`);
+                        tableHTML += '</tr></thead>';
+                        // Body
+                        tableHTML += '<tbody>';
+                        rows.slice(1).forEach(row => {
+                            tableHTML += '<tr>';
+                            row.forEach(cell => tableHTML += `<td>${sno_escapeHtml(cell)}</td>`);
+                            tableHTML += '</tr>';
+                        });
+                        tableHTML += '</tbody></table>';
+                        csvPreviewContainer.innerHTML = tableHTML;
+                    }
+                    
+                    mdPreviewContainer.classList.add("hidden");
+                    editor.classList.add("hidden");
+                    lineIndicator.classList.add("hidden");
+                    csvPreviewContainer.classList.remove("hidden");
+                    currentViewMode = 'csv';
+                };
+
+                const toggleMdPreview = () => {
+                    hideMenu();
+                     if (currentViewMode === 'md') {
+                        showEditorView();
+                        return;
+                    }
+                    
+                    const markdownText = editor.value;
+                    const html = marked.parse(markdownText);
+                    mdPreviewContainer.innerHTML = `<div class="markdown-preview">${html}</div>`;
+                    
+                    csvPreviewContainer.classList.add("hidden");
+                    editor.classList.add("hidden");
+                    lineIndicator.classList.add("hidden");
+                    mdPreviewContainer.classList.remove("hidden");
+                    currentViewMode = 'md';
+                };
+
 
                 const updateLineIndicator = (currentLineNumber) => {
                     const editorStyles = window.getComputedStyle(editor);
@@ -1609,11 +1798,6 @@
                         buffers[activeBufferIndex].content = editor.value;
                         saveState();
                         updateStats();
-
-                        if (isMarkdownView) {
-                            const html = mdConverter.makeHtml(editor.value);
-                            markdownPreview.innerHTML = html;
-                        }
                     }
                 });
 
@@ -1719,270 +1903,6 @@
                 if (localStorage.getItem(statsStorageKey) === "true") {
                     statsDisplay.classList.add("hidden");
                 }
-
-                // --- VIEW TOGGLE LOGIC ---
-                const toggleMarkdownPreview = () => {
-                    hideMenu();
-                    isMarkdownView = !isMarkdownView;
-
-                    if (isCsvView) {
-                        isCsvView = false;
-                        csvGrid.classList.add("hidden");
-                        csvViewBtn.classList.remove("active");
-                    }
-
-                    if (isMarkdownView) {
-                        const markdownText = editor.value;
-                        const html = mdConverter.makeHtml(markdownText);
-                        markdownPreview.innerHTML = html;
-                        editrContainer.classList.add("hidden");
-                        markdownPreview.classList.remove("hidden");
-                        mdViewBtn.classList.add("active");
-                    } else {
-                        editrContainer.classList.remove("hidden");
-                        markdownPreview.classList.add("hidden");
-                        mdViewBtn.classList.remove("active");
-                        editor.focus();
-                    }
-                };
-
-                const toggleCsvGrid = () => {
-                    hideMenu();
-                    isCsvView = !isCsvView;
-
-                    if (isMarkdownView) {
-                        isMarkdownView = false;
-                        markdownPreview.classList.add("hidden");
-                        mdViewBtn.classList.remove("active");
-                    }
-
-                    if (isCsvView) {
-                        editrContainer.classList.add("hidden");
-                        csvGrid.classList.remove("hidden");
-                        csvViewBtn.classList.add("active");
-                        parseCsvAndRenderGrid();
-                    } else {
-                        editrContainer.classList.remove("hidden");
-                        csvGrid.classList.add("hidden");
-                        csvViewBtn.classList.remove("active");
-                        editor.focus();
-                    }
-                };
-
-                mdViewBtn.addEventListener("click", toggleMarkdownPreview);
-                csvViewBtn.addEventListener("click", toggleCsvGrid);
-
-                // --- CSV Grid Functions ---
-                const parseCsvAndRenderGrid = () => {
-                    const text = editor.value.trim();
-                    csvData = text.split("\n").map((line) => line.split(","));
-                    if (
-                        csvData.length === 1 &&
-                        csvData[0].length === 1 &&
-                        csvData[0][0] === ""
-                    ) {
-                        csvData = [
-                            ["Header1", "Header2"],
-                            ["data1", "data2"],
-                        ]; // Default data
-                    }
-                    renderCsvGrid();
-                };
-
-                const updateEditorFromCsv = () => {
-                    const newText = csvData
-                        .map((row) => row.join(","))
-                        .join("\n");
-                    editor.value = newText;
-                    if (activeBufferIndex !== -1) {
-                        buffers[activeBufferIndex].content = newText;
-                    }
-                    saveState();
-                };
-
-                const renderCsvGrid = () => {
-                    csvGrid.innerHTML = "";
-                    if (!csvData || csvData.length === 0) return;
-
-                    const tableContainer = document.createElement("div");
-                    tableContainer.id = "csv-grid-table-container";
-
-                    const table = document.createElement("table");
-
-                    const thead = document.createElement("thead");
-                    const headerRow = document.createElement("tr");
-                    csvData[0].forEach((header, index) => {
-                        const th = document.createElement("th");
-                        th.innerHTML = `
-                            <span contenteditable="true" data-col-index="${index}">${sno_escapeHtml(header)}</span>
-                            <button class="csv-action-btn delete-col-btn" data-col-index="${index}" title="Delete Column">🗑️</button>
-                        `;
-                        headerRow.appendChild(th);
-                    });
-                    headerRow.appendChild(document.createElement("th"));
-                    thead.appendChild(headerRow);
-                    table.appendChild(thead);
-
-                    const tbody = document.createElement("tbody");
-                    for (let i = 1; i < csvData.length; i++) {
-                        const dataRow = document.createElement("tr");
-                        csvData[i].forEach((cell, j) => {
-                            const td = document.createElement("td");
-                            td.textContent = cell;
-                            td.contentEditable = "true";
-                            td.dataset.rowIndex = i;
-                            td.dataset.colIndex = j;
-                            dataRow.appendChild(td);
-                        });
-                        const actionTd = document.createElement("td");
-                        actionTd.innerHTML = `<button class="csv-action-btn delete-row-btn" data-row-index="${i}" title="Delete Row">🗑️</button>`;
-                        dataRow.appendChild(actionTd);
-                        tbody.appendChild(dataRow);
-                    }
-                    table.appendChild(tbody);
-                    tableContainer.appendChild(table);
-
-                    const controls = document.createElement("div");
-                    controls.id = "csv-controls";
-                    controls.innerHTML = `
-                        <button id="add-row-btn" class="btn btn-secondary">+ Add Row</button>
-                        <button id="add-col-btn" class="btn btn-secondary">+ Add Column</button>
-                    `;
-
-                    csvGrid.appendChild(tableContainer);
-                    csvGrid.appendChild(controls);
-                };
-
-                csvGrid.addEventListener("click", (e) => {
-                    if (e.target.id === "add-row-btn") {
-                        const numCols = csvData[0] ? csvData[0].length : 1;
-                        csvData.push(new Array(numCols).fill(""));
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    } else if (e.target.id === "add-col-btn") {
-                        const newHeader = prompt(
-                            "Enter new column header:",
-                            "NewColumn",
-                        );
-                        if (newHeader) {
-                            csvData.forEach((row, i) =>
-                                row.push(i === 0 ? newHeader : ""),
-                            );
-                            updateEditorFromCsv();
-                            renderCsvGrid();
-                        }
-                    } else if (e.target.classList.contains("delete-row-btn")) {
-                        const rowIndex = parseInt(
-                            e.target.dataset.rowIndex,
-                            10,
-                        );
-                        csvData.splice(rowIndex, 1);
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    } else if (e.target.classList.contains("delete-col-btn")) {
-                        const colIndex = parseInt(
-                            e.target.dataset.colIndex,
-                            10,
-                        );
-                        csvData.forEach((row) => row.splice(colIndex, 1));
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    }
-                });
-
-                csvGrid.addEventListener(
-                    "blur",
-                    (e) => {
-                        if (e.target.contentEditable === "true") {
-                            if (e.target.tagName === "TD") {
-                                const rowIndex = parseInt(
-                                    e.target.dataset.rowIndex,
-                                    10,
-                                );
-                                const colIndex = parseInt(
-                                    e.target.dataset.colIndex,
-                                    10,
-                                );
-                                csvData[rowIndex][colIndex] =
-                                    e.target.textContent;
-                            } else if (e.target.tagName === "SPAN") {
-                                const colIndex = parseInt(
-                                    e.target.dataset.colIndex,
-                                    10,
-                                );
-                                csvData[0][colIndex] = e.target.textContent;
-                            }
-                            updateEditorFromCsv();
-                        }
-                    },
-                    true,
-                );
-
-                csvGrid.addEventListener("keydown", (e) => {
-                    if (e.target.contentEditable !== "true") return;
-
-                    if (
-                        ![
-                            "ArrowUp",
-                            "ArrowDown",
-                            "ArrowLeft",
-                            "ArrowRight",
-                        ].includes(e.key)
-                    ) {
-                        return;
-                    }
-
-                    e.preventDefault();
-
-                    const isHeader = e.target.tagName === "SPAN";
-                    let currentRow, currentCol;
-
-                    if (isHeader) {
-                        currentRow = 0;
-                        currentCol = parseInt(e.target.dataset.colIndex, 10);
-                    } else {
-                        currentRow = parseInt(e.target.dataset.rowIndex, 10);
-                        currentCol = parseInt(e.target.dataset.colIndex, 10);
-                    }
-
-                    let nextRow = currentRow;
-                    let nextCol = currentCol;
-
-                    switch (e.key) {
-                        case "ArrowUp":
-                            nextRow--;
-                            break;
-                        case "ArrowDown":
-                            nextRow++;
-                            break;
-                        case "ArrowLeft":
-                            nextCol--;
-                            break;
-                        case "ArrowRight":
-                            nextCol++;
-                            break;
-                    }
-
-                    let nextEl = null;
-                    if (nextRow === 0) {
-                        nextEl = csvGrid.querySelector(
-                            `th span[data-col-index="${nextCol}"]`,
-                        );
-                    } else {
-                        nextEl = csvGrid.querySelector(
-                            `td[data-row-index="${nextRow}"][data-col-index="${nextCol}"]`,
-                        );
-                    }
-
-                    if (nextEl) {
-                        nextEl.focus();
-                        const selection = window.getSelection();
-                        const range = document.createRange();
-                        range.selectNodeContents(nextEl);
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    }
-                });
 
                 const showMenu = (x, y) => {
                     contextMenu.style.left = `${x}px`;
@@ -2273,219 +2193,6 @@
                     sno_init();
                 };
 
-                // --- ======================= ---
-                // --- TEXT EXPANDER CODE ---
-                // --- ======================= ---
-
-                const textExpanderModal = document.getElementById(
-                    "text-expander-modal",
-                );
-                const expansionsList =
-                    document.getElementById("expansions-list");
-                const shortcutInput = document.getElementById(
-                    "expansion-shortcut-input",
-                );
-                const valueInput = document.getElementById(
-                    "expansion-value-input",
-                );
-                const addExpansionBtn =
-                    document.getElementById("add-expansion-btn");
-                const importBtn = document.getElementById(
-                    "import-expansions-btn",
-                );
-                const exportBtn = document.getElementById(
-                    "export-expansions-btn",
-                );
-                const importFileInput = document.getElementById(
-                    "import-expansions-input",
-                );
-
-                const EXPANSIONS_STORAGE_KEY = "editrTextExpansions";
-                let textExpansions = {};
-
-                const loadTextExpansions = () => {
-                    const stored = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
-                    if (stored) {
-                        try {
-                            textExpansions = JSON.parse(stored);
-                        } catch (e) {
-                            console.error("Could not parse text expansions", e);
-                            textExpansions = {};
-                        }
-                    }
-                    renderExpansionsList();
-                };
-
-                const saveTextExpansions = () => {
-                    localStorage.setItem(
-                        EXPANSIONS_STORAGE_KEY,
-                        JSON.stringify(textExpansions),
-                    );
-                };
-
-                const renderExpansionsList = () => {
-                    expansionsList.innerHTML = "";
-                    if (Object.keys(textExpansions).length === 0) {
-                        expansionsList.innerHTML = `<div class="expansion-item" style="color: #888888;">No custom shortcuts defined.</div>`;
-                        return;
-                    }
-
-                    const sortedKeys = Object.keys(textExpansions).sort();
-
-                    for (const shortcut of sortedKeys) {
-                        const value = textExpansions[shortcut];
-                        const item = document.createElement("div");
-                        item.className = "expansion-item";
-                        item.innerHTML = `
-                            <span class="expansion-item-shortcut">${sno_escapeHtml(shortcut)}</span>
-                            <span class="expansion-item-value">${sno_escapeHtml(value)}</span>
-                            <div class="expansion-item-actions">
-                                <button class="btn btn-small" data-shortcut="${shortcut}">Edit</button>
-                                <button class="btn btn-small btn-danger" data-shortcut="${shortcut}">Del</button>
-                            </div>
-                        `;
-                        expansionsList.appendChild(item);
-                    }
-                };
-
-                const showTextExpanderModal = () => {
-                    hideMenu();
-                    renderExpansionsList();
-                    textExpanderModal.classList.add("active");
-                };
-
-                const hideTextExpanderModal = () => {
-                    textExpanderModal.classList.remove("active");
-                    shortcutInput.value = "";
-                    valueInput.value = "";
-                };
-
-                const addOrUpdateExpansion = () => {
-                    const shortcut = shortcutInput.value.trim();
-                    const value = valueInput.value;
-
-                    if (!shortcut.startsWith(".") || shortcut.length < 2) {
-                        alert(
-                            "Shortcut must start with '.' and be at least 2 characters long.",
-                        );
-                        return;
-                    }
-                    if (shortcut === ".d") {
-                        alert(
-                            "'.d' is a reserved shortcut for the current date and cannot be modified.",
-                        );
-                        return;
-                    }
-                    if (!value) {
-                        alert("Expansion value cannot be empty.");
-                        return;
-                    }
-
-                    textExpansions[shortcut] = value;
-                    saveTextExpansions();
-                    renderExpansionsList();
-                    shortcutInput.value = "";
-                    valueInput.value = "";
-                    shortcutInput.focus();
-                };
-
-                expansionsList.addEventListener("click", (e) => {
-                    const shortcut = e.target.dataset.shortcut;
-                    if (!shortcut) return;
-
-                    if (e.target.textContent === "Edit") {
-                        shortcutInput.value = shortcut;
-                        valueInput.value = textExpansions[shortcut];
-                        valueInput.focus();
-                    } else if (e.target.textContent === "Del") {
-                        if (
-                            confirm(
-                                `Are you sure you want to delete the shortcut "${shortcut}"?`,
-                            )
-                        ) {
-                            delete textExpansions[shortcut];
-                            saveTextExpansions();
-                            renderExpansionsList();
-                        }
-                    }
-                });
-
-                const handleTextExpansion = (shortcut, event) => {
-                    let expansion = null;
-                    if (shortcut === ".d") {
-                        const d = new Date();
-                        const year = d.getFullYear();
-                        const month = String(d.getMonth() + 1).padStart(2, "0");
-                        const day = String(d.getDate()).padStart(2, "0");
-                        expansion = `${year}${month}${day}`;
-                    } else if (textExpansions[shortcut]) {
-                        expansion = textExpansions[shortcut];
-                    }
-
-                    if (expansion !== null) {
-                        event.preventDefault();
-                        const startPos =
-                            editor.selectionStart - shortcut.length;
-                        const endPos = editor.selectionStart;
-
-                        // Replace the shortcut with the expansion
-                        editor.setSelectionRange(startPos, endPos);
-                        document.execCommand("insertText", false, expansion);
-
-                        return true; // Indicate that an expansion happened
-                    }
-                    return false;
-                };
-
-                const exportExpansions = () => {
-                    const dataStr =
-                        "data:text/json;charset=utf-8," +
-                        encodeURIComponent(
-                            JSON.stringify(textExpansions, null, 2),
-                        );
-                    const downloadAnchorNode = document.createElement("a");
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute(
-                        "download",
-                        "b-edit-expansions.txt",
-                    );
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
-                };
-
-                const importExpansions = (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const imported = JSON.parse(e.target.result);
-                            if (
-                                typeof imported !== "object" ||
-                                imported === null
-                            ) {
-                                throw new Error("Invalid format");
-                            }
-                            // Simple merge: imported keys overwrite existing ones
-                            textExpansions = { ...textExpansions, ...imported };
-                            saveTextExpansions();
-                            renderExpansionsList();
-                            alert("Shortcuts imported successfully!");
-                        } catch (err) {
-                            alert(
-                                "Error importing file. Please make sure it's a valid JSON file.",
-                            );
-                            console.error("Import error:", err);
-                        } finally {
-                            // Reset file input to allow importing the same file again
-                            importFileInput.value = "";
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-
                 // --- MENU & SHORTCUT LISTENERS ---
                 document
                     .getElementById("menu-new")
@@ -2515,6 +2222,12 @@
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
                 document
+                    .getElementById("menu-csv-preview")
+                    .addEventListener("click", toggleCsvPreview);
+                document
+                    .getElementById("menu-md-preview")
+                    .addEventListener("click", toggleMdPreview);
+                document
                     .getElementById("menu-text-expander")
                     .addEventListener("click", showTextExpanderModal);
                 document
@@ -2531,14 +2244,6 @@
                 importFileInput.addEventListener("change", importExpansions);
 
                 document.addEventListener("keydown", (e) => {
-                    if (isMarkdownView || isCsvView) {
-                        if (e.key === "Escape") {
-                            if (isMarkdownView) toggleMarkdownPreview();
-                            if (isCsvView) toggleCsvGrid();
-                        }
-                        return;
-                    }
-
                     if (
                         findBar.style.display === "flex" &&
                         e.target === findInput
@@ -2607,7 +2312,11 @@
                         }
                     }
                     if (e.key === "Escape") {
-                        hideFindBar();
+                        if (currentViewMode !== 'editor') {
+                           showEditorView();
+                        } else {
+                           hideFindBar();
+                        }
                     }
                 });
 
