@@ -726,55 +726,6 @@
                 resize: vertical;
                 min-height: 80px;
             }
-            
-            /* --- CLI Styles --- */
-            #cli-container {
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background-color: rgba(0, 0, 0, 0.85);
-                z-index: 2000;
-                display: flex;
-                flex-direction: column;
-                padding: 2rem;
-                box-sizing: border-box;
-                font-family: "Fira Code", "Courier New", monospace;
-            }
-
-            #cli-output {
-                flex-grow: 1;
-                overflow-y: auto;
-                color: #00ff00;
-                white-space: pre-wrap;
-                word-wrap: break-word;
-                font-size: 14px;
-                line-height: 1.5;
-            }
-
-            #cli-input-container {
-                display: flex;
-                align-items: center;
-                flex-shrink: 0;
-            }
-            
-            #cli-input-container::before {
-                content: '>';
-                color: #00ff00;
-                margin-right: 0.5em;
-            }
-
-            #cli-input {
-                flex-grow: 1;
-                background: transparent;
-                border: none;
-                outline: none;
-                color: #00ff00;
-                font-family: "Fira Code", "Courier New", monospace;
-                font-size: 14px;
-            }
-
 
             @media (max-width: 768px) {
                 .header {
@@ -832,19 +783,12 @@
             <textarea
                 id="editor"
                 spellcheck="false"
-                placeholder="Right-click or ☰ for menu. Type ./ to enter CLI mode."
+                placeholder="Right-click or ☰ for menu."
             ></textarea>
         </div>
 
         <div id="markdown-preview" class="hidden"></div>
         <div id="csv-grid" class="hidden"></div>
-        
-        <div id="cli-container" class="hidden">
-            <pre id="cli-output"></pre>
-            <div id="cli-input-container">
-                <input type="text" id="cli-input" autocomplete="off" />
-            </div>
-        </div>
 
         <div id="top-right-container">
             <div id="stats-display">
@@ -1159,9 +1103,6 @@
                 const csvGrid = document.getElementById("csv-grid");
                 const mdViewBtn = document.getElementById("menu-md-view");
                 const csvViewBtn = document.getElementById("menu-csv-view");
-                const cliContainer = document.getElementById("cli-container");
-                const cliInput = document.getElementById("cli-input");
-                const cliOutput = document.getElementById("cli-output");
 
                 // --- ================================== ---
                 // --- SNO (Secure Note) INTEGRATION CODE ---
@@ -1674,12 +1615,6 @@
                             markdownPreview.innerHTML = html;
                         }
                     }
-                    // CLI trigger
-                    if (editor.value.endsWith("./")) {
-                        // Remove the trigger string from the editor
-                        editor.value = editor.value.slice(0, -2);
-                        showCli();
-                    }
                 });
 
                 const updateStats = () => {
@@ -1777,7 +1712,7 @@
                     const isHidden = statsDisplay.classList.toggle("hidden");
                     localStorage.setItem(statsStorageKey, isHidden);
                     hideMenu();
-                    return `Stats display is now ${isHidden ? 'hidden' : 'visible'}.`;
+                    return `Stats display is now ${isHidden ? "hidden" : "visible"}.`;
                 };
                 document
                     .getElementById("menu-toggle-stats")
@@ -2204,7 +2139,8 @@
 
                 const saveFile = async () => {
                     hideMenu();
-                    if (activeBufferIndex === -1) return "No active file to save.";
+                    if (activeBufferIndex === -1)
+                        return "No active file to save.";
                     const activeBuffer = buffers[activeBufferIndex];
                     const fileHandle = fileHandles.get(activeBuffer.id);
 
@@ -2225,7 +2161,8 @@
 
                 const saveFileAs = async () => {
                     hideMenu();
-                    if (activeBufferIndex === -1) return "No active file to save.";
+                    if (activeBufferIndex === -1)
+                        return "No active file to save.";
                     const activeBuffer = buffers[activeBufferIndex];
                     const content = activeBuffer.content;
                     const fileName = activeBuffer.fileName || "untitled.txt";
@@ -2260,7 +2197,7 @@
                             await writable.close();
                             renderActiveBuffer();
                             saveState();
-                             return `Saved as ${newFileHandle.name}.`;
+                            return `Saved as ${newFileHandle.name}.`;
                         } catch (err) {
                             if (err.name !== "AbortError") {
                                 console.error(
@@ -2297,8 +2234,9 @@
 
                 const closeFile = () => {
                     hideMenu();
-                    if (buffers.length <= 0 || activeBufferIndex < 0) return "No file to close.";
-                    
+                    if (buffers.length <= 0 || activeBufferIndex < 0)
+                        return "No file to close.";
+
                     const closedFileName = buffers[activeBufferIndex].fileName;
                     fileHandles.delete(buffers[activeBufferIndex].id);
                     buffers.splice(activeBufferIndex, 1);
@@ -2336,7 +2274,7 @@
                         saveState();
                         return `Switched to ${buffers[activeBufferIndex].fileName}.`;
                     }
-                     return "No other files to switch to.";
+                    return "No other files to switch to.";
                 };
 
                 const openLink = () => {
@@ -2613,247 +2551,6 @@
                     };
                     reader.readAsText(file);
                 };
-                
-                // --- ================= ---
-                // --- CLI CODE ---
-                // --- ================= ---
-                
-                let inGameMode = false;
-
-                const showCli = () => {
-                    cliContainer.classList.remove("hidden");
-                    cliInput.focus();
-                    cliOutput.textContent = 'editr CLI mode. Type "help" for a list of commands.\n';
-                };
-                
-                const hideCli = () => {
-                    cliContainer.classList.add("hidden");
-                    cliInput.value = '';
-                    inGameMode = false; // Exit game mode when closing CLI
-                    editor.focus();
-                };
-                
-                const appendToCliOutput = (text) => {
-                    cliOutput.textContent += text + '\n';
-                    cliOutput.scrollTop = cliOutput.scrollHeight;
-                };
-
-                const processCommand = async (commandStr) => {
-                    appendToCliOutput(`> ${commandStr}`);
-                    const [command, ...args] = commandStr.trim().split(/\s+/);
-
-                    if (inGameMode) {
-                        blackjackGame(command);
-                        return;
-                    }
-
-                    let result = '';
-                    switch (command.toLowerCase()) {
-                        case 'help':
-                            result = `Available commands:
-  help          - Shows this help message.
-  file          - Shows the current file name.
-  new           - Creates a new file.
-  open          - Opens a file.
-  save          - Saves the current file.
-  saveas        - Saves the current file with a new name.
-  close         - Closes the current file.
-  next          - Switches to the next file.
-  prev          - Switches to the previous file.
-  stats         - Toggles the stats display.
-  notes         - Opens the secure notes app.
-  game          - Starts a game of Blackjack.
-  clear         - Clears the CLI screen.
-  exit          - Exits CLI mode.`;
-                            break;
-                        case 'file':
-                            result = activeBufferIndex > -1 ? buffers[activeBufferIndex].fileName : 'No file open.';
-                            break;
-                        case 'new':
-                            result = newFile();
-                            break;
-                        case 'open':
-                            result = await openFile();
-                            break;
-                        case 'save':
-                            result = await saveFile();
-                            break;
-                        case 'saveas':
-                            result = await saveFileAs();
-                            break;
-                        case 'close':
-                            result = closeFile();
-                            break;
-                        case 'next':
-                            result = nextFile();
-                            break;
-                        case 'prev':
-                            result = prevFile();
-                            break;
-                        case 'stats':
-                            result = toggleStats({ stopPropagation: () => {} }); // Pass a dummy event
-                            break;
-                        case 'notes':
-                            result = showSnoView();
-                            break;
-                        case 'game':
-                            inGameMode = true;
-                            blackjackGame('start');
-                            return; // Don't print result yet
-                        case 'clear':
-                            cliOutput.textContent = '';
-                            return;
-                        case 'exit':
-                            hideCli();
-                            return;
-                        default:
-                            result = `Unknown command: "${command}". Type "help" for a list of commands.`;
-                            break;
-                    }
-                    appendToCliOutput(result);
-                };
-
-                cliInput.addEventListener('keydown', (e) => {
-                    if (e.key === 'Enter') {
-                        e.preventDefault();
-                        const command = cliInput.value;
-                        cliInput.value = '';
-                        if (command.trim()) {
-                            processCommand(command);
-                        }
-                    } else if (e.key === 'Escape') {
-                        hideCli();
-                    }
-                });
-                
-                // --- Blackjack Game Logic ---
-                let playerHand, dealerHand, deck, inProgress;
-
-                function blackjackGame(action) {
-                    switch(action) {
-                        case 'start':
-                            deck = createDeck();
-                            shuffleDeck(deck);
-                            playerHand = [dealCard(), dealCard()];
-                            dealerHand = [dealCard(), dealCard()];
-                            inProgress = true;
-                            appendToCliOutput('\n--- Blackjack ---');
-                            appendToCliOutput('Type "hit" or "stand". Type "quit" to exit the game.');
-                            showStatus();
-                            checkBlackjack();
-                            break;
-                        case 'hit':
-                            if (!inProgress) return;
-                            playerHand.push(dealCard());
-                            showStatus();
-                            if (getHandValue(playerHand) > 21) {
-                                appendToCliOutput('You busted! Dealer wins.');
-                                inProgress = false;
-                                inGameMode = false;
-                                appendToCliOutput('\nType "game" to play again, or "exit" to close the CLI.');
-                            }
-                            break;
-                        case 'stand':
-                             if (!inProgress) return;
-                            while(getHandValue(dealerHand) < 17) {
-                                dealerHand.push(dealCard());
-                            }
-                            endGame();
-                            break;
-                        case 'quit':
-                            inGameMode = false;
-                            appendToCliOutput('Exited Blackjack.');
-                            break;
-                        default:
-                             if (inProgress) {
-                                appendToCliOutput('Invalid command. Type "hit", "stand", or "quit".');
-                             }
-                            break;
-                    }
-                }
-
-                function createDeck() {
-                    const suits = ['♥', '♦', '♣', '♠'];
-                    const ranks = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
-                    const newDeck = [];
-                    for (let suit of suits) {
-                        for (let rank of ranks) {
-                            newDeck.push({ rank, suit });
-                        }
-                    }
-                    return newDeck;
-                }
-
-                function shuffleDeck(d) {
-                    for (let i = d.length - 1; i > 0; i--) {
-                        const j = Math.floor(Math.random() * (i + 1));
-                        [d[i], d[j]] = [d[j], d[i]];
-                    }
-                }
-
-                function dealCard() {
-                    return deck.pop();
-                }
-
-                function getHandValue(hand) {
-                    let value = 0;
-                    let aces = 0;
-                    for (let card of hand) {
-                        if (['J', 'Q', 'K'].includes(card.rank)) {
-                            value += 10;
-                        } else if (card.rank === 'A') {
-                            aces += 1;
-                            value += 11;
-                        } else {
-                            value += parseInt(card.rank);
-                        }
-                    }
-                    while (value > 21 && aces > 0) {
-                        value -= 10;
-                        aces -= 1;
-                    }
-                    return value;
-                }
-                
-                function handToString(hand) {
-                    return hand.map(c => `${c.rank}${c.suit}`).join(' ');
-                }
-
-                function showStatus() {
-                    appendToCliOutput(`Your hand: ${handToString(playerHand)} (Value: ${getHandValue(playerHand)})`);
-                    appendToCliOutput(`Dealer's hand: ${dealerHand[0].rank}${dealerHand[0].suit} ?`);
-                }
-                
-                function checkBlackjack() {
-                    if (getHandValue(playerHand) === 21) {
-                        appendToCliOutput('Blackjack! You win!');
-                        inProgress = false;
-                        inGameMode = false;
-                        appendToCliOutput('\nType "game" to play again, or "exit" to close the CLI.');
-                    }
-                }
-
-                function endGame() {
-                    inProgress = false;
-                    inGameMode = false;
-                    const playerValue = getHandValue(playerHand);
-                    const dealerValue = getHandValue(dealerHand);
-                    
-                    appendToCliOutput(`Your hand: ${handToString(playerHand)} (Value: ${playerValue})`);
-                    appendToCliOutput(`Dealer's hand: ${handToString(dealerHand)} (Value: ${dealerValue})`);
-
-                    if (dealerValue > 21) {
-                        appendToCliOutput('Dealer busts! You win!');
-                    } else if (playerValue > dealerValue) {
-                        appendToCliOutput('You win!');
-                    } else if (dealerValue > playerValue) {
-                         appendToCliOutput('Dealer wins!');
-                    } else {
-                        appendToCliOutput('Push (tie)!');
-                    }
-                    appendToCliOutput('\nType "game" to play again, or "exit" to close the CLI.');
-                }
-
 
                 // --- MENU & SHORTCUT LISTENERS ---
                 document
@@ -2900,10 +2597,6 @@
                 importFileInput.addEventListener("change", importExpansions);
 
                 document.addEventListener("keydown", (e) => {
-                    if (cliContainer.classList.contains('hidden') === false) {
-                        return; // Don't process global shortcuts if CLI is active
-                    }
-                
                     if (isMarkdownView || isCsvView) {
                         if (e.key === "Escape") {
                             if (isMarkdownView) toggleMarkdownPreview();
