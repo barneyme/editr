@@ -1663,11 +1663,82 @@
                         const lastWord = textBeforeCursor.split(/\s+/).pop();
                         if (handleTextExpansion(lastWord, e)) return;
 
-                        e.preventDefault();
                         const currentLineStart =
                             textBeforeCursor.lastIndexOf("\n") + 1;
                         const currentLine =
                             textBeforeCursor.substring(currentLineStart);
+
+                        // Match ordered list: e.g., "  1. content"
+                        const orderedListMatch = currentLine.match(
+                            /^(\s*)(\d+)(\.\s+)(.*)/,
+                        );
+                        // Match unordered list: e.g., "  - content"
+                        const unorderedListMatch =
+                            currentLine.match(/^(\s*[-*]\s+)(.*)/);
+
+                        let nextLinePrefix = null;
+
+                        if (orderedListMatch) {
+                            const content = orderedListMatch[4];
+                            if (content.length === 0) {
+                                // Empty item: Terminate list. Replace marker with newline + indent.
+                                const indent = orderedListMatch[1];
+                                e.preventDefault();
+                                editor.setSelectionRange(
+                                    currentLineStart,
+                                    cursorPos,
+                                );
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n" + indent,
+                                );
+                                return;
+                            } else {
+                                // Continue list
+                                const indent = orderedListMatch[1];
+                                const number =
+                                    parseInt(orderedListMatch[2], 10) + 1;
+                                const marker = orderedListMatch[3];
+                                nextLinePrefix = `${indent}${number}${marker}`;
+                            }
+                        } else if (unorderedListMatch) {
+                            const content = unorderedListMatch[2];
+                            if (content.length === 0) {
+                                // Empty item: Terminate list. Find indent and replace marker.
+                                const indentMatch = currentLine.match(/^(\s*)/);
+                                const indent = indentMatch
+                                    ? indentMatch[1]
+                                    : "";
+                                e.preventDefault();
+                                editor.setSelectionRange(
+                                    currentLineStart,
+                                    cursorPos,
+                                );
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n" + indent,
+                                );
+                                return;
+                            } else {
+                                // Continue list
+                                nextLinePrefix = unorderedListMatch[1];
+                            }
+                        }
+
+                        if (nextLinePrefix !== null) {
+                            e.preventDefault();
+                            document.execCommand(
+                                "insertText",
+                                false,
+                                "\n" + nextLinePrefix,
+                            );
+                            return;
+                        }
+
+                        // Fallback to original indentation logic if no list was matched
+                        e.preventDefault();
                         const leadingWhitespaceMatch =
                             currentLine.match(/^\s*/);
                         const indent = leadingWhitespaceMatch
