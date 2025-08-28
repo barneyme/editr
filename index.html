@@ -1099,119 +1099,158 @@
                         padding-right: 15px;
                     "
                 >
-                    <h3>Core Editing</h3>
-                    <ul>
-                        <li>
-                            <strong>Standard Text Editing:</strong> Supports
-                            features like tab indentation, auto-pairing of
-                            brackets `()`, `[]`, `{}`, quotes `""`, `''`, and
-                            backticks ` `` `.
-                        </li>
-                        <li>
-                            <strong>Auto-Indented Lists:</strong> Pressing
-                            `Enter` in a bulleted (`*`, `-`) or numbered (`1.`)
-                            list automatically continues the list. Press `Enter`
-                            on an empty list item to exit the list.
-                        </li>
-                        <li>
-                            <strong>Drag & Drop:</strong> Drag a text file from
-                            your computer and drop it onto the window to open
-                            it.
-                        </li>
-                    </ul>
+                    <style>
+                        .help-section {
+                            margin-top: 1.5rem;
+                            margin-bottom: 1.5rem;
+                            padding-bottom: 1rem;
+                            border-bottom: 1px solid #555;
+                        }
+                        .help-section:last-child {
+                            border-bottom: none;
+                            margin-bottom: 0;
+                        }
+                        .help-section h3 {
+                            font-size: 1.25em;
+                            font-weight: 600;
+                            margin-bottom: 0.75rem;
+                            color: #ffb74d;
+                        }
+                        .help-section ul {
+                            padding-left: 20px;
+                            line-height: 1.6;
+                        }
+                        .help-section li {
+                            margin-bottom: 0.5rem;
+                        }
+                    </style>
 
-                    <h3>File Management</h3>
-                    <ul>
-                        <li>
-                            <strong>New (Ctrl+N):</strong> Opens a new editor in
-                            a new browser tab.
-                        </li>
-                        <li>
-                            <strong>Open (Ctrl+O):</strong> Open a text,
-                            markdown, or CSV file from your computer.
-                        </li>
-                        <li>
-                            <strong>Save (Ctrl+S):</strong> Saves the current
-                            file. If opened from your computer, it will try to
-                            save back to the original file. Otherwise, it will
-                            prompt you to "Save As".
-                        </li>
-                        <li>
-                            <strong>Save As:</strong> Lets you save the current
-                            text to a new file on your computer.
-                        </li>
-                        <li>
-                            <strong>Next/Last File (Ctrl+→ / Ctrl+←):</strong>
-                            Cycle between open files (buffers).
-                        </li>
-                        <li>
-                            <strong>Close File (Ctrl+W):</strong> Closes the
-                            current file.
-                        </li>
-                    </ul>
+                    <div class="help-section">
+                        <h3>Core Editing</h3>
+                        <ul>
+                            <li>
+                                <strong>Standard Text Editing:</strong> Supports
+                                features like tab indentation, auto-pairing of
+                                brackets `()`, `[]`, `{}`, quotes `""`, `''`,
+                                and backticks ` `` `.
+                            </li>
+                            <li>
+                                <strong>Auto-Indented Lists:</strong> Pressing
+                                `Enter` in a bulleted (`*`, `-`) or numbered
+                                (`1.`) list automatically continues the list.
+                                Press `Enter` on an empty list item to exit the
+                                list.
+                            </li>
+                            <li>
+                                <strong>Drag & Drop:</strong> Drag a text file
+                                from your computer and drop it onto the window
+                                to open it.
+                            </li>
+                        </ul>
+                    </div>
 
-                    <h3>Views</h3>
-                    <ul>
-                        <li>
-                            <strong>CSV View:</strong> Renders comma-separated
-                            text in an editable grid. You can add/delete rows
-                            and columns, edit cells, and the underlying text is
-                            updated automatically.
-                        </li>
-                        <li>
-                            <strong>MD View:</strong> Renders Markdown text as
-                            formatted HTML. From this view, you can save the
-                            content as a self-contained HTML file or print it
-                            (e.g., to a PDF).
-                        </li>
-                    </ul>
+                    <div class="help-section">
+                        <h3>File Management</h3>
+                        <ul>
+                            <li>
+                                <strong>New (Ctrl+N):</strong> Opens a new
+                                editor in a new browser tab.
+                            </li>
+                            <li>
+                                <strong>Open (Ctrl+O):</strong> Open a text,
+                                markdown, or CSV file from your computer.
+                            </li>
+                            <li>
+                                <strong>Save (Ctrl+S):</strong> Saves the
+                                current file. If opened from your computer, it
+                                will try to save back to the original file.
+                                Otherwise, it will prompt you to "Save As".
+                            </li>
+                            <li>
+                                <strong>Save As:</strong> Lets you save the
+                                current text to a new file on your computer.
+                            </li>
+                            <li>
+                                <strong
+                                    >Next/Last File (Ctrl+→ / Ctrl+←):</strong
+                                >
+                                Cycle between open files (buffers).
+                            </li>
+                            <li>
+                                <strong>Close File (Ctrl+W):</strong> Closes the
+                                current file.
+                            </li>
+                        </ul>
+                    </div>
 
-                    <h3>Tools</h3>
-                    <ul>
-                        <li>
-                            <strong>Find (Ctrl+F):</strong> Opens a search bar
-                            to find text. Use Enter/Shift+Enter to navigate
-                            matches.
-                        </li>
-                        <li>
-                            <strong>Open Link (Ctrl+U):</strong> Finds the first
-                            URL on the current line (or in the selected text)
-                            and opens it in a new tab.
-                        </li>
-                        <li>
-                            <strong>Notes (Ctrl+=):</strong> A built-in,
-                            password-protected, encrypted note-taking app. Your
-                            notes are stored securely in your browser's local
-                            storage.
-                        </li>
-                        <li>
-                            <strong>Text Expander:</strong> Define custom
-                            shortcuts (e.g., `.sig`) that expand into longer
-                            snippets of text when you type them followed by a
-                            space or Enter. The shortcut `.d` is reserved and
-                            expands to the current date (YYYYMMDD).
-                        </li>
-                    </ul>
+                    <div class="help-section">
+                        <h3>Views</h3>
+                        <ul>
+                            <li>
+                                <strong>CSV View:</strong> Renders
+                                comma-separated text in an editable grid. You
+                                can add/delete rows and columns, edit cells, and
+                                the underlying text is updated automatically.
+                            </li>
+                            <li>
+                                <strong>MD View:</strong> Renders Markdown text
+                                as formatted HTML. From this view, you can save
+                                the content as a self-contained HTML file or
+                                print it (e.g., to a PDF).
+                            </li>
+                        </ul>
+                    </div>
 
-                    <h3>Markdown Shortcuts</h3>
-                    <ul>
-                        <li>
-                            <strong>Bold:</strong> Select text and press
-                            `Ctrl+B`.
-                        </li>
-                        <li>
-                            <strong>Italics:</strong> Select text and press
-                            `Ctrl+I`.
-                        </li>
-                        <li>
-                            <strong>Link:</strong> Select text and press
-                            `Ctrl+K`.
-                        </li>
-                        <li>
-                            <strong>Heading:</strong> Press `Ctrl+H` to cycle
-                            through heading levels (H1 to H6).
-                        </li>
-                    </ul>
+                    <div class="help-section">
+                        <h3>Tools</h3>
+                        <ul>
+                            <li>
+                                <strong>Find (Ctrl+F):</strong> Opens a search
+                                bar to find text. Use Enter/Shift+Enter to
+                                navigate matches.
+                            </li>
+                            <li>
+                                <strong>Open Link (Ctrl+U):</strong> Finds the
+                                first URL on the current line (or in the
+                                selected text) and opens it in a new tab.
+                            </li>
+                            <li>
+                                <strong>Notes (Ctrl+=):</strong> A built-in,
+                                password-protected, encrypted note-taking app.
+                                Your notes are stored securely in your browser's
+                                local storage.
+                            </li>
+                            <li>
+                                <strong>Text Expander:</strong> Define custom
+                                shortcuts (e.g., `.sig`) that expand into longer
+                                snippets of text when you type them followed by
+                                a space or Enter. The shortcut `.d` is reserved
+                                and expands to the current date (YYYYMMDD).
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Markdown Shortcuts</h3>
+                        <ul>
+                            <li>
+                                <strong>Bold:</strong> Select text and press
+                                `Ctrl+B`.
+                            </li>
+                            <li>
+                                <strong>Italics:</strong> Select text and press
+                                `Ctrl+I`.
+                            </li>
+                            <li>
+                                <strong>Link:</strong> Select text and press
+                                `Ctrl+K`.
+                            </li>
+                            <li>
+                                <strong>Heading:</strong> Press `Ctrl+H` to
+                                cycle through heading levels (H1 to H6).
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </div>
