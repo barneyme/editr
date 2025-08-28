@@ -1,6 +1,6 @@
 {
-    "name": "editr",
-    "short_name": "editr",
+    "name": "edit",
+    "short_name": "edit",
     "description": "Text editor.",
     "start_url": ".",
     "display": "standalone",
@@ -18,7 +18,7 @@
             "type": "image/png"
         },
         {
-            "src": "https://placehold.co/512x512/282a36/f8f8f2?text=e&maskable=true",
+            "src": "https://placehold.co/512x512/282a36/f8f8f2?text=b&maskable=true",
             "sizes": "512x512",
             "type": "image/png",
             "purpose": "maskable"

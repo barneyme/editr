@@ -1,7 +1,7 @@
 // sw.js - Service Worker
 
 // Define a name for the cache
-const CACHE_NAME = "editr-cache-v1";
+const CACHE_NAME = "edit-cache-v1";
 
 // List of essential files to cache for the app shell.
 // We'll only cache local files here to make installation more reliable.

@@ -3,7 +3,6 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>editr</title>
 
         <link rel="manifest" href="manifest.json" />
 
@@ -18,7 +17,7 @@
         <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
 
         <style>
-            /* --- editr Base Styles --- */
+            /* --- edit Base Styles --- */
             body,
             html {
                 margin: 0;
@@ -32,7 +31,7 @@
                 color: #f0f0f0;
             }
 
-            #editr-container {
+            #edit-container {
                 width: 100%;
                 height: 100%;
                 position: relative;
@@ -778,7 +777,7 @@
         />
     </head>
     <body>
-        <div id="editr-container">
+        <div id="edit-container">
             <div id="line-indicator"></div>
             <textarea
                 id="editor"
@@ -871,6 +870,13 @@
             <div class="menu-item" id="menu-sno">
                 <span>Notes</span>
                 <span class="shortcut">Ctrl+=</span>
+            </div>
+            <div class="menu-separator menu-item-md hidden"></div>
+            <div class="menu-item menu-item-md hidden" id="menu-save-html">
+                <span>Save as HTML</span>
+            </div>
+            <div class="menu-item menu-item-md hidden" id="menu-save-pdf">
+                <span>Print to PDF</span>
             </div>
             <div class="menu-separator"></div>
             <div
@@ -1095,14 +1101,17 @@
                 const findNext = document.getElementById("find-next");
                 const findClose = document.getElementById("find-close");
                 const body = document.body;
-                const editrContainer =
-                    document.getElementById("editr-container");
+                const editContainer =
+                    document.getElementById("edit-container");
                 const snoContainer = document.getElementById("sno-container");
                 const markdownPreview =
                     document.getElementById("markdown-preview");
                 const csvGrid = document.getElementById("csv-grid");
                 const mdViewBtn = document.getElementById("menu-md-view");
                 const csvViewBtn = document.getElementById("menu-csv-view");
+                const mdMenuItems = document.querySelectorAll(".menu-item-md");
+                const saveHtmlBtn = document.getElementById("menu-save-html");
+                const savePdfBtn = document.getElementById("menu-save-pdf");
 
                 // --- ================================== ---
                 // --- SNO (Secure Note) INTEGRATION CODE ---
@@ -1254,9 +1263,9 @@
                     currentEditingId = null;
                     currentPasswordHash = null;
 
-                    // Hide SNO view and show editr view
+                    // Hide SNO view and show edit view
                     snoContainer.classList.add("hidden");
-                    editrContainer.style.display = "block"; // Or 'flex' etc. as needed
+                    editContainer.style.display = "block"; // Or 'flex' etc. as needed
 
                     // Clean up UI for next time
                     sno_init();
@@ -1475,7 +1484,7 @@
                     });
 
                 // --- ================= ---
-                // --- editr CORE CODE ---
+                // --- edit CORE CODE ---
                 // --- ================= ---
 
                 // --- VIEW STATE MANAGEMENT ---
@@ -1508,8 +1517,8 @@
                     sessionId = generateShortId();
                     history.replaceState(null, "", `#${sessionId}`);
                 }
-                const storageKey = `editrTextSession-${sessionId}`;
-                const statsStorageKey = `editrStatsHidden-${sessionId}`;
+                const storageKey = `editTextSession-${sessionId}`;
+                const statsStorageKey = `editStatsHidden-${sessionId}`;
 
                 // --- STATE MANAGEMENT ---
                 let buffers = [];
@@ -1537,21 +1546,21 @@
                         activeBufferIndex >= buffers.length
                     ) {
                         editor.value = "";
-                        document.title = "editr";
+                        document.title = "edit";
                         updateStats();
                         return;
                     }
                     const activeBuffer = buffers[activeBufferIndex];
                     editor.value = activeBuffer.content;
                     document.title = activeBuffer.fileName
-                        ? `${activeBuffer.fileName} - editr`
-                        : "editr";
+                        ? activeBuffer.fileName
+                        : "edit";
                     updateStats();
                 };
 
                 const createNewBuffer = (
                     content = "",
-                    fileName = "untitled.txt",
+                    fileName = "New",
                     fileHandle = null,
                 ) => {
                     const newBuffer = {
@@ -1665,90 +1674,72 @@
 
                         const currentLineStart =
                             textBeforeCursor.lastIndexOf("\n") + 1;
-                        const currentLine =
-                            textBeforeCursor.substring(currentLineStart);
+                        let lineEnd = editor.value.indexOf("\n", cursorPos);
+                        if (lineEnd === -1) {
+                            lineEnd = editor.value.length;
+                        }
+                        const currentLine = editor.value.substring(
+                            currentLineStart,
+                            lineEnd,
+                        );
 
-                        // Match ordered list: e.g., "  1. content"
-                        const orderedListMatch = currentLine.match(
+                        const bulletListMatch =
+                            currentLine.match(/^(\s*[-*+]\s+)(.*)/);
+                        const numberedListMatch = currentLine.match(
                             /^(\s*)(\d+)(\.\s+)(.*)/,
                         );
-                        // Match unordered list: e.g., "  - content"
-                        const unorderedListMatch =
-                            currentLine.match(/^(\s*[-*]\s+)(.*)/);
 
-                        let nextLinePrefix = null;
-
-                        if (orderedListMatch) {
-                            const content = orderedListMatch[4];
-                            if (content.length === 0) {
-                                // Empty item: Terminate list. Replace marker with newline + indent.
-                                const indent = orderedListMatch[1];
-                                e.preventDefault();
-                                editor.setSelectionRange(
-                                    currentLineStart,
-                                    cursorPos,
-                                );
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    "\n" + indent,
-                                );
-                                return;
-                            } else {
-                                // Continue list
-                                const indent = orderedListMatch[1];
-                                const number =
-                                    parseInt(orderedListMatch[2], 10) + 1;
-                                const marker = orderedListMatch[3];
-                                nextLinePrefix = `${indent}${number}${marker}`;
-                            }
-                        } else if (unorderedListMatch) {
-                            const content = unorderedListMatch[2];
-                            if (content.length === 0) {
-                                // Empty item: Terminate list. Find indent and replace marker.
-                                const indentMatch = currentLine.match(/^(\s*)/);
-                                const indent = indentMatch
-                                    ? indentMatch[1]
-                                    : "";
-                                e.preventDefault();
-                                editor.setSelectionRange(
-                                    currentLineStart,
-                                    cursorPos,
-                                );
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    "\n" + indent,
-                                );
-                                return;
-                            } else {
-                                // Continue list
-                                nextLinePrefix = unorderedListMatch[1];
-                            }
-                        }
-
-                        if (nextLinePrefix !== null) {
+                        if (bulletListMatch || numberedListMatch) {
                             e.preventDefault();
+                            const content = bulletListMatch
+                                ? bulletListMatch[2]
+                                : numberedListMatch[4];
+
+                            if (content.trim() === "") {
+                                // Exit list
+                                editor.setSelectionRange(
+                                    currentLineStart,
+                                    lineEnd,
+                                );
+                                document.execCommand("insertText", false, "");
+                            } else {
+                                // Continue list
+                                let nextMarker;
+                                if (bulletListMatch) {
+                                    nextMarker = bulletListMatch[1];
+                                } else {
+                                    const indent = numberedListMatch[1];
+                                    const num = parseInt(
+                                        numberedListMatch[2],
+                                        10,
+                                    );
+                                    const markerSuffix = numberedListMatch[3];
+                                    nextMarker = `${indent}${num + 1}${markerSuffix}`;
+                                }
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n" + nextMarker,
+                                );
+                            }
+                        } else {
+                            // Not a list, do generic auto-indent
+                            e.preventDefault();
+                            const lineUpToCursor = editor.value.substring(
+                                currentLineStart,
+                                cursorPos,
+                            );
+                            const leadingWhitespaceMatch =
+                                lineUpToCursor.match(/^\s*/);
+                            const indent = leadingWhitespaceMatch
+                                ? leadingWhitespaceMatch[0]
+                                : "";
                             document.execCommand(
                                 "insertText",
                                 false,
-                                "\n" + nextLinePrefix,
+                                "\n" + indent,
                             );
-                            return;
                         }
-
-                        // Fallback to original indentation logic if no list was matched
-                        e.preventDefault();
-                        const leadingWhitespaceMatch =
-                            currentLine.match(/^\s*/);
-                        const indent = leadingWhitespaceMatch
-                            ? leadingWhitespaceMatch[0]
-                            : "";
-                        document.execCommand(
-                            "insertText",
-                            false,
-                            "\n" + indent,
-                        );
                         return;
                     }
                     if (e.key === " ") {
@@ -1783,7 +1774,6 @@
                     const isHidden = statsDisplay.classList.toggle("hidden");
                     localStorage.setItem(statsStorageKey, isHidden);
                     hideMenu();
-                    return `Stats display is now ${isHidden ? "hidden" : "visible"}.`;
                 };
                 document
                     .getElementById("menu-toggle-stats")
@@ -1797,6 +1787,10 @@
                     hideMenu();
                     isMarkdownView = !isMarkdownView;
 
+                    mdMenuItems.forEach((item) =>
+                        item.classList.toggle("hidden", !isMarkdownView),
+                    );
+
                     if (isCsvView) {
                         isCsvView = false;
                         csvGrid.classList.add("hidden");
@@ -1807,11 +1801,11 @@
                         const markdownText = editor.value;
                         const html = mdConverter.makeHtml(markdownText);
                         markdownPreview.innerHTML = html;
-                        editrContainer.classList.add("hidden");
+                        editContainer.classList.add("hidden");
                         markdownPreview.classList.remove("hidden");
                         mdViewBtn.classList.add("active");
                     } else {
-                        editrContainer.classList.remove("hidden");
+                        editContainer.classList.remove("hidden");
                         markdownPreview.classList.add("hidden");
                         mdViewBtn.classList.remove("active");
                         editor.focus();
@@ -1826,15 +1820,18 @@
                         isMarkdownView = false;
                         markdownPreview.classList.add("hidden");
                         mdViewBtn.classList.remove("active");
+                        mdMenuItems.forEach((item) =>
+                            item.classList.add("hidden"),
+                        );
                     }
 
                     if (isCsvView) {
-                        editrContainer.classList.add("hidden");
+                        editContainer.classList.add("hidden");
                         csvGrid.classList.remove("hidden");
                         csvViewBtn.classList.add("active");
                         parseCsvAndRenderGrid();
                     } else {
-                        editrContainer.classList.remove("hidden");
+                        editContainer.classList.remove("hidden");
                         csvGrid.classList.add("hidden");
                         csvViewBtn.classList.remove("active");
                         editor.focus();
@@ -2088,7 +2085,6 @@
                 };
                 const hideFindBar = () => {
                     findBar.style.display = "none";
-                    editor.focus(); // Return focus to the editor
                 };
 
                 const selectResult = () => {
@@ -2144,17 +2140,9 @@
                     selectResult();
                 };
 
-                const toggleFindBar = () => {
-                    if (findBar.style.display === "flex") {
-                        hideFindBar();
-                    } else {
-                        showFindBar();
-                    }
-                };
-
                 document
                     .getElementById("menu-find")
-                    .addEventListener("click", toggleFindBar);
+                    .addEventListener("click", showFindBar);
                 findClose.addEventListener("click", hideFindBar);
                 findNext.addEventListener("click", findNextMatch);
                 findPrev.addEventListener("click", findPrevMatch);
@@ -2166,11 +2154,12 @@
                     if (e.key === "Escape") hideFindBar();
                 });
 
-                // --- FILE OPERATIONS ---
                 const newFile = () => {
                     hideMenu();
-                    createNewBuffer();
-                    return "New file created.";
+                    window.open(
+                        window.location.origin + window.location.pathname,
+                        "_blank",
+                    );
                 };
 
                 const openFile = async () => {
@@ -2198,20 +2187,15 @@
                         const file = await fileHandle.getFile();
                         const content = await file.text();
                         createNewBuffer(content, file.name, fileHandle);
-                        return `Opened ${file.name}.`;
                     } catch (err) {
-                        if (err.name !== "AbortError") {
+                        if (err.name !== "AbortError")
                             console.error("Error opening file:", err);
-                            return "Error opening file.";
-                        }
-                        return "File open cancelled.";
                     }
                 };
 
                 const saveFile = async () => {
                     hideMenu();
-                    if (activeBufferIndex === -1)
-                        return "No active file to save.";
+                    if (activeBufferIndex === -1) return;
                     const activeBuffer = buffers[activeBufferIndex];
                     const fileHandle = fileHandles.get(activeBuffer.id);
 
@@ -2220,95 +2204,70 @@
                             const writable = await fileHandle.createWritable();
                             await writable.write(activeBuffer.content);
                             await writable.close();
-                            return `Saved ${activeBuffer.fileName}.`;
                         } catch (err) {
                             console.error("Error saving file:", err);
-                            return await saveFileAs();
                         }
                     } else {
-                        return await saveFileAs();
+                        saveFileAs();
                     }
                 };
 
                 const saveFileAs = async () => {
                     hideMenu();
-                    if (activeBufferIndex === -1)
-                        return "No active file to save.";
-                    const activeBuffer = buffers[activeBufferIndex];
-                    const content = activeBuffer.content;
-                    const fileName = activeBuffer.fileName || "untitled.txt";
-
-                    if (window.showSaveFilePicker) {
-                        try {
-                            const newFileHandle =
-                                await window.showSaveFilePicker({
-                                    suggestedName: fileName,
-                                    types: [
-                                        {
-                                            description: "Text Files",
-                                            accept: {
-                                                "text/plain": [
-                                                    ".txt",
-                                                    ".md",
-                                                    ".csv",
-                                                    ".js",
-                                                    ".html",
-                                                    ".css",
-                                                    ".json",
-                                                ],
-                                            },
-                                        },
-                                    ],
-                                });
-                            fileHandles.set(activeBuffer.id, newFileHandle);
-                            activeBuffer.fileName = newFileHandle.name;
-                            const writable =
-                                await newFileHandle.createWritable();
-                            await writable.write(content);
-                            await writable.close();
-                            renderActiveBuffer();
-                            saveState();
-                            return `Saved as ${newFileHandle.name}.`;
-                        } catch (err) {
-                            if (err.name !== "AbortError") {
-                                console.error(
-                                    "Error using showSaveFilePicker:",
-                                    err,
-                                );
-                            }
-                            return "Save cancelled.";
-                        }
-                    } else {
-                        try {
-                            const blob = new Blob([content], {
-                                type: "text/plain;charset=utf-8",
-                            });
-                            const url = URL.createObjectURL(blob);
-                            const a = document.createElement("a");
-                            a.href = url;
-                            a.download = fileName;
-                            document.body.appendChild(a);
-                            a.click();
-                            document.body.removeChild(a);
-                            URL.revokeObjectURL(url);
-                            return `Downloaded ${fileName}.`;
-                        } catch (err) {
-                            console.error(
-                                "Error using fallback save method:",
-                                err,
-                            );
-                            alert("Could not save the file.");
-                            return "Could not save the file.";
-                        }
+                    if (activeBufferIndex === -1) return;
+                    try {
+                        const newFileHandle = await window.showSaveFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
+                        });
+                        const activeBuffer = buffers[activeBufferIndex];
+                        fileHandles.set(activeBuffer.id, newFileHandle);
+                        activeBuffer.fileName = newFileHandle.name;
+                        const writable = await newFileHandle.createWritable();
+                        await writable.write(activeBuffer.content);
+                        await writable.close();
+                        renderActiveBuffer();
+                        saveState();
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error saving file as:", err);
                     }
+                };
+
+                const saveAsHtml = () => {
+                    hideMenu();
+                    if (!isMarkdownView || activeBufferIndex === -1) return;
+
+                    const htmlContent = markdownPreview.innerHTML;
+                    const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Document</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;}img{max-width:100%;height:auto;}pre{white-space:pre-wrap;word-wrap:break-word;}</style></head><body>${htmlContent}</body></html>`;
+
+                    const blob = new Blob([fullHtml], { type: "text/html" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const baseName = activeBuffer.fileName.includes(".")
+                        ? activeBuffer.fileName.split(".").slice(0, -1).join(".")
+                        : activeBuffer.fileName;
+                    a.download = `${baseName}.html`;
+                    a.href = url;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+
+                const saveAsPdf = () => {
+                    hideMenu();
+                    if (!isMarkdownView) return;
+                    window.print();
                 };
 
                 const closeFile = () => {
                     hideMenu();
-                    if (buffers.length <= 0 || activeBufferIndex < 0)
-                        return "No file to close.";
+                    if (buffers.length <= 0 || activeBufferIndex < 0) return;
 
-                    const closedFileName = buffers[activeBufferIndex].fileName;
                     fileHandles.delete(buffers[activeBufferIndex].id);
                     buffers.splice(activeBufferIndex, 1);
 
@@ -2321,7 +2280,6 @@
                         renderActiveBuffer();
                     }
                     saveState();
-                    return `Closed ${closedFileName}.`;
                 };
 
                 const nextFile = () => {
@@ -2331,9 +2289,7 @@
                             (activeBufferIndex + 1) % buffers.length;
                         renderActiveBuffer();
                         saveState();
-                        return `Switched to ${buffers[activeBufferIndex].fileName}.`;
                     }
-                    return "No other files to switch to.";
                 };
                 const prevFile = () => {
                     hideMenu();
@@ -2343,9 +2299,7 @@
                             buffers.length;
                         renderActiveBuffer();
                         saveState();
-                        return `Switched to ${buffers[activeBufferIndex].fileName}.`;
                     }
-                    return "No other files to switch to.";
                 };
 
                 const openLink = () => {
@@ -2353,16 +2307,20 @@
                     const start = editor.selectionStart;
                     const end = editor.selectionEnd;
                     const fullText = editor.value;
-                    const urlRegex = /https?:\/\/[^\s]+/;
-                    const urlRegexGlobal = /https?:\/\/[^\s]+/g;
+                    const urlRegex = /https?:\/\/[^\s]+/; // Finds the first URL
+                    const urlRegexGlobal = /https?:\/\/[^\s]+/g; // Finds all URLs
 
                     let textToScan = "";
                     let urlsToOpen = [];
 
+                    // Case 1: User has selected/highlighted text
                     if (start !== end) {
                         textToScan = fullText.substring(start, end);
                         urlsToOpen = textToScan.match(urlRegexGlobal);
-                    } else {
+                    }
+                    // Case 2: No selection, just a cursor on a line
+                    else {
+                        // Find the boundaries of the current line
                         const lineStart =
                             fullText.lastIndexOf("\n", start - 1) + 1;
                         let lineEnd = fullText.indexOf("\n", start);
@@ -2371,6 +2329,7 @@
                         }
                         textToScan = fullText.substring(lineStart, lineEnd);
 
+                        // Find the first URL on that line
                         const singleUrlMatch = textToScan.match(urlRegex);
                         if (singleUrlMatch) {
                             urlsToOpen = [singleUrlMatch[0]];
@@ -2404,10 +2363,9 @@
 
                 const showSnoView = () => {
                     hideMenu();
-                    editrContainer.style.display = "none";
+                    editContainer.style.display = "none";
                     snoContainer.classList.remove("hidden");
                     sno_init();
-                    return "Opening secure notes...";
                 };
 
                 // --- ======================= ---
@@ -2437,7 +2395,7 @@
                     "import-expansions-input",
                 );
 
-                const EXPANSIONS_STORAGE_KEY = "editrTextExpansions";
+                const EXPANSIONS_STORAGE_KEY = "editTextExpansions";
                 let textExpansions = {};
 
                 const loadTextExpansions = () => {
@@ -2584,7 +2542,7 @@
                     downloadAnchorNode.setAttribute("href", dataStr);
                     downloadAnchorNode.setAttribute(
                         "download",
-                        "b-edit-expansions.txt",
+                        "edit-expansions.txt",
                     );
                     document.body.appendChild(downloadAnchorNode);
                     downloadAnchorNode.click();
@@ -2623,6 +2581,81 @@
                     reader.readAsText(file);
                 };
 
+                // --- Helper functions for markdown shortcuts ---
+                const applyMarkdownFormatting = (prefix, suffix = prefix) => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const selectedText = editor.value.substring(start, end);
+                    const textToInsert = prefix + selectedText + suffix;
+                    document.execCommand("insertText", false, textToInsert);
+
+                    if (start === end) {
+                        // No selection, place cursor in the middle
+                        editor.selectionStart = editor.selectionEnd =
+                            start + prefix.length;
+                    } else {
+                        // Text was selected, re-select it without the markers
+                        editor.selectionStart = start + prefix.length;
+                        editor.selectionEnd = end + prefix.length;
+                    }
+                };
+
+                const applyLinkFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const selectedText = editor.value.substring(start, end);
+
+                    if (start === end) {
+                        document.execCommand("insertText", false, "[]()");
+                        editor.selectionStart = editor.selectionEnd = start + 1; // Cursor in []
+                    } else {
+                        document.execCommand(
+                            "insertText",
+                            false,
+                            `[${selectedText}]()`,
+                        );
+                        editor.selectionStart = editor.selectionEnd =
+                            start + selectedText.length + 3; // Cursor in ()
+                    }
+                };
+
+                const applyHeadingFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    let lineEnd = val.indexOf("\n", start);
+                    if (lineEnd === -1) lineEnd = val.length;
+
+                    const line = val.substring(lineStart, lineEnd);
+                    const match = line.match(/^(#*)\s*(.*)/);
+
+                    if (match) {
+                        let hashes = match[1];
+                        const content = match[2];
+
+                        hashes = hashes.length >= 6 ? "" : hashes + "#";
+
+                        const newLine = hashes
+                            ? `${hashes} ${content}`
+                            : content;
+
+                        editor.setSelectionRange(lineStart, lineEnd);
+                        document.execCommand("insertText", false, newLine);
+
+                        const newCursorPos =
+                            lineStart +
+                            (hashes ? hashes.length + 1 : 0) +
+                            content.length;
+                        editor.selectionStart = editor.selectionEnd = Math.min(
+                            newCursorPos,
+                            lineStart + newLine.length,
+                        );
+                    }
+                };
+
                 // --- MENU & SHORTCUT LISTENERS ---
                 document
                     .getElementById("menu-new")
@@ -2636,6 +2669,8 @@
                 document
                     .getElementById("menu-save-as")
                     .addEventListener("click", saveFileAs);
+                saveHtmlBtn.addEventListener("click", saveAsHtml);
+                savePdfBtn.addEventListener("click", saveAsPdf);
                 document
                     .getElementById("menu-close-file")
                     .addEventListener("click", closeFile);
@@ -2666,26 +2701,6 @@
                     importFileInput.click(),
                 );
                 importFileInput.addEventListener("change", importExpansions);
-
-                // --- HELPER FOR MARKDOWN SHORTCUTS ---
-                const wrapSelection = (before, after = before) => {
-                    const { selectionStart, selectionEnd, value } = editor;
-                    const selectedText = value.substring(
-                        selectionStart,
-                        selectionEnd,
-                    );
-                    if (!selectedText) return; // Do nothing if no text is selected
-
-                    const textToInsert = before + selectedText + after;
-                    document.execCommand("insertText", false, textToInsert);
-
-                    // Re-select the original text
-                    editor.focus();
-                    editor.setSelectionRange(
-                        selectionStart + before.length,
-                        selectionStart + before.length + selectedText.length,
-                    );
-                };
 
                 document.addEventListener("keydown", (e) => {
                     if (isMarkdownView || isCsvView) {
@@ -2737,50 +2752,29 @@
                                 e.preventDefault();
                                 saveFile();
                                 break;
-                            case "b":
-                                e.preventDefault();
-                                wrapSelection("**");
-                                break;
-                            case "i":
-                                e.preventDefault();
-                                wrapSelection("*");
-                                break;
-                            case "k":
-                                e.preventDefault();
-                                // wrapSelection will check if text is selected
-                                const url = prompt("Enter URL:", "https://");
-                                if (url) {
-                                    // Proceed only if user provides a URL
-                                    wrapSelection("[", `](${url})`);
-                                }
-                                break;
-                            case "h":
-                                e.preventDefault();
-                                const { selectionStart, selectionEnd, value } =
-                                    editor;
-                                const lineStart =
-                                    value.lastIndexOf(
-                                        "\n",
-                                        selectionStart - 1,
-                                    ) + 1;
-                                // Temporarily move cursor to insert at the beginning of the line
-                                editor.setSelectionRange(lineStart, lineStart);
-                                document.execCommand("insertText", false, "# ");
-                                // Restore selection, shifted by the length of the inserted text
-                                const shift = 2; // length of '# '
-                                editor.focus();
-                                editor.setSelectionRange(
-                                    selectionStart + shift,
-                                    selectionEnd + shift,
-                                );
-                                break;
                             case "u":
                                 e.preventDefault();
                                 openLink();
                                 break;
                             case "f":
                                 e.preventDefault();
-                                toggleFindBar();
+                                showFindBar();
+                                break;
+                            case "b":
+                                e.preventDefault();
+                                applyMarkdownFormatting("**");
+                                break;
+                            case "i":
+                                e.preventDefault();
+                                applyMarkdownFormatting("*");
+                                break;
+                            case "k":
+                                e.preventDefault();
+                                applyLinkFormatting();
+                                break;
+                            case "h":
+                                e.preventDefault();
+                                applyHeadingFormatting();
                                 break;
                             case "w":
                                 e.preventDefault();
