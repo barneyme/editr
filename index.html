@@ -58,7 +58,7 @@
                 outline: none;
                 resize: none;
                 background-color: transparent;
-                color: #f8f8f2; /* <<< KEPT THIS COLOR AS REQUESTED */
+                color: #f8f82; /* <<< KEPT THIS COLOR AS REQUESTED */
                 font-family: "Fira Code", "Courier New", monospace;
                 font-size: 16px;
                 line-height: 1.6;
@@ -1202,52 +1202,40 @@
                     </div>
 
                     <div class="help-section">
-                        <h3>Tools</h3>
+                        <h3>Markdown Shortcuts</h3>
                         <ul>
+                            <li><strong>Bold:</strong> `Ctrl+B`</li>
+                            <li><strong>Italics:</strong> `Ctrl+I`</li>
                             <li>
-                                <strong>Find (Ctrl+F):</strong> Opens a search
-                                bar to find text. Use Enter/Shift+Enter to
-                                navigate matches.
+                                <strong>Strikethrough:</strong> `Ctrl+Shift+S`
                             </li>
+                            <li><strong>Link:</strong> `Ctrl+K`</li>
+                            <li><strong>Image:</strong> `Ctrl+Shift+I`</li>
                             <li>
-                                <strong>Open Link (Ctrl+U):</strong> Finds the
-                                first URL on the current line (or in the
-                                selected text) and opens it in a new tab.
+                                <strong>Heading:</strong> `Ctrl+H` to cycle
+                                levels
                             </li>
-                            <li>
-                                <strong>Notes (Ctrl+=):</strong> A built-in,
-                                password-protected, encrypted note-taking app.
-                                Your notes are stored securely in your browser's
-                                local storage.
-                            </li>
-                            <li>
-                                <strong>Text Expander:</strong> Define custom
-                                shortcuts (e.g., `.sig`) that expand into longer
-                                snippets of text when you type them followed by
-                                a space or Enter. The shortcut `.d` is reserved
-                                and expands to the current date (YYYYMMDD).
-                            </li>
+                            <li><strong>Blockquote:</strong> `Ctrl+Shift+>`</li>
+                            <li><strong>Inline Code:</strong> `Ctrl+E`</li>
                         </ul>
                     </div>
 
                     <div class="help-section">
-                        <h3>Markdown Shortcuts</h3>
+                        <h3>Productivity Shortcuts</h3>
                         <ul>
                             <li>
-                                <strong>Bold:</strong> Select text and press
-                                `Ctrl+B`.
+                                <strong>Toggle Task Item:</strong> `Ctrl+Enter`
                             </li>
                             <li>
-                                <strong>Italics:</strong> Select text and press
-                                `Ctrl+I`.
+                                <strong>Indent/Outdent List Item:</strong> `Tab`
+                                / `Shift+Tab`
+                            </li>
+                            <li><strong>Find:</strong> `Ctrl+F`</li>
+                            <li>
+                                <strong>Open Link in Text:</strong> `Ctrl+U`
                             </li>
                             <li>
-                                <strong>Link:</strong> Select text and press
-                                `Ctrl+K`.
-                            </li>
-                            <li>
-                                <strong>Heading:</strong> Press `Ctrl+H` to
-                                cycle through heading levels (H1 to H6).
+                                <strong>Open Secure Notes:</strong> `Ctrl+=`
                             </li>
                         </ul>
                     </div>
@@ -1826,7 +1814,19 @@
                 const openChars = Object.keys(pairMap);
 
                 editor.addEventListener("keydown", (e) => {
+                    // This is handled in the main keydown listener now
+                    if (e.key === "Enter" && e.ctrlKey) {
+                        e.preventDefault();
+                        toggleTaskItem();
+                        return;
+                    }
+
                     if (e.key === "Tab") {
+                        const handled = handleTabIndent(e.shiftKey);
+                        if (handled) {
+                            e.preventDefault();
+                            return;
+                        }
                         e.preventDefault();
                         document.execCommand("insertText", false, "\t");
                         return;
@@ -2790,6 +2790,13 @@
                     }
                 };
 
+                const applyImageFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    document.execCommand("insertText", false, "![alt text]()");
+                    editor.selectionStart = editor.selectionEnd = start + 14; // Cursor in ()
+                };
+
                 const applyHeadingFormatting = () => {
                     if (document.activeElement !== editor) return;
                     const start = editor.selectionStart;
@@ -2823,6 +2830,119 @@
                             lineStart + newLine.length,
                         );
                     }
+                };
+
+                const toggleLinePrefix = (prefix) => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const val = editor.value;
+
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    let lineEnd = val.indexOf("\n", end);
+                    if (lineEnd === -1) lineEnd = val.length;
+
+                    const selectedLinesText = val.substring(lineStart, lineEnd);
+                    const lines = selectedLinesText.split("\n");
+                    const allPrefixed = lines.every((line) =>
+                        line.trim().startsWith(prefix.trim()),
+                    );
+
+                    let newLinesText = "";
+                    if (allPrefixed) {
+                        newLinesText = lines
+                            .map((line) => line.replace(prefix, ""))
+                            .join("\n");
+                    } else {
+                        newLinesText = lines
+                            .map((line) => `${prefix}${line}`)
+                            .join("\n");
+                    }
+
+                    editor.setSelectionRange(lineStart, lineEnd);
+                    document.execCommand("insertText", false, newLinesText);
+                    const newEndPos = lineStart + newLinesText.length;
+                    editor.setSelectionRange(newEndPos, newEndPos);
+                };
+
+                const toggleTaskItem = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    let lineEnd = val.indexOf("\n", start);
+                    if (lineEnd === -1) lineEnd = val.length;
+
+                    const line = val.substring(lineStart, lineEnd);
+                    const incompleteMatch = line.match(
+                        /^(\s*[-*+]\s+\[) (\]\s*.*)/,
+                    );
+                    const completeMatch = line.match(
+                        /^(\s*[-*+]\s+\[)x(\]\s*.*)/,
+                    );
+
+                    let newLine;
+                    if (incompleteMatch) {
+                        newLine = `${incompleteMatch[1]}x${incompleteMatch[2]}`;
+                    } else if (completeMatch) {
+                        newLine = `${completeMatch[1]} ${completeMatch[2]}`;
+                    } else {
+                        return; // Not a task item
+                    }
+
+                    editor.setSelectionRange(lineStart, lineEnd);
+                    document.execCommand("insertText", false, newLine);
+                    editor.selectionStart = editor.selectionEnd =
+                        lineStart + newLine.length;
+                };
+
+                const handleTabIndent = (isShift) => {
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    const line = val
+                        .substring(lineStart, val.length)
+                        .split("\n")[0];
+
+                    const isListItem = line.trim().match(/^([-*+]|\d+\.)\s/);
+
+                    if (isListItem) {
+                        if (isShift) {
+                            // Outdent
+                            const currentIndent = line.match(/^\s*/)[0].length;
+                            if (currentIndent > 0) {
+                                const newIndent = Math.max(
+                                    0,
+                                    currentIndent - 2,
+                                );
+                                const newLine =
+                                    " ".repeat(newIndent) + line.trimStart();
+                                editor.setSelectionRange(
+                                    lineStart,
+                                    lineStart + line.length,
+                                );
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    newLine,
+                                );
+                                editor.selectionStart = editor.selectionEnd =
+                                    start - (currentIndent - newIndent);
+                            }
+                        } else {
+                            // Indent
+                            const newLine = "  " + line;
+                            editor.setSelectionRange(
+                                lineStart,
+                                lineStart + line.length,
+                            );
+                            document.execCommand("insertText", false, newLine);
+                            editor.selectionStart = editor.selectionEnd =
+                                start + 2;
+                        }
+                        return true; // Handled
+                    }
+                    return false; // Not handled
                 };
 
                 // --- MENU & SHORTCUT LISTENERS ---
@@ -2921,6 +3041,7 @@
                     }
 
                     if (e.ctrlKey || e.metaKey) {
+                        // Shortcuts that are NOT Shift-sensitive
                         switch (e.key.toLowerCase()) {
                             case "n":
                                 e.preventDefault();
@@ -2958,6 +3079,10 @@
                                 e.preventDefault();
                                 applyHeadingFormatting();
                                 break;
+                            case "e":
+                                e.preventDefault();
+                                applyMarkdownFormatting("`");
+                                break;
                             case "w":
                                 e.preventDefault();
                                 closeFile();
@@ -2974,6 +3099,24 @@
                                 e.preventDefault();
                                 showSnoView();
                                 break;
+                        }
+
+                        // Shortcuts that ARE Shift-sensitive
+                        if (e.shiftKey) {
+                            switch (e.key.toLowerCase()) {
+                                case "s":
+                                    e.preventDefault();
+                                    applyMarkdownFormatting("~~");
+                                    break;
+                                case "i":
+                                    e.preventDefault();
+                                    applyImageFormatting();
+                                    break;
+                                case ">":
+                                    e.preventDefault();
+                                    toggleLinePrefix("> ");
+                                    break;
+                            }
                         }
                     }
                     if (e.key === "Escape") {
