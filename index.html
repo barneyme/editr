@@ -2667,6 +2667,26 @@
                 );
                 importFileInput.addEventListener("change", importExpansions);
 
+                // --- HELPER FOR MARKDOWN SHORTCUTS ---
+                const wrapSelection = (before, after = before) => {
+                    const { selectionStart, selectionEnd, value } = editor;
+                    const selectedText = value.substring(
+                        selectionStart,
+                        selectionEnd,
+                    );
+                    if (!selectedText) return; // Do nothing if no text is selected
+
+                    const textToInsert = before + selectedText + after;
+                    document.execCommand("insertText", false, textToInsert);
+
+                    // Re-select the original text
+                    editor.focus();
+                    editor.setSelectionRange(
+                        selectionStart + before.length,
+                        selectionStart + before.length + selectedText.length,
+                    );
+                };
+
                 document.addEventListener("keydown", (e) => {
                     if (isMarkdownView || isCsvView) {
                         if (e.key === "Escape") {
@@ -2716,6 +2736,43 @@
                             case "s":
                                 e.preventDefault();
                                 saveFile();
+                                break;
+                            case "b":
+                                e.preventDefault();
+                                wrapSelection("**");
+                                break;
+                            case "i":
+                                e.preventDefault();
+                                wrapSelection("*");
+                                break;
+                            case "k":
+                                e.preventDefault();
+                                // wrapSelection will check if text is selected
+                                const url = prompt("Enter URL:", "https://");
+                                if (url) {
+                                    // Proceed only if user provides a URL
+                                    wrapSelection("[", `](${url})`);
+                                }
+                                break;
+                            case "h":
+                                e.preventDefault();
+                                const { selectionStart, selectionEnd, value } =
+                                    editor;
+                                const lineStart =
+                                    value.lastIndexOf(
+                                        "\n",
+                                        selectionStart - 1,
+                                    ) + 1;
+                                // Temporarily move cursor to insert at the beginning of the line
+                                editor.setSelectionRange(lineStart, lineStart);
+                                document.execCommand("insertText", false, "# ");
+                                // Restore selection, shifted by the length of the inserted text
+                                const shift = 2; // length of '# '
+                                editor.focus();
+                                editor.setSelectionRange(
+                                    selectionStart + shift,
+                                    selectionEnd + shift,
+                                );
                                 break;
                             case "u":
                                 e.preventDefault();
