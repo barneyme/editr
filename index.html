@@ -216,6 +216,13 @@
                 text-align: left;
                 white-space: nowrap;
             }
+            #csv-grid th .csv-header-sortable {
+                cursor: pointer;
+                user-select: none;
+            }
+            #csv-grid th .csv-header-sortable:hover {
+                color: #ffb74d; /* Light Orange */
+            }
             #csv-grid thead {
                 background-color: #3d3d3d;
                 color: #f0f0f0;
@@ -1226,14 +1233,6 @@
                     <div class="help-section">
                         <h3>Productivity Shortcuts</h3>
                         <ul>
-                            <li>
-                                <strong>Toggle Task Item:</strong> `Ctrl +
-                                Enter`
-                            </li>
-                            <li>
-                                <strong>Indent/Outdent List Item:</strong> `Tab`
-                                / `Shift + Tab`
-                            </li>
                             <li><strong>Find:</strong> `Ctrl + F`</li>
                             <li>
                                 <strong>Open Link in Text:</strong> `Ctrl + U`
@@ -1660,6 +1659,7 @@
                     emoji: true,
                 });
                 let csvData = [];
+                let csvSortState = { columnIndex: -1, direction: "asc" };
 
                 // --- HELPER FUNCTION for short IDs ---
                 const generateShortId = (length = 8) => {
@@ -1702,6 +1702,19 @@
                     );
                 };
 
+                const saveCurrentBufferState = () => {
+                    if (
+                        activeBufferIndex !== -1 &&
+                        buffers[activeBufferIndex]
+                    ) {
+                        const buffer = buffers[activeBufferIndex];
+                        buffer.content = editor.value;
+                        buffer.selectionStart = editor.selectionStart;
+                        buffer.selectionEnd = editor.selectionEnd;
+                        saveState();
+                    }
+                };
+
                 const renderActiveBuffer = () => {
                     if (
                         activeBufferIndex < 0 ||
@@ -1717,6 +1730,16 @@
                     document.title = activeBuffer.fileName
                         ? activeBuffer.fileName
                         : "edit";
+                    if (
+                        activeBuffer.selectionStart !== undefined &&
+                        activeBuffer.selectionEnd !== undefined
+                    ) {
+                        editor.focus();
+                        editor.setSelectionRange(
+                            activeBuffer.selectionStart,
+                            activeBuffer.selectionEnd,
+                        );
+                    }
                     updateStats();
                 };
 
@@ -1729,6 +1752,8 @@
                         id: generateShortId(),
                         content,
                         fileName,
+                        selectionStart: 0,
+                        selectionEnd: 0,
                     };
                     buffers.push(newBuffer);
                     if (fileHandle) {
@@ -1746,10 +1771,15 @@
                             const savedState = JSON.parse(savedStateJSON);
                             buffers = savedState.buffers || [];
                             activeBufferIndex =
-                                savedState.activeBufferIndex || 0;
+                                savedState.activeBufferIndex !== undefined
+                                    ? savedState.activeBufferIndex
+                                    : -1;
                             if (buffers.length === 0) {
                                 createNewBuffer();
                             } else {
+                                if (activeBufferIndex >= buffers.length) {
+                                    activeBufferIndex = 0;
+                                }
                                 renderActiveBuffer();
                             }
                         } catch (e) {
@@ -1778,7 +1808,7 @@
                 editor.addEventListener("input", () => {
                     if (activeBufferIndex !== -1) {
                         buffers[activeBufferIndex].content = editor.value;
-                        saveState();
+                        saveCurrentBufferState();
                         updateStats();
 
                         if (isMarkdownView) {
@@ -1803,8 +1833,14 @@
                     statsChar.textContent = `→ ${currentCharNumber}`;
                     updateLineIndicator(currentLineNumber);
                 };
-                editor.addEventListener("keyup", updateStats);
-                editor.addEventListener("click", updateStats);
+                editor.addEventListener("keyup", () => {
+                    updateStats();
+                    saveCurrentBufferState();
+                });
+                editor.addEventListener("click", () => {
+                    updateStats();
+                    saveCurrentBufferState();
+                });
                 editor.addEventListener("scroll", updateStats);
 
                 const pairMap = {
@@ -1818,19 +1854,7 @@
                 const openChars = Object.keys(pairMap);
 
                 editor.addEventListener("keydown", (e) => {
-                    // This is handled in the main keydown listener now
-                    if (e.key === "Enter" && e.ctrlKey) {
-                        e.preventDefault();
-                        toggleTaskItem();
-                        return;
-                    }
-
                     if (e.key === "Tab") {
-                        const handled = handleTabIndent(e.shiftKey);
-                        if (handled) {
-                            e.preventDefault();
-                            return;
-                        }
                         e.preventDefault();
                         document.execCommand("insertText", false, "\t");
                         return;
@@ -2003,8 +2027,53 @@
                 csvViewBtn.addEventListener("click", toggleCsvGrid);
 
                 // --- CSV Grid Functions ---
+                const sortCsvData = (columnIndex) => {
+                    if (csvData.length < 2) return; // Nothing to sort
+
+                    if (csvSortState.columnIndex === columnIndex) {
+                        csvSortState.direction =
+                            csvSortState.direction === "asc" ? "desc" : "asc";
+                    } else {
+                        csvSortState.columnIndex = columnIndex;
+                        csvSortState.direction = "asc";
+                    }
+
+                    const header = csvData[0];
+                    const dataRows = csvData.slice(1);
+
+                    dataRows.sort((a, b) => {
+                        const valA = a[columnIndex] || "";
+                        const valB = b[columnIndex] || "";
+
+                        const numA = parseFloat(valA);
+                        const numB = parseFloat(valB);
+
+                        let compareResult;
+                        if (!isNaN(numA) && !isNaN(numB)) {
+                            compareResult = numA - numB;
+                        } else {
+                            compareResult = valA.localeCompare(
+                                valB,
+                                undefined,
+                                {
+                                    sensitivity: "base",
+                                },
+                            );
+                        }
+
+                        return csvSortState.direction === "asc"
+                            ? compareResult
+                            : -compareResult;
+                    });
+
+                    csvData = [header, ...dataRows];
+                    updateEditorFromCsv();
+                    renderCsvGrid();
+                };
+
                 const parseCsvAndRenderGrid = () => {
                     const text = editor.value.trim();
+                    csvSortState = { columnIndex: -1, direction: "asc" }; // Reset sort on parse
                     csvData = text.split("\n").map((line) => line.split(","));
                     if (
                         csvData.length === 1 &&
@@ -2044,7 +2113,7 @@
                     csvData[0].forEach((header, index) => {
                         const th = document.createElement("th");
                         th.innerHTML = `
-                            <span contenteditable="true" data-col-index="${index}">${sno_escapeHtml(header)}</span>
+                            <span contenteditable="true" data-col-index="${index}" class="csv-header-sortable" title="Click to sort">${sno_escapeHtml(header)}</span>
                             <button class="csv-action-btn delete-col-btn" data-col-index="${index}" title="Delete Column">🗑️</button>
                         `;
                         headerRow.appendChild(th);
@@ -2084,6 +2153,17 @@
                 };
 
                 csvGrid.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("csv-header-sortable")) {
+                        const colIndex = parseInt(
+                            e.target.dataset.colIndex,
+                            10,
+                        );
+                        if (!isNaN(colIndex)) {
+                            sortCsvData(colIndex);
+                        }
+                        return;
+                    }
+
                     if (e.target.id === "add-row-btn") {
                         const numCols = csvData[0] ? csvData[0].length : 1;
                         csvData.push(new Array(numCols).fill(""));
@@ -2448,6 +2528,7 @@
 
                 const nextFile = () => {
                     hideMenu();
+                    saveCurrentBufferState();
                     if (buffers.length > 1) {
                         activeBufferIndex =
                             (activeBufferIndex + 1) % buffers.length;
@@ -2457,6 +2538,7 @@
                 };
                 const prevFile = () => {
                     hideMenu();
+                    saveCurrentBufferState();
                     if (buffers.length > 1) {
                         activeBufferIndex =
                             (activeBufferIndex - 1 + buffers.length) %
@@ -2685,7 +2767,7 @@
                         const year = d.getFullYear();
                         const month = String(d.getMonth() + 1).padStart(2, "0");
                         const day = String(d.getDate()).padStart(2, "0");
-                        expansion = `${year}${month}${day}`;
+                        expansion = `${year}-${month}-${day}`;
                     } else if (textExpansions[shortcut]) {
                         expansion = textExpansions[shortcut];
                     }
@@ -2867,86 +2949,6 @@
                     document.execCommand("insertText", false, newLinesText);
                     const newEndPos = lineStart + newLinesText.length;
                     editor.setSelectionRange(newEndPos, newEndPos);
-                };
-
-                const toggleTaskItem = () => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const val = editor.value;
-                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-                    let lineEnd = val.indexOf("\n", start);
-                    if (lineEnd === -1) lineEnd = val.length;
-
-                    const line = val.substring(lineStart, lineEnd);
-                    const incompleteMatch = line.match(
-                        /^(\s*[-*+]\s+\[) (\]\s*.*)/,
-                    );
-                    const completeMatch = line.match(
-                        /^(\s*[-*+]\s+\[)x(\]\s*.*)/,
-                    );
-
-                    let newLine;
-                    if (incompleteMatch) {
-                        newLine = `${incompleteMatch[1]}x${incompleteMatch[2]}`;
-                    } else if (completeMatch) {
-                        newLine = `${completeMatch[1]} ${completeMatch[2]}`;
-                    } else {
-                        return; // Not a task item
-                    }
-
-                    editor.setSelectionRange(lineStart, lineEnd);
-                    document.execCommand("insertText", false, newLine);
-                    editor.selectionStart = editor.selectionEnd =
-                        lineStart + newLine.length;
-                };
-
-                const handleTabIndent = (isShift) => {
-                    const start = editor.selectionStart;
-                    const val = editor.value;
-                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-                    const line = val
-                        .substring(lineStart, val.length)
-                        .split("\n")[0];
-
-                    const isListItem = line.trim().match(/^([-*+]|\d+\.)\s/);
-
-                    if (isListItem) {
-                        if (isShift) {
-                            // Outdent
-                            const currentIndent = line.match(/^\s*/)[0].length;
-                            if (currentIndent > 0) {
-                                const newIndent = Math.max(
-                                    0,
-                                    currentIndent - 2,
-                                );
-                                const newLine =
-                                    " ".repeat(newIndent) + line.trimStart();
-                                editor.setSelectionRange(
-                                    lineStart,
-                                    lineStart + line.length,
-                                );
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    newLine,
-                                );
-                                editor.selectionStart = editor.selectionEnd =
-                                    start - (currentIndent - newIndent);
-                            }
-                        } else {
-                            // Indent
-                            const newLine = "  " + line;
-                            editor.setSelectionRange(
-                                lineStart,
-                                lineStart + line.length,
-                            );
-                            document.execCommand("insertText", false, newLine);
-                            editor.selectionStart = editor.selectionEnd =
-                                start + 2;
-                        }
-                        return true; // Handled
-                    }
-                    return false; // Not handled
                 };
 
                 // --- MENU & SHORTCUT LISTENERS ---
@@ -3160,6 +3162,7 @@
                 });
 
                 window.addEventListener("beforeunload", () => {
+                    saveCurrentBufferState();
                     if (masterKey && currentPasswordHash) {
                         sno_saveNotesToStorage();
                     }
