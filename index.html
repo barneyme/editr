@@ -361,11 +361,19 @@
                 font-family: "Fira Code", "Courier New", monospace;
                 font-size: 14px;
                 display: flex;
+                align-items: center;
                 gap: 16px;
                 background-color: rgba(61, 61, 61, 0.5);
                 padding: 4px 12px;
                 border-radius: 6px;
                 transition: opacity 0.3s;
+            }
+            #stats-filename {
+                color: #e0e0e0;
+                max-width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
             .hidden {
@@ -798,6 +806,7 @@
 
         <div id="top-right-container">
             <div id="stats-display">
+                <span id="stats-filename"></span>
                 <span id="stats-line">↓ 1</span>
                 <span id="stats-char">→ 1</span>
                 <span id="stats-words">= 0</span>
@@ -1254,6 +1263,7 @@
                 const contextMenu = document.getElementById("context-menu");
                 const menuTrigger = document.getElementById("menu-trigger");
                 const statsDisplay = document.getElementById("stats-display");
+                const statsFileName = document.getElementById("stats-filename");
                 const statsLine = document.getElementById("stats-line");
                 const statsChar = document.getElementById("stats-char");
                 const statsWords = document.getElementById("stats-words");
@@ -1722,14 +1732,18 @@
                     ) {
                         editor.value = "";
                         document.title = "edit";
+                        statsFileName.textContent = "edit";
                         updateStats();
                         return;
                     }
                     const activeBuffer = buffers[activeBufferIndex];
                     editor.value = activeBuffer.content;
-                    document.title = activeBuffer.fileName
+                    const displayName = activeBuffer.fileName
                         ? activeBuffer.fileName
                         : "edit";
+                    document.title = displayName;
+                    statsFileName.textContent = displayName;
+
                     if (
                         activeBuffer.selectionStart !== undefined &&
                         activeBuffer.selectionEnd !== undefined
@@ -3144,20 +3158,27 @@
                     e.preventDefault();
                     e.stopPropagation();
                     body.classList.remove("dragover");
-                    const file = e.dataTransfer.files[0];
-                    if (
-                        file &&
-                        (file.type.startsWith("text/") ||
-                            file.type === "" ||
-                            file.name.match(
-                                /\.(txt|md|js|html|css|json|xml|csv)$/,
-                            ))
-                    ) {
-                        const reader = new FileReader();
-                        reader.onload = (re) => {
-                            createNewBuffer(re.target.result, file.name);
-                        };
-                        reader.readAsText(file);
+
+                    if (e.dataTransfer.files.length > 0) {
+                        for (const file of e.dataTransfer.files) {
+                            if (
+                                file &&
+                                (file.type.startsWith("text/") ||
+                                    file.type === "" ||
+                                    file.name.match(
+                                        /\.(txt|md|js|html|css|json|xml|csv)$/,
+                                    ))
+                            ) {
+                                const reader = new FileReader();
+                                reader.onload = (re) => {
+                                    createNewBuffer(
+                                        re.target.result,
+                                        file.name,
+                                    );
+                                };
+                                reader.readAsText(file);
+                            }
+                        }
                     }
                 });
 
