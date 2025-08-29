@@ -1139,6 +1139,15 @@
                         .help-section li {
                             margin-bottom: 0.5rem;
                         }
+                        .help-section pre {
+                            background-color: #262626;
+                            padding: 0.5em 1em;
+                            border-radius: 4px;
+                            margin-top: 0.5rem;
+                        }
+                        .help-section code {
+                            font-family: "Fira Code", monospace;
+                        }
                     </style>
                     <div class="help-section">
                         <h3>File Management</h3>
@@ -1236,6 +1245,21 @@
                                 <strong>Blockquote:</strong> `Ctrl + Shift +> `
                             </li>
                             <li><strong>Inline Code:</strong> `Ctrl + E`</li>
+                            <li><strong>Insert Table:</strong> `Ctrl + T`</li>
+                            <li>
+                                <strong>Insert Horizontal Rule:</strong> `Ctrl +
+                                -`
+                            </li>
+                        </ul>
+                        <ul>
+                            <li>
+                                <strong>Table Column Alignment:</strong> You can
+                                align content in table columns by adding colons
+                                to the header separator line.
+                                <pre><code>| Left | Center | Right |
+|:---|:------:|------:|
+| a  |    b   |     c |</code></pre>
+                            </li>
                         </ul>
                     </div>
 
@@ -3102,6 +3126,24 @@
                             case "e":
                                 e.preventDefault();
                                 applyMarkdownFormatting("`");
+                                break;
+                            case "t":
+                                e.preventDefault();
+                                const tableTemplate =
+                                    "| Header 1 | Header 2 |\n|:---------|:---------|\n| Cell 1   | Cell 2   |\n";
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    tableTemplate,
+                                );
+                                break;
+                            case "-":
+                                e.preventDefault();
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n\n---\n\n",
+                                );
                                 break;
                             case "w":
                                 e.preventDefault();
