@@ -58,11 +58,20 @@
                 outline: none;
                 resize: none;
                 background-color: transparent;
-                color: #f8f82; /* <<< KEPT THIS COLOR AS REQUESTED */
+                color: #f8f8f2; /* <<< KEPT THIS COLOR AS REQUESTED */
                 font-family: "Fira Code", "Courier New", monospace;
                 font-size: 16px;
                 line-height: 1.6;
                 box-sizing: border-box;
+            }
+
+            /* --- VI MODE CURSOR --- */
+            #editor.vi-normal-mode {
+                caret-color: #ff9800;
+                caret-shape: block;
+            }
+            #editor.vi-insert-mode {
+                caret-shape: bar;
             }
 
             body.dragover {
@@ -810,6 +819,7 @@
                 <span id="stats-line">↓ 1</span>
                 <span id="stats-char">→ 1</span>
                 <span id="stats-words">= 0</span>
+                <span id="stats-vi-mode" class="hidden"></span>
             </div>
 
             <div id="menu-trigger" title="Menu">
@@ -886,6 +896,10 @@
             <div class="menu-item" id="menu-sno">
                 <span>Notes</span>
                 <span class="shortcut">Ctrl+=</span>
+            </div>
+            <div class="menu-item" id="menu-vi-mode">
+                <span>Vi Mode</span>
+                <span class="shortcut">Ctrl+M</span>
             </div>
             <div class="menu-separator menu-item-md hidden"></div>
             <div class="menu-item menu-item-md hidden" id="menu-save-html">
@@ -1132,6 +1146,13 @@
                             margin-bottom: 0.75rem;
                             color: #ffb74d;
                         }
+                        .help-section h4 {
+                            font-size: 1.1em;
+                            font-weight: 500;
+                            margin-top: 1rem;
+                            margin-bottom: 0.5rem;
+                            color: #e0e0e0;
+                        }
                         .help-section ul {
                             padding-left: 20px;
                             line-height: 1.6;
@@ -1147,6 +1168,16 @@
                         }
                         .help-section code {
                             font-family: "Fira Code", monospace;
+                            color: #ffb74d;
+                        }
+                        .help-section li code {
+                            color: #ffb74d;
+                            background-color: #3d3d3d;
+                            padding: 2px 5px;
+                            border-radius: 3px;
+                        }
+                        .help-section strong {
+                            color: #f0f0f0;
                         }
                     </style>
                     <div class="help-section">
@@ -1227,6 +1258,91 @@
                     </div>
 
                     <div class="help-section">
+                        <h3>Vi Mode</h3>
+                        <ul>
+                            <li>
+                                <strong>Toggle Vi Mode:</strong> `Ctrl + M`. An
+                                indicator will appear in the bottom right.
+                            </li>
+                            <li>
+                                <strong>Modes:</strong> Use `Esc` to return to
+                                **Normal** mode from **Insert** mode.
+                            </li>
+                        </ul>
+                        <h4>Cursor Movement (Normal Mode)</h4>
+                        <ul>
+                            <li>
+                                <code>h, j, k, l</code>: Move left, down, up,
+                                right
+                            </li>
+                            <li>
+                                <code>w, b, e</code>: Forward by word, backward
+                                by word, to end of word
+                            </li>
+                            <li>
+                                <code>0, $</code>: Move to start / end of line
+                            </li>
+                            <li>
+                                <code>gg, G</code>: Go to first / last line of
+                                the file
+                            </li>
+                            <li>
+                                <code>nG</code>: Go to line number `n` (e.g.,
+                                `10G`)
+                            </li>
+                        </ul>
+                        <h4>Editing (Normal Mode)</h4>
+                        <ul>
+                            <li>
+                                <code>i, a</code>: Enter Insert mode before /
+                                after cursor
+                            </li>
+                            <li>
+                                <code>I, A</code>: Insert at the beginning / end
+                                of the line
+                            </li>
+                            <li>
+                                <code>o, O</code>: Open a new line below / above
+                                and enter Insert mode
+                            </li>
+                            <li>
+                                <code>x</code>: Delete character under the
+                                cursor
+                            </li>
+                            <li><code>dd</code>: Delete the current line</li>
+                            <li>
+                                <code>dw</code>: Delete from cursor to the end
+                                of the word
+                            </li>
+                            <li>
+                                <code>d$</code>: Delete from cursor to the end
+                                of the line
+                            </li>
+                            <li>
+                                <code>yy</code>: Yank (copy) the current line
+                            </li>
+                            <li>
+                                <code>p, P</code>: Paste after / before the
+                                cursor
+                            </li>
+                            <li><code>u</code>: Undo</li>
+                            <li>
+                                <code>.</code>: Repeat the last modification
+                                command
+                            </li>
+                        </ul>
+                        <h4>Saving and Quitting (Normal Mode)</h4>
+                        <ul>
+                            <li><code>:w</code>: Save the file</li>
+                            <li><code>:q</code>: Quit Vi Mode</li>
+                            <li><code>:wq</code>: Save and quit Vi Mode</li>
+                            <li>
+                                <code>:q!</code>: Quit Vi Mode without saving
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
                         <h3>Markdown Shortcuts</h3>
                         <ul>
                             <li><strong>Bold:</strong> `Ctrl + B`</li>
@@ -1275,6 +1391,13 @@
                             </li>
                         </ul>
                     </div>
+                    <div style="text-align: left; margin-top: 2rem">
+                        <a
+                            href="get.html"
+                            style="color: #ffb74d; text-decoration: none"
+                            >Download "Edit"</a
+                        >
+                    </div>
                 </div>
             </div>
         </div>
@@ -1291,6 +1414,7 @@
                 const statsLine = document.getElementById("stats-line");
                 const statsChar = document.getElementById("stats-char");
                 const statsWords = document.getElementById("stats-words");
+                const statsViMode = document.getElementById("stats-vi-mode");
                 const findBar = document.getElementById("find-bar");
                 const findInput = document.getElementById("find-input");
                 const findPrev = document.getElementById("find-prev");
@@ -1695,6 +1819,16 @@
                 let csvData = [];
                 let csvSortState = { columnIndex: -1, direction: "asc" };
 
+                // --- ================= ---
+                // --- VI MODE STATE ---
+                // --- ================= ---
+                let isViMode = false;
+                let viState = "normal"; // 'normal', 'insert', 'command_line'
+                let viCommandBuffer = "";
+                let viPendingAction = null;
+                let viLastCommand = { fn: null, args: [] };
+                let yankBuffer = { text: "", isLine: false };
+
                 // --- HELPER FUNCTION for short IDs ---
                 const generateShortId = (length = 8) => {
                     const chars =
@@ -1892,6 +2026,16 @@
                 const openChars = Object.keys(pairMap);
 
                 editor.addEventListener("keydown", (e) => {
+                    if (
+                        isViMode &&
+                        viState === "insert" &&
+                        e.key === "Escape"
+                    ) {
+                        handleViKeyPress(e);
+                        return;
+                    }
+                    if (isViMode && viState !== "insert") return;
+
                     if (e.key === "Tab") {
                         e.preventDefault();
                         document.execCommand("insertText", false, "\t");
@@ -2425,12 +2569,35 @@
                 findClose.addEventListener("click", hideFindBar);
                 findNext.addEventListener("click", findNextMatch);
                 findPrev.addEventListener("click", findPrevMatch);
+
                 findInput.addEventListener("keydown", (e) => {
+                    // Handle Vi command line mode first
+                    if (isViMode && viState === "command_line") {
+                        if (e.key === "Enter") {
+                            e.preventDefault();
+                            viHelpers.executeEx(findInput.value);
+                            findBar.style.display = "none";
+                            viState = "normal";
+                            updateViStatus();
+                            editor.focus();
+                        } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            findBar.style.display = "none";
+                            viState = "normal";
+                            updateViStatus();
+                            editor.focus();
+                        }
+                        return;
+                    }
+
+                    // Standard find logic
                     if (e.key === "Enter") {
                         e.preventDefault();
                         e.shiftKey ? findPrevMatch() : findNextMatch();
                     }
-                    if (e.key === "Escape") hideFindBar();
+                    if (e.key === "Escape") {
+                        hideFindBar();
+                    }
                 });
 
                 const newFile = () => {
@@ -2491,18 +2658,23 @@
                     }
                 };
 
-                const saveFileAs = async () => {
+                const saveFileAs = async (suggestedName = null) => {
                     hideMenu();
                     if (activeBufferIndex === -1) return;
                     try {
-                        const newFileHandle = await window.showSaveFilePicker({
+                        const options = {
                             types: [
                                 {
                                     description: "Text Files",
                                     accept: { "text/plain": [".txt"] },
                                 },
                             ],
-                        });
+                        };
+                        if (suggestedName) {
+                            options.suggestedName = suggestedName;
+                        }
+                        const newFileHandle =
+                            await window.showSaveFilePicker(options);
                         const activeBuffer = buffers[activeBufferIndex];
                         fileHandles.set(activeBuffer.id, newFileHandle);
                         activeBuffer.fileName = newFileHandle.name;
@@ -2874,6 +3046,488 @@
                     reader.readAsText(file);
                 };
 
+                // --- ======================= ---
+                // --- VI MODE IMPLEMENTATION ---
+                // --- ======================= ---
+                const toggleViMode = () => {
+                    isViMode = !isViMode;
+                    if (isViMode) {
+                        viState = "normal";
+                        statsViMode.classList.remove("hidden");
+                        updateViStatus();
+                    } else {
+                        viState = "insert";
+                        editor.classList.remove(
+                            "vi-normal-mode",
+                            "vi-insert-mode",
+                        );
+                        statsViMode.classList.add("hidden");
+                    }
+                    hideMenu();
+                };
+
+                const updateViStatus = () => {
+                    if (!isViMode) return;
+                    statsViMode.textContent = `-- ${viState.toUpperCase()} --`;
+                    if (viState === "normal") {
+                        editor.classList.add("vi-normal-mode");
+                        editor.classList.remove("vi-insert-mode");
+                    } else {
+                        editor.classList.remove("vi-normal-mode");
+                        editor.classList.add("vi-insert-mode");
+                    }
+                };
+
+                const getViRepeatCount = () => {
+                    const count = parseInt(viCommandBuffer, 10);
+                    return isNaN(count) || count < 1 ? 1 : count;
+                };
+
+                const viGetLineBoundaries = (pos) => {
+                    const text = editor.value;
+                    const start = text.lastIndexOf("\n", pos - 1) + 1;
+                    let end = text.indexOf("\n", pos);
+                    if (end === -1) end = text.length;
+                    return { start, end, text: text.substring(start, end) };
+                };
+
+                const viGetCursorInfo = (pos = editor.selectionStart) => {
+                    const textUpToCursor = editor.value.substring(0, pos);
+                    const lines = textUpToCursor.split("\n");
+                    return {
+                        line: lines.length - 1,
+                        col: lines[lines.length - 1].length,
+                    };
+                };
+
+                const viSetCursor = (pos) => {
+                    editor.selectionStart = editor.selectionEnd = Math.max(
+                        0,
+                        Math.min(editor.value.length, pos),
+                    );
+                };
+
+                const viHelpers = {
+                    h: (count) => viSetCursor(editor.selectionStart - count),
+                    l: (count) => viSetCursor(editor.selectionStart + count),
+                    k: (count) => {
+                        for (let i = 0; i < count; i++) {
+                            const { line, col } = viGetCursorInfo();
+                            if (line === 0) return;
+                            const prevLine = editor.value.split("\n")[line - 1];
+                            const prevLineStart =
+                                editor.value.lastIndexOf(
+                                    "\n",
+                                    editor.selectionStart - col - 2,
+                                ) + 1;
+                            viSetCursor(
+                                prevLineStart + Math.min(col, prevLine.length),
+                            );
+                        }
+                    },
+                    j: (count) => {
+                        for (let i = 0; i < count; i++) {
+                            const { line, col } = viGetCursorInfo();
+                            const lines = editor.value.split("\n");
+                            if (line >= lines.length - 1) return;
+                            const nextLine = lines[line + 1];
+                            const { end } = viGetLineBoundaries(
+                                editor.selectionStart,
+                            );
+                            viSetCursor(
+                                end + 1 + Math.min(col, nextLine.length),
+                            );
+                        }
+                    },
+                    w: (count) => {
+                        let pos = editor.selectionStart;
+                        const text = editor.value;
+                        for (let i = 0; i < count; i++) {
+                            const remainingText = text.substring(pos);
+                            let match = remainingText.match(/\S\s+/);
+                            if (match) {
+                                pos += match.index + match[0].length;
+                            } else {
+                                match = remainingText.match(/\s\S/);
+                                pos += match ? match.index + 1 : text.length;
+                            }
+                        }
+                        viSetCursor(pos);
+                    },
+                    b: (count) => {
+                        let pos = editor.selectionStart;
+                        for (let i = 0; i < count; i++) {
+                            const textBefore = editor.value.substring(0, pos);
+                            const match = textBefore.match(/(\S+)\s*$/);
+                            if (match) {
+                                let newPos =
+                                    textBefore.lastIndexOf(
+                                        " ",
+                                        match.index - 2,
+                                    ) + 1;
+                                if (newPos < 0) newPos = 0;
+                                pos = newPos;
+                            } else {
+                                pos = 0;
+                                break;
+                            }
+                        }
+                        viSetCursor(pos);
+                    },
+                    e: (count) => {
+                        let pos = editor.selectionStart;
+                        const text = editor.value;
+                        for (let i = 0; i < count; i++) {
+                            const match = text.substring(pos + 1).match(/\S\b/);
+                            if (match) {
+                                pos += match.index + 2;
+                            } else {
+                                pos = text.length;
+                                break;
+                            }
+                        }
+                        viSetCursor(pos - 1);
+                    },
+                    0: () =>
+                        viSetCursor(
+                            viGetLineBoundaries(editor.selectionStart).start,
+                        ),
+                    "^": () => {
+                        const { start, text } = viGetLineBoundaries(
+                            editor.selectionStart,
+                        );
+                        viSetCursor(start + text.search(/\S|$/));
+                    },
+                    $: () =>
+                        viSetCursor(
+                            viGetLineBoundaries(editor.selectionStart).end,
+                        ),
+                    G: () => {
+                        const lines = editor.value.split("\n");
+                        let count = parseInt(viCommandBuffer);
+                        if (isNaN(count)) count = lines.length;
+                        viHelpers.gg(count);
+                    },
+                    gg: (count) => {
+                        if (count <= 1) {
+                            viSetCursor(0);
+                            return;
+                        }
+                        const lines = editor.value.split("\n");
+                        let pos = 0;
+                        for (
+                            let i = 0;
+                            i < count - 1 && i < lines.length;
+                            i++
+                        ) {
+                            pos += lines[i].length + 1;
+                        }
+                        viSetCursor(pos);
+                    },
+                    i: () => {
+                        viState = "insert";
+                        updateViStatus();
+                    },
+                    I: () => {
+                        viHelpers["^"]();
+                        viState = "insert";
+                        updateViStatus();
+                    },
+                    a: () => {
+                        if (editor.selectionStart < editor.value.length)
+                            viHelpers.l(1);
+                        viState = "insert";
+                        updateViStatus();
+                    },
+                    A: () => {
+                        viHelpers["$"]();
+                        viState = "insert";
+                        updateViStatus();
+                    },
+                    o: (count) => {
+                        const { end } = viGetLineBoundaries(
+                            editor.selectionStart,
+                        );
+                        editor.setSelectionRange(end, end);
+                        document.execCommand(
+                            "insertText",
+                            false,
+                            "\n".repeat(count),
+                        );
+                        viState = "insert";
+                        updateViStatus();
+                        viLastCommand = { fn: viHelpers.o, args: [count] };
+                    },
+                    O: (count) => {
+                        const { start } = viGetLineBoundaries(
+                            editor.selectionStart,
+                        );
+                        editor.setSelectionRange(start, start);
+                        document.execCommand(
+                            "insertText",
+                            false,
+                            "\n".repeat(count),
+                        );
+                        editor.selectionStart = editor.selectionEnd = start;
+                        viState = "insert";
+                        updateViStatus();
+                        viLastCommand = { fn: viHelpers.O, args: [count] };
+                    },
+                    x: (count) => {
+                        const start = editor.selectionStart;
+                        const text = editor.value.substring(
+                            start,
+                            start + count,
+                        );
+                        editor.setSelectionRange(start, start + count);
+                        yankBuffer = { text, isLine: false };
+                        document.execCommand("delete");
+                        viSetCursor(start);
+                        viLastCommand = { fn: viHelpers.x, args: [count] };
+                    },
+                    dd: (count) => {
+                        const { line } = viGetCursorInfo();
+                        const lines = editor.value.split("\n");
+                        const startLine = line;
+                        const endLine = Math.min(
+                            lines.length,
+                            startLine + count,
+                        );
+
+                        let startPos = 0;
+                        for (let i = 0; i < startLine; i++)
+                            startPos += lines[i].length + 1;
+
+                        const deletedLines = lines.slice(startLine, endLine);
+                        let endPos = startPos;
+                        deletedLines.forEach((l) => (endPos += l.length + 1));
+                        if (endLine === lines.length && startPos > 0) endPos--;
+
+                        editor.setSelectionRange(startPos, endPos);
+                        yankBuffer = {
+                            text:
+                                deletedLines.join("\n") +
+                                (startLine + deletedLines.length < lines.length
+                                    ? "\n"
+                                    : ""),
+                            isLine: true,
+                        };
+                        document.execCommand("delete");
+                        viSetCursor(startPos);
+                        viLastCommand = { fn: viHelpers.dd, args: [count] };
+                    },
+                    dw: (count) => {
+                        let start = editor.selectionStart;
+                        let end = start;
+                        for (let i = 0; i < count; i++) {
+                            const textAfter = editor.value.substring(end);
+                            const match = textAfter.match(/^\s*\S+/);
+                            if (match) {
+                                end += match[0].length;
+                            } else {
+                                end = editor.value.length;
+                                break;
+                            }
+                        }
+                        editor.setSelectionRange(start, end);
+                        yankBuffer = {
+                            text: editor.value.substring(start, end),
+                            isLine: false,
+                        };
+                        document.execCommand("delete");
+                        viSetCursor(start);
+                        viLastCommand = { fn: viHelpers.dw, args: [count] };
+                    },
+                    d$: (count) => {
+                        const start = editor.selectionStart;
+                        const { end } = viGetLineBoundaries(start);
+                        editor.setSelectionRange(start, end);
+                        yankBuffer = {
+                            text: editor.value.substring(start, end),
+                            isLine: false,
+                        };
+                        document.execCommand("delete");
+                        viSetCursor(start);
+                        viLastCommand = { fn: viHelpers.d$, args: [count] };
+                    },
+                    yy: (count) => {
+                        const { line } = viGetCursorInfo();
+                        const lines = editor.value.split("\n");
+                        const yankedLines = lines.slice(line, line + count);
+                        yankBuffer = {
+                            text: yankedLines.join("\n") + "\n",
+                            isLine: true,
+                        };
+                    },
+                    p: (count) => {
+                        const start = editor.selectionStart;
+                        let pasteText = yankBuffer.text.repeat(count);
+                        let pastePos = start;
+                        if (yankBuffer.isLine) {
+                            pastePos = viGetLineBoundaries(start).end + 1;
+                        } else {
+                            pastePos = start + 1;
+                        }
+                        editor.setSelectionRange(pastePos, pastePos);
+                        document.execCommand("insertText", false, pasteText);
+                        viSetCursor(
+                            yankBuffer.isLine
+                                ? pastePos
+                                : pastePos + pasteText.length - 1,
+                        );
+                        viLastCommand = { fn: viHelpers.p, args: [count] };
+                    },
+                    P: (count) => {
+                        const start = editor.selectionStart;
+                        let pasteText = yankBuffer.text.repeat(count);
+                        let pastePos = start;
+                        if (yankBuffer.isLine) {
+                            pastePos = viGetLineBoundaries(start).start;
+                        }
+                        editor.setSelectionRange(pastePos, pastePos);
+                        document.execCommand("insertText", false, pasteText);
+                        viSetCursor(pastePos + pasteText.length - 1);
+                        viLastCommand = { fn: viHelpers.P, args: [count] };
+                    },
+                    u: () => document.execCommand("undo"),
+                    ".": () => {
+                        if (viLastCommand.fn) {
+                            viLastCommand.fn(...viLastCommand.args);
+                        }
+                    },
+                    executeEx: (cmd) => {
+                        const [command, ...args] = cmd
+                            .substring(1)
+                            .split(/\s+/);
+                        switch (command) {
+                            case "w":
+                                saveFile();
+                                break;
+                            case "q":
+                                toggleViMode();
+                                break;
+                            case "wq":
+                                saveFile().then(toggleViMode);
+                                break;
+                            case "q!":
+                                toggleViMode();
+                                break;
+                            default:
+                                const lineNum = parseInt(command);
+                                if (!isNaN(lineNum)) viHelpers.gg(lineNum);
+                        }
+                    },
+                };
+
+                const handleViKeyPress = (e) => {
+                    if (viState === "insert") {
+                        if (e.key === "Escape") {
+                            e.preventDefault();
+                            viState = "normal";
+                            viHelpers.h(1);
+                            updateViStatus();
+                        }
+                        return; // Let default handler do the typing
+                    }
+
+                    if (viState === "command_line") return;
+
+                    e.preventDefault();
+                    const key = e.key;
+
+                    // NORMAL MODE
+                    if (viPendingAction) {
+                        const action = viPendingAction;
+                        viPendingAction = null;
+                        const count = getViRepeatCount();
+                        if (key === action) {
+                            // For dd, yy
+                            if (action === "d") viHelpers.dd(count);
+                            if (action === "y") viHelpers.yy(count);
+                        } else {
+                            if (action === "d" && key === "w")
+                                viHelpers.dw(count);
+                            if (action === "d" && key === "$")
+                                viHelpers.d$(count);
+                        }
+                        viCommandBuffer = "";
+                        return;
+                    }
+
+                    if (
+                        !isNaN(parseInt(key)) &&
+                        !(viCommandBuffer === "" && key === "0")
+                    ) {
+                        viCommandBuffer += key;
+                        return;
+                    }
+
+                    const count = getViRepeatCount();
+                    switch (key) {
+                        case "h":
+                        case "k":
+                        case "j":
+                        case "l":
+                        case "w":
+                        case "b":
+                        case "e":
+                        case "0":
+                        case "^":
+                        case "$":
+                        case "i":
+                        case "I":
+                        case "a":
+                        case "A":
+                        case "u":
+                        case ".":
+                        case "x":
+                        case "p":
+                        case "P":
+                        case "o":
+                        case "O":
+                        case "G":
+                            viHelpers[key](count);
+                            break;
+                        case "g":
+                            viPendingAction = "g";
+                            break;
+                        case "d":
+                            viPendingAction = "d";
+                            return;
+                        case "y":
+                            viPendingAction = "y";
+                            return;
+                        case ":":
+                            viState = "command_line";
+                            findInput.value = ":";
+                            findBar.style.display = "flex";
+                            findInput.focus();
+                            findInput.setSelectionRange(1, 1);
+                            return;
+                        case "Escape":
+                            viCommandBuffer = "";
+                            break;
+                        default:
+                            break;
+                    }
+
+                    if (viPendingAction === "g" && key === "g") {
+                        viHelpers.gg(count);
+                        viPendingAction = null;
+                    }
+
+                    if (key !== "d" && key !== "y" && key !== "g") {
+                        viCommandBuffer = "";
+                        viPendingAction = null;
+                    }
+                };
+
+                editor.addEventListener("keydown", (e) => {
+                    if (isViMode) {
+                        handleViKeyPress(e);
+                    }
+                });
+
                 // --- Helper functions for markdown shortcuts ---
                 const applyMarkdownFormatting = (prefix, suffix = prefix) => {
                     if (document.activeElement !== editor) return;
@@ -3020,6 +3674,9 @@
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
                 document
+                    .getElementById("menu-vi-mode")
+                    .addEventListener("click", toggleViMode);
+                document
                     .getElementById("menu-help")
                     .addEventListener("click", showHelpModal);
                 document
@@ -3045,6 +3702,8 @@
                 importFileInput.addEventListener("change", importExpansions);
 
                 document.addEventListener("keydown", (e) => {
+                    if (isViMode) return; // Main Vi handler is on the editor itself
+
                     if (isMarkdownView || isCsvView) {
                         if (e.key === "Escape") {
                             if (isMarkdownView) toggleMarkdownPreview();
@@ -3160,6 +3819,10 @@
                             case "=":
                                 e.preventDefault();
                                 showSnoView();
+                                break;
+                            case "m":
+                                e.preventDefault();
+                                toggleViMode();
                                 break;
                         }
 
