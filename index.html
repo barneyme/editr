@@ -1064,6 +1064,45 @@
                     </button>
                 </div>
 
+                <h3>Date Shortcut (.d)</h3>
+                <div
+                    style="
+                        display: flex;
+                        gap: 10px;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    "
+                >
+                    <input
+                        type="text"
+                        id="date-format-input"
+                        placeholder="e.g., YYYY-MM-DD"
+                        style="
+                            flex-grow: 1;
+                            padding: 8px 12px;
+                            border: 1px solid #888888;
+                            border-radius: 4px;
+                            font-size: 14px;
+                            background: #2d2d2d;
+                            color: #f0f0f0;
+                            font-family: &quot;Fira Code&quot;, monospace;
+                        "
+                    />
+                    <button id="save-date-format-btn" class="btn">
+                        Save Format
+                    </button>
+                </div>
+                <p
+                    style="
+                        font-size: 12px;
+                        color: #888;
+                        margin-top: -15px;
+                        margin-bottom: 20px;
+                    "
+                >
+                    Use: DD, MM, MMM, YY, YYYY. Separators: - /
+                </p>
+
                 <h3>My Shortcuts</h3>
                 <div id="expansions-list"></div>
 
@@ -1258,6 +1297,93 @@
                     </div>
 
                     <div class="help-section">
+                        <h3>Markdown Shortcuts</h3>
+                        <ul>
+                            <li><strong>Bold:</strong> `Ctrl + B`</li>
+                            <li><strong>Italics:</strong> `Ctrl + I`</li>
+                            <li>
+                                <strong>Strikethrough:</strong> `Ctrl + Shift +
+                                S`
+                            </li>
+                            <li><strong>Link:</strong> `Ctrl + K`</li>
+                            <li><strong>Image:</strong> `Ctrl + Shift + I`</li>
+                            <li>
+                                <strong>Heading:</strong> `Ctrl + H` to cycle
+                                levels
+                            </li>
+                            <li>
+                                <strong>Blockquote:</strong> `Ctrl + Shift +> `
+                            </li>
+                            <li><strong>Inline Code:</strong> `Ctrl + E`</li>
+                            <li><strong>Insert Table:</strong> `Ctrl + T`</li>
+                            <li>
+                                <strong>Insert Horizontal Rule:</strong> `Ctrl +
+                                -`
+                            </li>
+                        </ul>
+                        <ul>
+                            <li>
+                                <strong>Table Column Alignment:</strong> You can
+                                align content in table columns by adding colons
+                                to the header separator line.
+                                <pre><code>| Left | Center | Right |
+|:---|:------:|------:|
+| a  |    b   |     c |</code></pre>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Text Expander</h3>
+                        <ul>
+                            <li>
+                                <strong>Open Manager:</strong> Click "Text" in
+                                the main menu to add, edit, or remove text
+                                expansion shortcuts.
+                            </li>
+                            <li>
+                                <strong>Usage:</strong> In the editor, type a
+                                shortcut (e.g., <code>.sig</code>) followed by a
+                                <strong>space</strong> or
+                                <strong>Enter</strong> to replace it with its
+                                full text.
+                            </li>
+                            <li>
+                                <strong>Rules:</strong> Shortcuts must start
+                                with a period (<code>.</code>) and be at least
+                                two characters long.
+                            </li>
+                            <li>
+                                <strong>Built-in Date Shortcut:</strong> The
+                                shortcut <code>.d</code> expands to the current
+                                date. You can customize its format in the Text
+                                Expander manager using <code>DD</code>,
+                                <code>MM</code>, <code>MMM</code>,
+                                <code>YY</code>, <code>YYYY</code> with
+                                <code>-</code> or <code>/</code> separators.
+                            </li>
+                            <li>
+                                <strong>Import/Export:</strong> You can back up
+                                your shortcuts to a file or import them from
+                                another machine using the manager.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Productivity Shortcuts</h3>
+                        <ul>
+                            <li><strong>Find:</strong> `Ctrl + F`</li>
+                            <li>
+                                <strong>Open Link in Text:</strong> `Ctrl + U`
+                            </li>
+                            <li>
+                                <strong>Open Secure Notes:</strong> `Ctrl + =`
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
                         <h3>Vi Mode</h3>
                         <ul>
                             <li>
@@ -1266,7 +1392,8 @@
                             </li>
                             <li>
                                 <strong>Modes:</strong> Use `Esc` to return to
-                                **Normal** mode from **Insert** mode.
+                                <strong>Normal</strong> mode from
+                                <strong>Insert</strong> mode.
                             </li>
                         </ul>
                         <h4>Cursor Movement (Normal Mode)</h4>
@@ -1338,56 +1465,6 @@
                             <li><code>:wq</code>: Save and quit Vi Mode</li>
                             <li>
                                 <code>:q!</code>: Quit Vi Mode without saving
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="help-section">
-                        <h3>Markdown Shortcuts</h3>
-                        <ul>
-                            <li><strong>Bold:</strong> `Ctrl + B`</li>
-                            <li><strong>Italics:</strong> `Ctrl + I`</li>
-                            <li>
-                                <strong>Strikethrough:</strong> `Ctrl + Shift +
-                                S`
-                            </li>
-                            <li><strong>Link:</strong> `Ctrl + K`</li>
-                            <li><strong>Image:</strong> `Ctrl + Shift + I`</li>
-                            <li>
-                                <strong>Heading:</strong> `Ctrl + H` to cycle
-                                levels
-                            </li>
-                            <li>
-                                <strong>Blockquote:</strong> `Ctrl + Shift +> `
-                            </li>
-                            <li><strong>Inline Code:</strong> `Ctrl + E`</li>
-                            <li><strong>Insert Table:</strong> `Ctrl + T`</li>
-                            <li>
-                                <strong>Insert Horizontal Rule:</strong> `Ctrl +
-                                -`
-                            </li>
-                        </ul>
-                        <ul>
-                            <li>
-                                <strong>Table Column Alignment:</strong> You can
-                                align content in table columns by adding colons
-                                to the header separator line.
-                                <pre><code>| Left | Center | Right |
-|:---|:------:|------:|
-| a  |    b   |     c |</code></pre>
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="help-section">
-                        <h3>Productivity Shortcuts</h3>
-                        <ul>
-                            <li><strong>Find:</strong> `Ctrl + F`</li>
-                            <li>
-                                <strong>Open Link in Text:</strong> `Ctrl + U`
-                            </li>
-                            <li>
-                                <strong>Open Secure Notes:</strong> `Ctrl + =`
                             </li>
                         </ul>
                     </div>
@@ -2859,8 +2936,15 @@
                 const importFileInput = document.getElementById(
                     "import-expansions-input",
                 );
+                const dateFormatInput =
+                    document.getElementById("date-format-input");
+                const saveDateFormatBtn = document.getElementById(
+                    "save-date-format-btn",
+                );
 
                 const EXPANSIONS_STORAGE_KEY = "editTextExpansions";
+                const DATE_FORMAT_STORAGE_KEY = "editTextDateFormat";
+                const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
                 let textExpansions = {};
 
                 const loadTextExpansions = () => {
@@ -2911,6 +2995,9 @@
                 const showTextExpanderModal = () => {
                     hideMenu();
                     renderExpansionsList();
+                    dateFormatInput.value =
+                        localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
+                        DEFAULT_DATE_FORMAT;
                     textExpanderModal.classList.add("active");
                 };
 
@@ -2973,11 +3060,34 @@
                 const handleTextExpansion = (shortcut, event) => {
                     let expansion = null;
                     if (shortcut === ".d") {
+                        const format =
+                            localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
+                            DEFAULT_DATE_FORMAT;
                         const d = new Date();
                         const year = d.getFullYear();
-                        const month = String(d.getMonth() + 1).padStart(2, "0");
-                        const day = String(d.getDate()).padStart(2, "0");
-                        expansion = `${year}-${month}-${day}`;
+                        const month = d.getMonth(); // 0-indexed
+                        const day = d.getDate();
+                        const monthNames = [
+                            "Jan",
+                            "Feb",
+                            "Mar",
+                            "Apr",
+                            "May",
+                            "Jun",
+                            "Jul",
+                            "Aug",
+                            "Sep",
+                            "Oct",
+                            "Nov",
+                            "Dec",
+                        ];
+
+                        expansion = format
+                            .replace(/YYYY/g, year)
+                            .replace(/YY/g, String(year).slice(-2))
+                            .replace(/MMM/g, monthNames[month])
+                            .replace(/MM/g, String(month + 1).padStart(2, "0"))
+                            .replace(/DD/g, String(day).padStart(2, "0"));
                     } else if (textExpansions[shortcut]) {
                         expansion = textExpansions[shortcut];
                     }
@@ -3044,6 +3154,19 @@
                         }
                     };
                     reader.readAsText(file);
+                };
+
+                const saveDateFormat = () => {
+                    const newFormat = dateFormatInput.value.trim();
+                    // Basic validation to ensure only allowed characters are used
+                    if (!/^[YMD\/-]+$/.test(newFormat) && newFormat !== "") {
+                        alert(
+                            "Invalid characters in date format. Only use Y, M, D, -, and /.",
+                        );
+                        return;
+                    }
+                    localStorage.setItem(DATE_FORMAT_STORAGE_KEY, newFormat);
+                    alert("Date format saved!");
                 };
 
                 // --- ======================= ---
@@ -3700,6 +3823,7 @@
                     importFileInput.click(),
                 );
                 importFileInput.addEventListener("change", importExpansions);
+                saveDateFormatBtn.addEventListener("click", saveDateFormat);
 
                 document.addEventListener("keydown", (e) => {
                     if (isViMode) return; // Main Vi handler is on the editor itself
