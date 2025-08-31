@@ -189,6 +189,24 @@
                 background-color: #888888;
                 margin: 2.5em 0;
             }
+            #markdown-preview .toc {
+                background-color: #3d3d3d;
+                border: 1px solid #888888;
+                border-radius: 5px;
+                padding: 1em 1.5em;
+                margin-bottom: 2em;
+            }
+            #markdown-preview .toc h3 {
+                margin-top: 0;
+                color: #f0f0f0;
+            }
+            #markdown-preview .toc ul {
+                padding-left: 1em;
+                list-style-type: none;
+            }
+            #markdown-preview .toc li {
+                margin-bottom: 0.7em;
+            }
 
             /* --- CSV Grid Styles --- */
             #csv-grid {
@@ -878,11 +896,6 @@
                 <span class="shortcut">Ctrl+F</span>
             </div>
             <div class="menu-separator"></div>
-            <div class="menu-item" id="menu-open-link">
-                <span>Open Link</span>
-                <span class="shortcut">Ctrl+U</span>
-            </div>
-            <div class="menu-separator"></div>
             <div class="menu-item" id="menu-sno">
                 <span>Notes</span>
                 <span class="shortcut">Ctrl+=</span>
@@ -1265,24 +1278,6 @@
                     </div>
 
                     <div class="help-section">
-                        <h3>Views</h3>
-                        <ul>
-                            <li>
-                                <strong>CSV View:</strong> Renders
-                                comma-separated text in an editable grid. You
-                                can add/delete rows and columns, edit cells, and
-                                the underlying text is updated automatically.
-                            </li>
-                            <li>
-                                <strong>MD View:</strong> Renders Markdown text
-                                as formatted HTML. From this view, you can save
-                                the content as a self-contained HTML file or
-                                print it (e.g., to a PDF).
-                            </li>
-                        </ul>
-                    </div>
-
-                    <div class="help-section">
                         <h3>Markdown Shortcuts</h3>
                         <ul>
                             <li><strong>Bold:</strong> `Ctrl + B`</li>
@@ -1290,6 +1285,9 @@
                             <li>
                                 <strong>Strikethrough:</strong> `Ctrl + Shift +
                                 S`
+                            </li>
+                            <li>
+                                <strong>To-Do Item:</strong> `Ctrl + Shift + C`
                             </li>
                             <li><strong>Link:</strong> `Ctrl + K`</li>
                             <li><strong>Image:</strong> `Ctrl + Shift + I`</li>
@@ -1317,6 +1315,71 @@
 | a  |    b   |     c |</code></pre>
                             </li>
                         </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Views</h3>
+                        <ul>
+                            <li>
+                                <strong>CSV View:</strong> Renders
+                                comma-separated text in an editable grid. You
+                                can add/delete rows and columns, edit cells, and
+                                the underlying text is updated automatically.
+                            </li>
+                            <li>
+                                <strong>MD View:</strong> Renders Markdown text
+                                as formatted HTML. From this view, you can save
+                                the content as a self-contained HTML file or
+                                print it (e.g., to a PDF).
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Table of Contents</h3>
+                        <ul>
+                            <li>
+                                For long documents, you can automatically
+                                generate a Table of Contents (ToC).
+                            </li>
+                            <li>
+                                Simply type <code>[TOC]</code> on its own line
+                                where you want the table of contents to appear.
+                            </li>
+                            <li>
+                                When you switch to <strong>MD View</strong>,
+                                this tag will be replaced with a clickable list
+                                of all the headings (e.g.,
+                                <code># Heading 1</code>,
+                                <code>## Subheading</code>) in your document.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>To-Do Lists</h3>
+                        <ul>
+                            <li>
+                                You can create interactive to-do lists directly
+                                in your text. This is powered by Markdown.
+                            </li>
+                            <li>
+                                Use <code>- [ ]</code> for an incomplete task
+                                and <code>- [x]</code> for a completed task.
+                            </li>
+                            <li>
+                                When viewed in <strong>MD View</strong>, these
+                                will be rendered as clickable checkboxes.
+                            </li>
+                            <li>
+                                <strong>Shortcut:</strong> Use
+                                <code>Ctrl + Shift + C</code> to insert a new
+                                to-do item on the current line.
+                            </li>
+                        </ul>
+                        <pre><code>- [ ] Finish report
+- [x] Send email
+- [ ] Start new project</code></pre>
                     </div>
 
                     <div class="help-section">
@@ -1366,14 +1429,12 @@
                             <li>
                                 <strong>Open Secure Notes:</strong> `Ctrl + =`
                             </li>
+                            <li>
+                                <strong>Email File:</strong> `Ctrl + Shift + E`
+                                - Opens your default email client with the
+                                current file's content in a new message.
+                            </li>
                         </ul>
-                    </div>
-                    <div style="text-align: left; margin-top: 2rem">
-                        <a
-                            href="get.html"
-                            style="color: #ffb74d; text-decoration: none"
-                            >Download "Edit"</a
-                        >
                     </div>
                 </div>
             </div>
@@ -1791,6 +1852,7 @@
                     strikethrough: true,
                     tasklists: true,
                     emoji: true,
+                    ghCompatibleHeaderId: true,
                 });
                 let csvData = [];
                 let csvSortState = { columnIndex: -1, direction: "asc" };
@@ -1950,7 +2012,12 @@
                         updateStats();
 
                         if (isMarkdownView) {
-                            const html = mdConverter.makeHtml(editor.value);
+                            const markdownText = editor.value;
+                            let html = mdConverter.makeHtml(markdownText);
+                            if (markdownText.includes("[TOC]")) {
+                                const tocHtml = generateTocHtml(markdownText);
+                                html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
+                            }
                             markdownPreview.innerHTML = html;
                         }
                     }
@@ -2106,6 +2173,41 @@
                 });
 
                 // --- VIEW TOGGLE LOGIC ---
+                const generateTocHtml = (markdownText) => {
+                    const tocLines = [];
+                    const headingRegex = /^(#{1,6})\s+(.*)/gm;
+                    let match;
+
+                    while ((match = headingRegex.exec(markdownText)) !== null) {
+                        const level = match[1].length;
+                        const text = match[2].trim();
+                        // Replicate Showdown's ID generation
+                        const id = text
+                            .toLowerCase()
+                            .replace(/[^\w\s-]/g, "") // Remove non-word chars
+                            .replace(/\s+/g, "-"); // Replace spaces with hyphens
+
+                        tocLines.push({ level, text, id });
+                    }
+
+                    if (tocLines.length === 0) {
+                        return "";
+                    }
+
+                    let html =
+                        '<div class="toc"><h3>Table of Contents</h3><ul>';
+                    tocLines.forEach((line) => {
+                        html += `<li style="margin-left: ${
+                            (line.level - 1) * 1.5
+                        }em;">
+                        <a href="#${line.id}" style="color: #ffb74d; text-decoration: none;">${line.text}</a>
+                     </li>`;
+                    });
+                    html += "</ul></div><hr>";
+
+                    return html;
+                };
+
                 const toggleMarkdownPreview = () => {
                     hideMenu();
                     isMarkdownView = !isMarkdownView;
@@ -2122,7 +2224,14 @@
 
                     if (isMarkdownView) {
                         const markdownText = editor.value;
-                        const html = mdConverter.makeHtml(markdownText);
+                        let html = mdConverter.makeHtml(markdownText);
+
+                        // Check if the user wants a ToC and replace the placeholder
+                        if (markdownText.includes("[TOC]")) {
+                            const tocHtml = generateTocHtml(markdownText);
+                            html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
+                        }
+
                         markdownPreview.innerHTML = html;
                         editContainer.classList.add("hidden");
                         markdownPreview.classList.remove("hidden");
@@ -2754,6 +2863,22 @@
                     }
                 };
 
+                const emailFile = () => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const subject = activeBuffer.fileName || "My Note";
+                    let body = activeBuffer.content;
+
+                    // Replace newlines with CRLF for better mail client compatibility
+                    body = body.replace(/\n/g, "\r\n");
+
+                    const mailtoLink = `mailto:?subject=${encodeURIComponent(
+                        subject,
+                    )}&body=${encodeURIComponent(body)}`;
+                    window.location.href = mailtoLink;
+                };
+
                 const showSnoView = () => {
                     hideMenu();
                     editContainer.style.display = "none";
@@ -3144,6 +3269,20 @@
                     editor.setSelectionRange(newEndPos, newEndPos);
                 };
 
+                const insertTodoItem = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    const prefix = "- [ ] ";
+
+                    editor.setSelectionRange(lineStart, lineStart);
+                    document.execCommand("insertText", false, prefix);
+
+                    const newCursorPos = lineStart + prefix.length;
+                    editor.setSelectionRange(newCursorPos, newCursorPos);
+                };
+
                 // --- MENU & SHORTCUT LISTENERS ---
                 document
                     .getElementById("menu-new")
@@ -3168,9 +3307,6 @@
                 document
                     .getElementById("menu-prev-file")
                     .addEventListener("click", prevFile);
-                document
-                    .getElementById("menu-open-link")
-                    .addEventListener("click", openLink);
                 document
                     .getElementById("menu-sno")
                     .addEventListener("click", showSnoView);
@@ -3333,6 +3469,14 @@
                                 case ">":
                                     e.preventDefault();
                                     toggleLinePrefix("> ");
+                                    break;
+                                case "c":
+                                    e.preventDefault();
+                                    insertTodoItem();
+                                    break;
+                                case "e":
+                                    e.preventDefault();
+                                    emailFile();
                                     break;
                             }
                         }
