@@ -1449,15 +1449,16 @@
                             <li>
                                 <a
                                     href="https://sourceforge.net/projects/edit/files/latest/download"
-                                    ><img
-                                        alt="Download editr"
-                                        src="https://a.fsdn.com/con/app/sf-download-button"
-                                        width="276"
-                                        height="48"
-                                        srcset="
-                                            https://a.fsdn.com/con/app/sf-download-button?button_size=2x 2x
-                                        "
-                                /></a>
+                                    >Download for Windows and Mac</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    id="pwa-install-link"
+                                    style="display: none; cursor: pointer"
+                                    >Install as an App (PWA)</a
+                                >
                             </li>
                         </ul>
                     </div>
@@ -3307,6 +3308,34 @@
                     const newCursorPos = lineStart + prefix.length;
                     editor.setSelectionRange(newCursorPos, newCursorPos);
                 };
+
+                // --- PWA Install Logic ---
+                let deferredPrompt;
+                const pwaInstallLink =
+                    document.getElementById("pwa-install-link");
+
+                window.addEventListener("beforeinstallprompt", (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    if (pwaInstallLink) {
+                        pwaInstallLink.style.display = "block";
+                    }
+                });
+
+                if (pwaInstallLink) {
+                    pwaInstallLink.addEventListener("click", async (e) => {
+                        e.preventDefault();
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            const { outcome } = await deferredPrompt.userChoice;
+                            console.log(
+                                `User response to the install prompt: ${outcome}`,
+                            );
+                            deferredPrompt = null;
+                            pwaInstallLink.style.display = "none";
+                        }
+                    });
+                }
 
                 // --- MENU & SHORTCUT LISTENERS ---
                 document
