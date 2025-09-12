@@ -777,7 +777,7 @@
             </div>
             <div class="menu-separator"></div>
             <div class="menu-item" id="menu-sno">
-                <span>Notes</span>
+                <span>Lock</span>
                 <span class="shortcut">Ctrl + =</span>
             </div>
             <div class="menu-separator menu-item-md hidden"></div>
@@ -849,7 +849,7 @@
 
         <div id="sno-container" class="hidden">
             <div id="loginScreen" class="login-screen">
-                <h1>Notes.</h1>
+                <h1>Lock</h1>
                 <div class="input-group">
                     <label for="masterPassword">Password</label>
                     <input
@@ -1240,9 +1240,7 @@
                             <li>
                                 <strong>Open Link in Text:</strong> `Ctrl + U`
                             </li>
-                            <li>
-                                <strong>Open Secure Notes:</strong> `Ctrl + =`
-                            </li>
+                            <li><strong>Lock Note:</strong> `Ctrl + =`</li>
                             <li>
                                 <strong>Email File:</strong> `Ctrl + Shift + E`
                                 - Opens your default email client with the
@@ -1432,7 +1430,7 @@
                     editContainer.style.display = "block";
 
                     const notesText = sno_formatNotesToText(notes);
-                    createNewBuffer(notesText, "Secure-Notes.txt", null, {
+                    createNewBuffer(notesText, "Locked-Notes.txt", null, {
                         isSno: true,
                     });
                 }
