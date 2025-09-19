@@ -201,9 +201,8 @@
             //
             // Example format for the .txt file:
             // {
-            //   "sig": "Best regards,\n- Your Name",
-            //   "addr": "123 Main St,\nAnytown, USA 12345",
-            //   "greet": "Hello, hope you're having a great day!"
+            //   "e": "you@email.com",
+            //   "p": "555-555-5555"
             // }
             //
             // Note: The built-in shortcuts like 'd' will still work even if not in the imported file.
@@ -222,24 +221,30 @@
             // Context menu items with their actions
             const menuActions = [
                 {
-                    text: "New File",
+                    text: "New",
                     action: () => newFile(),
                     shortcut: "Ctrl + N",
                 },
                 {
-                    text: "Open File",
+                    text: "Open",
                     action: () => openFile(),
                     shortcut: "Ctrl + O",
                 },
                 {
-                    text: "Save File",
+                    text: "Save",
                     action: () => saveFile(),
                     shortcut: "Ctrl + S",
                 },
                 {
-                    text: "Close File",
+                    text: "Close",
                     action: () => closeFile(),
                     shortcut: "Ctrl + W",
+                },
+                { text: "---" }, // Separator
+                {
+                    text: "Pin/Unpin",
+                    action: () => togglePin(),
+                    shortcut: "Ctrl + P",
                 },
                 { text: "---" }, // Separator
                 {
@@ -254,26 +259,26 @@
                 },
                 { text: "---" }, // Separator
                 {
-                    text: "Expander Rules",
+                    text: "Expander",
                     action: () => newExpanderBuffer(),
                     shortcut: "Ctrl + E",
                 },
                 {
-                    text: "Import Expander",
+                    text: "Import",
                     action: () => importExpanderRules(),
                 },
                 {
-                    text: "Export Expander",
+                    text: "Export",
                     action: () => exportExpanderRules(),
                 },
                 { text: "---" }, // Separator
                 {
-                    text: "Previous Buffer",
+                    text: "Previous",
                     action: () => switchBuffer(-1),
                     shortcut: "Ctrl + ←",
                 },
                 {
-                    text: "Next Buffer",
+                    text: "Next",
                     action: () => switchBuffer(1),
                     shortcut: "Ctrl + →",
                 },
@@ -304,6 +309,27 @@
                         const listItem = document.createElement("li");
                         listItem.className =
                             "flex justify-between items-center px-4 py-2 hover:bg-gray-600 cursor-pointer transition-colors";
+
+                        // Update the pin/unpin text dynamically
+                        if (item.text.includes("Pin/Unpin")) {
+                            const currentFile = JSON.parse(
+                                localStorage.getItem(currentBufferId),
+                            );
+                            const text =
+                                currentFile && currentFile.isPinned
+                                    ? "Unpin"
+                                    : "Pin";
+                            listItem.innerHTML = `
+                                <span>${text}</span>
+                                ${item.shortcut ? `<span class="text-xs text-gray-400 ml-4">${item.shortcut}</span>` : ""}
+                            `;
+                        } else {
+                            listItem.innerHTML = `
+                                <span>${item.text}</span>
+                                ${item.shortcut ? `<span class="text-xs text-gray-400 ml-4">${item.shortcut}</span>` : ""}
+                            `;
+                        }
+
                         // Disable switching buttons if there's only one buffer
                         if (
                             item.text.includes("Buffer") &&
@@ -324,10 +350,7 @@
                                 hideContextMenu();
                             };
                         }
-                        listItem.innerHTML = `
-                        <span>${item.text}</span>
-                        ${item.shortcut ? `<span class="text-xs text-gray-400 ml-4">${item.shortcut}</span>` : ""}
-                    `;
+
                         menuList.appendChild(listItem);
                     }
                 });
@@ -371,7 +394,11 @@
             // Saves all buffers to localStorage
             function saveBuffers() {
                 try {
-                    const buffers = bufferIds.map((id) =>
+                    // Filter out any buffers that don't exist in localStorage
+                    const existingBuffers = bufferIds.filter((id) =>
+                        localStorage.getItem(id),
+                    );
+                    const buffers = existingBuffers.map((id) =>
                         JSON.parse(localStorage.getItem(id)),
                     );
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(buffers));
@@ -396,7 +423,15 @@
                                 JSON.stringify(buffer),
                             );
                         });
-                        bufferIds = buffers.map((b) => b.id);
+                        // Separate pinned and unpinned buffers to maintain order
+                        const pinnedIds = buffers
+                            .filter((b) => b.isPinned)
+                            .map((b) => b.id);
+                        const unpinnedIds = buffers
+                            .filter((b) => !b.isPinned)
+                            .map((b) => b.id);
+                        bufferIds = [...pinnedIds, ...unpinnedIds];
+
                         if (bufferIds.length > 0) {
                             currentBufferId = bufferIds[0];
                         }
@@ -437,7 +472,8 @@
 
                 editor.value = currentFile.content;
                 const currentBufferIndex = bufferIds.indexOf(currentBufferId);
-                fileStatus.textContent = `${currentFile.name} (${currentBufferIndex + 1}/${bufferIds.length})`;
+                const pinIndicator = currentFile.isPinned ? " 📌" : "";
+                fileStatus.textContent = `${currentFile.name}${pinIndicator} (${currentBufferIndex + 1}/${bufferIds.length})`;
                 showMessage(`Switched to: ${currentFile.name}`);
             }
 
@@ -448,6 +484,7 @@
                     id: newId,
                     name: `Untitled-${bufferIds.length + 1}.txt`,
                     content: "",
+                    isPinned: false,
                 };
                 localStorage.setItem(newId, JSON.stringify(newFileObject));
                 bufferIds.push(newId);
@@ -495,6 +532,7 @@
                         id: newId,
                         name: file.name,
                         content: event.target.result,
+                        isPinned: false,
                     };
                     localStorage.setItem(newId, JSON.stringify(newFileObject));
                     bufferIds.push(newId);
@@ -592,6 +630,48 @@
                 updateUI();
             }
 
+            function togglePin() {
+                if (currentBufferId === null) {
+                    showMessage("No file to pin/unpin.");
+                    return;
+                }
+
+                const currentFile = JSON.parse(
+                    localStorage.getItem(currentBufferId),
+                );
+                currentFile.isPinned = !currentFile.isPinned;
+                localStorage.setItem(
+                    currentBufferId,
+                    JSON.stringify(currentFile),
+                );
+
+                // Reorder the bufferIds array
+                const currentIndex = bufferIds.indexOf(currentBufferId);
+                bufferIds.splice(currentIndex, 1); // Remove from current position
+
+                if (currentFile.isPinned) {
+                    bufferIds.unshift(currentBufferId); // Add to the front
+                    showMessage(`Pinned: ${currentFile.name}`);
+                } else {
+                    // Find the first non-pinned position to insert it
+                    let firstUnpinnedIndex = bufferIds.length;
+                    for (let i = 0; i < bufferIds.length; i++) {
+                        const buffer = JSON.parse(
+                            localStorage.getItem(bufferIds[i]),
+                        );
+                        if (!buffer.isPinned) {
+                            firstUnpinnedIndex = i;
+                            break;
+                        }
+                    }
+                    bufferIds.splice(firstUnpinnedIndex, 0, currentBufferId); // Insert at the correct spot
+                    showMessage(`Unpinned: ${currentFile.name}`);
+                }
+
+                saveBuffers(); // Persist the new order
+                updateUI(); // Update the status display
+            }
+
             function selectAll() {
                 editor.select();
                 showMessage("All text selected.");
@@ -610,6 +690,7 @@
                     name: "Calculator",
                     content:
                         "--- Simple Calculator ---\nType a mathematical expression and press Enter.\n\n",
+                    isPinned: false,
                 };
                 localStorage.setItem(
                     CALCULATOR_BUFFER_ID,
@@ -686,6 +767,7 @@
                     id: CALENDAR_BUFFER_ID,
                     name: "Calendar",
                     content: generateCalendarString(calendarDate),
+                    isPinned: false,
                 };
                 localStorage.setItem(
                     CALENDAR_BUFFER_ID,
@@ -726,6 +808,7 @@
 // -------------------------------------------------------------
 ${initialContent}
 `.trim(),
+                    isPinned: false,
                 };
                 localStorage.setItem(
                     EXPANDER_BUFFER_ID,
@@ -1179,6 +1262,10 @@ ${initialContent}
                         case "w":
                             e.preventDefault();
                             closeFile();
+                            break;
+                        case "p":
+                            e.preventDefault();
+                            togglePin();
                             break;
                         case "m":
                             if (e.shiftKey) {
