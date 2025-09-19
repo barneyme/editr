@@ -152,6 +152,11 @@
                                 "Service Worker registered with scope:",
                                 registration.scope,
                             );
+
+                            // Check for updates
+                            registration.addEventListener("updatefound", () => {
+                                console.log("Service Worker update found");
+                            });
                         })
                         .catch((err) => {
                             console.log(
@@ -372,6 +377,7 @@
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(buffers));
                     // Also save the expander rules buffer explicitly
                     saveExpanderRulesBuffer();
+                    console.log("Saved buffers:", buffers.length);
                 } catch (e) {
                     console.error("Could not save buffers to localStorage:", e);
                     showMessage("Error saving files. Check console.");
@@ -380,9 +386,9 @@
 
             // Loads all buffers from localStorage
             function loadBuffers() {
-                const storedBuffers = localStorage.getItem(STORAGE_KEY);
-                if (storedBuffers) {
-                    try {
+                try {
+                    const storedBuffers = localStorage.getItem(STORAGE_KEY);
+                    if (storedBuffers) {
                         const buffers = JSON.parse(storedBuffers);
                         buffers.forEach((buffer) => {
                             localStorage.setItem(
@@ -396,12 +402,19 @@
                         }
                         // Load expander rules from its buffer if it exists
                         loadExpanderRulesFromBuffer();
-                    } catch (e) {
-                        console.error(
-                            "Could not parse buffers from localStorage:",
-                            e,
-                        );
+                        console.log("Loaded buffers:", bufferIds.length);
+                    } else {
+                        console.log("No stored buffers found");
                     }
+                } catch (e) {
+                    console.error(
+                        "Could not parse buffers from localStorage:",
+                        e,
+                    );
+                    // Reset storage if corrupted
+                    localStorage.removeItem(STORAGE_KEY);
+                    bufferIds = [];
+                    currentBufferId = null;
                 }
             }
 
@@ -977,6 +990,8 @@ ${initialContent}
                         currentBufferId,
                         JSON.stringify(currentFile),
                     );
+                    // Also save to the main buffers array
+                    saveBuffers();
                 }
             });
 
@@ -1195,15 +1210,25 @@ ${initialContent}
 
             // Initialize the editor with one new, empty file on page load
             window.onload = () => {
+                console.log("Initializing editor...");
                 loadBuffers();
                 if (bufferIds.length === 0) {
+                    console.log("No buffers found, creating new file");
                     newFile();
                 } else {
+                    console.log("Loaded existing buffers, updating UI");
                     updateUI();
                 }
                 editor.focus();
                 // Set the initial highlight position
                 updateLineHighlight();
+
+                // Save buffers periodically to prevent data loss
+                setInterval(() => {
+                    if (currentBufferId !== null) {
+                        saveBuffers();
+                    }
+                }, 30000); // Save every 30 seconds
             };
         </script>
     </body>
