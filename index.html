@@ -493,11 +493,7 @@
                                     description: "Text File",
                                     accept: { "text/plain": [".txt"] },
                                 },
-                                {
-                                    description: "All Files",
-                                    // Corrected the extension from "*" to ".*"
-                                    accept: { "*/*": [".*"] },
-                                },
+                                // Removed the invalid "All Files" entry. The API will add this by default.
                             ],
                         });
                         const writable = await fileHandle.createWritable();
