@@ -218,6 +218,12 @@
                 },
                 { text: "---" }, // Separator
                 {
+                    text: "Open URL",
+                    action: () => openUrl(),
+                    shortcut: "Ctrl + Enter",
+                },
+                { text: "---" }, // Separator
+                {
                     text: "Calculator",
                     action: () => newCalculator(),
                     shortcut: "Ctrl + Shift + M",
@@ -959,6 +965,27 @@ ${initialContent}
             editor.addEventListener("click", updateLineHighlight);
             editor.addEventListener("scroll", updateLineHighlight);
 
+            // Function to open a URL from the current line
+            function openUrl() {
+                const cursorPosition = editor.selectionStart;
+                const text = editor.value;
+                const lineStart =
+                    text.lastIndexOf("\n", cursorPosition - 1) + 1;
+                const lineEnd =
+                    text.indexOf("\n", cursorPosition) === -1
+                        ? text.length
+                        : text.indexOf("\n", cursorPosition);
+                const line = text.substring(lineStart, lineEnd).trim();
+
+                const urlRegex = /^(https?:\/\/[^\s]+)$/i;
+                if (urlRegex.test(line)) {
+                    window.open(line, "_blank");
+                    showMessage(`Opening URL: ${line}`);
+                } else {
+                    showMessage("The current line is not a valid URL.");
+                }
+            }
+
             // Keyboard shortcuts and special key behaviors
             editor.addEventListener("keydown", (e) => {
                 // Fix: Call updateLineHighlight on arrow key presses
@@ -977,6 +1004,12 @@ ${initialContent}
                 const lineStart =
                     text.lastIndexOf("\n", cursorPosition - 1) + 1;
                 const line = text.substring(lineStart, cursorPosition);
+
+                // Check if the current line is a URL and open it on Ctrl + Enter
+                if (e.ctrlKey && e.key === "Enter") {
+                    e.preventDefault();
+                    openUrl();
+                }
 
                 // If it's the expander buffer, save the changes on Enter
                 if (currentBufferId === EXPANDER_BUFFER_ID) {
