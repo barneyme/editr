@@ -17,10 +17,8 @@
                 color: #e2e8f0;
                 cursor: default;
                 user-select: none;
-                /* Remove padding and centering for full-screen effect */
             }
 
-            /* Hide the default scrollbar for a cleaner look */
             body::-webkit-scrollbar {
                 width: 0;
                 background: transparent;
@@ -41,12 +39,10 @@
             #editor {
                 resize: none;
                 outline: none;
-                scrollbar-width: thin; /* Firefox */
-                scrollbar-color: #4a5568 #2d3748; /* Firefox */
+                scrollbar-width: thin;
+                scrollbar-color: #4a5568 #2d3748;
 
-                /* Corrected styles for line highlighting */
-                line-height: 1.5rem; /* Ensure consistent line height */
-                /* Change made here: The highlight color is now #2d3748 */
+                line-height: 1.5rem;
                 background-image: linear-gradient(
                     to bottom,
                     #2d3748 0%,
@@ -189,6 +185,8 @@
             let bufferIds = []; // Stores the ordered IDs of the buffers
             let currentBufferId = null;
             let calendarDate = new Date();
+            // A reference to the currently opened file handle for direct saving
+            let fileHandle = null;
 
             // --- Expander Rules Format ---
             // This text editor supports a text expansion feature. You can create your own
@@ -358,7 +356,7 @@
                 // Position the menu, adjusting for screen edges
                 const viewportWidth = window.innerWidth;
                 const viewportHeight = window.innerHeight;
-                contextMenu.style.display = "block"; // Temporarily show to get dimensions
+                contextMenu.style.display = "block";
                 const menuWidth = contextMenu.offsetWidth;
                 const menuHeight = contextMenu.offsetHeight;
 
@@ -394,7 +392,6 @@
             // Saves all buffers to localStorage
             function saveBuffers() {
                 try {
-                    // Filter out any buffers that don't exist in localStorage
                     const existingBuffers = bufferIds.filter((id) =>
                         localStorage.getItem(id),
                     );
@@ -402,9 +399,7 @@
                         JSON.parse(localStorage.getItem(id)),
                     );
                     localStorage.setItem(STORAGE_KEY, JSON.stringify(buffers));
-                    // Also save the expander rules buffer explicitly
                     saveExpanderRulesBuffer();
-                    console.log("Saved buffers:", buffers.length);
                 } catch (e) {
                     console.error("Could not save buffers to localStorage:", e);
                     showMessage("Error saving files. Check console.");
@@ -423,7 +418,6 @@
                                 JSON.stringify(buffer),
                             );
                         });
-                        // Separate pinned and unpinned buffers to maintain order
                         const pinnedIds = buffers
                             .filter((b) => b.isPinned)
                             .map((b) => b.id);
@@ -435,18 +429,13 @@
                         if (bufferIds.length > 0) {
                             currentBufferId = bufferIds[0];
                         }
-                        // Load expander rules from its buffer if it exists
                         loadExpanderRulesFromBuffer();
-                        console.log("Loaded buffers:", bufferIds.length);
-                    } else {
-                        console.log("No stored buffers found");
                     }
                 } catch (e) {
                     console.error(
                         "Could not parse buffers from localStorage:",
                         e,
                     );
-                    // Reset storage if corrupted
                     localStorage.removeItem(STORAGE_KEY);
                     bufferIds = [];
                     currentBufferId = null;
@@ -458,6 +447,8 @@
                 if (currentBufferId === null) {
                     editor.value = "";
                     fileStatus.textContent = "No open files";
+                    // Reset fileHandle when no file is open
+                    fileHandle = null;
                     return;
                 }
 
@@ -466,7 +457,7 @@
                 );
                 if (!currentFile) {
                     console.error("Current buffer not found in localStorage.");
-                    newFile(); // Fallback to creating a new file
+                    newFile();
                     return;
                 }
 
@@ -475,6 +466,15 @@
                 const pinIndicator = currentFile.isPinned ? " 📌" : "";
                 fileStatus.textContent = `${currentFile.name}${pinIndicator} (${currentBufferIndex + 1}/${bufferIds.length})`;
                 showMessage(`Switched to: ${currentFile.name}`);
+
+                // Update the fileHandle if the buffer has one
+                if (currentFile.fileHandle) {
+                    // This is a placeholder as you can't store a FileHandle in localStorage
+                    // I will update the openFile logic to directly set the fileHandle
+                    // to the global variable.
+                } else {
+                    fileHandle = null;
+                }
             }
 
             // Main actions
@@ -485,26 +485,90 @@
                     name: `Untitled-${bufferIds.length + 1}.txt`,
                     content: "",
                     isPinned: false,
+                    fileHandle: null, // New field to indicate if it's a local file
                 };
                 localStorage.setItem(newId, JSON.stringify(newFileObject));
                 bufferIds.push(newId);
                 currentBufferId = newId;
+                // Reset fileHandle when creating a new file
+                fileHandle = null;
                 saveBuffers();
                 updateUI();
                 editor.focus();
             }
 
-            function openFile() {
-                // Programmatically click the hidden file input
-                fileInput.click();
+            async function openFile() {
+                // Use File System Access API if available
+                if ("showOpenFilePicker" in window) {
+                    try {
+                        const [handle] = await window.showOpenFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: {
+                                        "text/plain": [
+                                            ".txt",
+                                            ".md",
+                                            ".html",
+                                            ".js",
+                                            ".css",
+                                            ".json",
+                                            ".bat",
+                                            ".ps1",
+                                            ".sh",
+                                            ".csv",
+                                            ".tsv",
+                                            ".log",
+                                            ".xml",
+                                        ],
+                                    },
+                                },
+                            ],
+                        });
+                        fileHandle = handle;
+                        const file = await fileHandle.getFile();
+
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                            const newId = `buffer-${Date.now()}`;
+                            const newFileObject = {
+                                id: newId,
+                                name: file.name,
+                                content: event.target.result,
+                                isPinned: false,
+                                fileHandle: "exists", // A simple flag to indicate it came from a file handle
+                            };
+                            localStorage.setItem(
+                                newId,
+                                JSON.stringify(newFileObject),
+                            );
+                            bufferIds.push(newId);
+                            currentBufferId = newId;
+                            saveBuffers();
+                            updateUI();
+                            editor.focus();
+                            showMessage(`Opened file: ${file.name}`);
+                        };
+                        reader.readAsText(file);
+                    } catch (e) {
+                        if (e.name === "AbortError") {
+                            showMessage("Open operation cancelled.");
+                        } else {
+                            console.error("Error opening file:", e);
+                            showMessage("Error opening file. Check console.");
+                        }
+                    }
+                } else {
+                    // Fallback to the old method for browsers that don't support the API
+                    fileInput.click();
+                }
             }
 
-            // Event listener for the file input change
+            // Event listener for the fallback file input change
             fileInput.addEventListener("change", (e) => {
                 const file = e.target.files[0];
                 if (!file) return;
 
-                // Check if the file is a supported plaintext type
                 const fileName = file.name.toLowerCase();
                 const supportedExtensions = [
                     ".txt",
@@ -524,6 +588,10 @@
                 const isSupported = supportedExtensions.some((ext) =>
                     fileName.endsWith(ext),
                 );
+                if (!isSupported) {
+                    showMessage("Unsupported file type.");
+                    return;
+                }
 
                 const reader = new FileReader();
                 reader.onload = (event) => {
@@ -533,6 +601,7 @@
                         name: file.name,
                         content: event.target.result,
                         isPinned: false,
+                        fileHandle: null, // No file handle for this method
                     };
                     localStorage.setItem(newId, JSON.stringify(newFileObject));
                     bufferIds.push(newId);
@@ -556,19 +625,31 @@
                 const content = editor.value;
 
                 try {
-                    // Use the File System Access API
+                    // Use File System Access API
                     if ("showSaveFilePicker" in window) {
-                        const fileHandle = await window.showSaveFilePicker({
-                            suggestedName: currentFile.name,
-                            types: [
-                                {
-                                    description: "Text File",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                                // Removed the invalid "All Files" entry. The API will add this by default.
-                            ],
-                        });
-                        const writable = await fileHandle.createWritable();
+                        let handle = fileHandle;
+                        // If there is no existing file handle, open a save dialog
+                        if (!handle) {
+                            handle = await window.showSaveFilePicker({
+                                suggestedName: currentFile.name,
+                                types: [
+                                    {
+                                        description: "Text File",
+                                        accept: { "text/plain": [".txt"] },
+                                    },
+                                ],
+                            });
+                            // Store the handle for future saves
+                            fileHandle = handle;
+                            // Update the buffer to reflect that it's now tied to a file
+                            currentFile.fileHandle = "exists";
+                            localStorage.setItem(
+                                currentBufferId,
+                                JSON.stringify(currentFile),
+                            );
+                            updateUI();
+                        }
+                        const writable = await handle.createWritable();
                         await writable.write(content);
                         await writable.close();
                         showMessage("File saved successfully.");
@@ -604,6 +685,8 @@
                 const index = bufferIds.indexOf(currentBufferId);
                 localStorage.removeItem(currentBufferId);
                 bufferIds.splice(index, 1);
+                // Reset file handle when closing the file
+                fileHandle = null;
 
                 if (bufferIds.length === 0) {
                     currentBufferId = null;
@@ -645,15 +728,13 @@
                     JSON.stringify(currentFile),
                 );
 
-                // Reorder the bufferIds array
                 const currentIndex = bufferIds.indexOf(currentBufferId);
-                bufferIds.splice(currentIndex, 1); // Remove from current position
+                bufferIds.splice(currentIndex, 1);
 
                 if (currentFile.isPinned) {
-                    bufferIds.unshift(currentBufferId); // Add to the front
+                    bufferIds.unshift(currentBufferId);
                     showMessage(`Pinned: ${currentFile.name}`);
                 } else {
-                    // Find the first non-pinned position to insert it
                     let firstUnpinnedIndex = bufferIds.length;
                     for (let i = 0; i < bufferIds.length; i++) {
                         const buffer = JSON.parse(
@@ -664,12 +745,12 @@
                             break;
                         }
                     }
-                    bufferIds.splice(firstUnpinnedIndex, 0, currentBufferId); // Insert at the correct spot
+                    bufferIds.splice(firstUnpinnedIndex, 0, currentBufferId);
                     showMessage(`Unpinned: ${currentFile.name}`);
                 }
 
-                saveBuffers(); // Persist the new order
-                updateUI(); // Update the status display
+                saveBuffers();
+                updateUI();
             }
 
             function selectAll() {
@@ -829,11 +910,9 @@ ${initialContent}
                     try {
                         const newRules = JSON.parse(
                             expanderBuffer.content.replace(/\/\/.*/g, ""),
-                        ); // Remove comments
-                        // Merge the new rules, but keep the function-based ones
+                        );
                         for (const key in newRules) {
                             if (typeof expanderRules[key] === "function") {
-                                // Keep the function-based rule as-is
                             } else {
                                 expanderRules[key] = newRules[key];
                             }
@@ -857,9 +936,7 @@ ${initialContent}
                             expanderBuffer.content.replace(/\/\/.*/g, ""),
                         );
                         expanderRules = { ...expanderRules, ...newRules };
-                    } catch (e) {
-                        // The buffer might be empty or invalid on first load, so we just ignore the error.
-                    }
+                    } catch (e) {}
                 }
             }
 
@@ -870,7 +947,6 @@ ${initialContent}
 
             function exportExpanderRules() {
                 const rulesToExport = {};
-                // Filter out any function-based rules for export, e.g., 'd'
                 for (const key in expanderRules) {
                     if (typeof expanderRules[key] !== "function") {
                         rulesToExport[key] = expanderRules[key];
@@ -896,7 +972,6 @@ ${initialContent}
                 reader.onload = (event) => {
                     try {
                         const importedRules = JSON.parse(event.target.result);
-                        // Merge imported rules with existing ones, overwriting duplicates
                         expanderRules = { ...expanderRules, ...importedRules };
                         showMessage(
                             "Expander rules imported successfully from .txt file.",
@@ -915,7 +990,6 @@ ${initialContent}
                 const cursorPosition = editor.selectionStart;
                 const text = editor.value;
 
-                // Check if there are at least two characters to check for the trigger
                 if (cursorPosition >= 2) {
                     const triggerPrefix = text.substring(
                         cursorPosition - 2,
@@ -929,20 +1003,17 @@ ${initialContent}
                         const expansion =
                             typeof rule === "function" ? rule() : rule;
 
-                        // Replace the trigger with the expanded text
                         const newText =
                             text.substring(0, cursorPosition - 2) +
                             expansion +
                             text.substring(cursorPosition);
                         editor.value = newText;
 
-                        // Move the cursor to the end of the newly inserted text
                         const newCursorPosition =
                             cursorPosition - 2 + expansion.length;
                         editor.selectionStart = newCursorPosition;
                         editor.selectionEnd = newCursorPosition;
 
-                        // Update the buffer
                         if (currentBufferId !== null) {
                             const currentFile = JSON.parse(
                                 localStorage.getItem(currentBufferId),
@@ -959,41 +1030,28 @@ ${initialContent}
 
             // Function to update the line highlight
             const updateLineHighlight = () => {
-                // Get the current cursor position
                 const cursorPosition = editor.selectionStart;
-                // Get the text before the cursor
                 const textBeforeCursor = editor.value.substring(
                     0,
                     cursorPosition,
                 );
-                // Count the number of newline characters to get the line number (0-indexed)
                 const lineNumber = (textBeforeCursor.match(/\n/g) || []).length;
-
-                // Get the computed line height and padding
                 const computedStyle = window.getComputedStyle(editor);
                 const lineHeight = parseFloat(computedStyle.lineHeight);
                 const paddingTop = parseFloat(computedStyle.paddingTop);
-
-                // Calculate the vertical position for the highlight
                 const highlightY = lineNumber * lineHeight + paddingTop;
-
-                // Set the CSS custom property on the editor element
                 editor.style.setProperty("--highlight-y", `${highlightY}px`);
             };
 
             // Event listeners
-            // Right-click to show the menu
             document.addEventListener("contextmenu", (e) => {
                 e.preventDefault();
-                // Show menu to the right of the cursor
                 showContextMenu(e.clientX, e.clientY);
             });
 
-            // Click the menu button to show the menu
             menuButton.addEventListener("click", (e) => {
                 e.stopPropagation();
                 const rect = menuButton.getBoundingClientRect();
-                // Position the menu to the left, aligned with the button
                 const menuWidth = contextMenu.offsetWidth;
                 const x = rect.right - menuWidth;
                 const y = rect.bottom;
@@ -1001,7 +1059,6 @@ ${initialContent}
             });
 
             document.addEventListener("click", (e) => {
-                // Hide the menu if the user clicks anywhere but the menu itself or the button
                 if (
                     !contextMenu.contains(e.target) &&
                     e.target !== menuButton &&
@@ -1011,7 +1068,6 @@ ${initialContent}
                 }
             });
 
-            // Drag and drop functionality
             editorContainer.addEventListener("dragover", (e) => {
                 e.preventDefault();
                 editorContainer.classList.add(
@@ -1062,7 +1118,6 @@ ${initialContent}
                 reader.readAsText(file);
             });
 
-            // Sync editor content with the current buffer in real-time
             editor.addEventListener("input", () => {
                 if (currentBufferId !== null) {
                     const currentFile = JSON.parse(
@@ -1073,12 +1128,10 @@ ${initialContent}
                         currentBufferId,
                         JSON.stringify(currentFile),
                     );
-                    // Also save to the main buffers array
                     saveBuffers();
                 }
             });
 
-            // Auto-pairing of brackets, quotes, etc.
             editor.addEventListener("input", (e) => {
                 const pairings = {
                     "(": ")",
@@ -1103,21 +1156,17 @@ ${initialContent}
                 }
             });
 
-            // Listen for changes to update the highlight position
             editor.addEventListener("input", updateLineHighlight);
             editor.addEventListener("click", updateLineHighlight);
             editor.addEventListener("scroll", updateLineHighlight);
 
-            // Keyboard shortcuts and special key behaviors
             editor.addEventListener("keydown", (e) => {
-                // Fix: Call updateLineHighlight on arrow key presses
                 if (
                     e.key === "ArrowUp" ||
                     e.key === "ArrowDown" ||
                     e.key === "ArrowLeft" ||
                     e.key === "ArrowRight"
                 ) {
-                    // Use setTimeout to ensure the cursor position has updated before calculating highlight
                     setTimeout(updateLineHighlight, 0);
                 }
 
@@ -1127,21 +1176,18 @@ ${initialContent}
                     text.lastIndexOf("\n", cursorPosition - 1) + 1;
                 const line = text.substring(lineStart, cursorPosition);
 
-                // If it's the expander buffer, save the changes on Enter
                 if (currentBufferId === EXPANDER_BUFFER_ID) {
                     if (e.key === "Enter") {
                         saveExpanderRulesBuffer();
                     }
                 }
 
-                // Special functionality for Calculator and Calendar buffers
                 if (
                     e.key === "Enter" &&
                     currentBufferId === CALCULATOR_BUFFER_ID
                 ) {
                     e.preventDefault();
                     try {
-                        // Safely evaluate the expression
                         const result = Function(
                             `'use strict'; return (${line})`,
                         )();
@@ -1152,7 +1198,6 @@ ${initialContent}
                     editor.scrollTop = editor.scrollHeight;
                 }
 
-                // New logic for calendar navigation with arrow keys
                 if (currentBufferId === CALENDAR_BUFFER_ID) {
                     if (e.key === "ArrowLeft") {
                         e.preventDefault();
@@ -1185,7 +1230,6 @@ ${initialContent}
                     }
                 }
 
-                // Tab indentation
                 if (e.key === "Tab") {
                     e.preventDefault();
                     const start = editor.selectionStart;
@@ -1195,7 +1239,6 @@ ${initialContent}
                     editor.selectionStart = editor.selectionEnd = start + 4;
                 }
 
-                // Auto-indented lists
                 if (
                     e.key === "Enter" &&
                     currentBufferId !== EXPANDER_BUFFER_ID
@@ -1210,7 +1253,6 @@ ${initialContent}
                         ];
 
                         if (line.trim() === marker.trim()) {
-                            // If empty list item, exit the list
                             const newText =
                                 text.substring(0, lineStart) +
                                 text.substring(cursorPosition);
@@ -1218,7 +1260,6 @@ ${initialContent}
                             editor.selectionStart = editor.selectionEnd =
                                 lineStart;
                         } else {
-                            // Continue the list
                             let newMarker = marker;
                             if (marker.match(/\d+\./)) {
                                 const number =
@@ -1244,7 +1285,6 @@ ${initialContent}
                     }
                 }
 
-                // Other keyboard shortcuts
                 if (e.ctrlKey || e.metaKey) {
                     switch (e.key) {
                         case "n":
@@ -1295,7 +1335,6 @@ ${initialContent}
                 }
             });
 
-            // Initialize the editor with one new, empty file on page load
             window.onload = () => {
                 console.log("Initializing editor...");
                 loadBuffers();
@@ -1307,15 +1346,13 @@ ${initialContent}
                     updateUI();
                 }
                 editor.focus();
-                // Set the initial highlight position
                 updateLineHighlight();
 
-                // Save buffers periodically to prevent data loss
                 setInterval(() => {
                     if (currentBufferId !== null) {
                         saveBuffers();
                     }
-                }, 30000); // Save every 30 seconds
+                }, 30000);
             };
         </script>
     </body>
