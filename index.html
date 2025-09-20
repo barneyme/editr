@@ -246,6 +246,12 @@
                 },
                 { text: "---" }, // Separator
                 {
+                    text: "Open URL",
+                    action: () => openURL(),
+                    shortcut: "Ctrl + U",
+                },
+                { text: "---" }, // Separator
+                {
                     text: "Calculator",
                     action: () => newCalculator(),
                     shortcut: "Ctrl + Shift + M",
@@ -288,11 +294,8 @@
 
                 menuActions.forEach((item) => {
                     // Check if the item should be hidden in the current buffer
-                    const isExpanderAction =
-                        item.text === "Import Expander" ||
-                        item.text === "Export Expander";
                     if (
-                        isExpanderAction &&
+                        (item.text === "Import" || item.text === "Export") &&
                         currentBufferId !== EXPANDER_BUFFER_ID
                     ) {
                         return; // Skip this item
@@ -756,6 +759,36 @@
             function selectAll() {
                 editor.select();
                 showMessage("All text selected.");
+            }
+
+            // --- URL opening function
+            function openURL() {
+                // Get the current line's text
+                const cursorPosition = editor.selectionStart;
+                const text = editor.value;
+                const lineStart =
+                    text.lastIndexOf("\n", cursorPosition - 1) + 1;
+                const lineEnd = text.indexOf("\n", cursorPosition);
+                const currentLine = text
+                    .substring(
+                        lineStart,
+                        lineEnd === -1 ? text.length : lineEnd,
+                    )
+                    .trim();
+
+                // Simple regex to check for a URL.
+                // It looks for a string starting with http://, https://, or www.
+                const urlRegex = /^(https?:\/\/|www\.)\S+$/i;
+                if (urlRegex.test(currentLine)) {
+                    // Prepend http:// if it's not already there for a clean open
+                    const url = currentLine.startsWith("http")
+                        ? currentLine
+                        : `http://${currentLine}`;
+                    window.open(url, "_blank");
+                    showMessage("Opening URL in new tab.");
+                } else {
+                    showMessage("No valid URL found on the current line.");
+                }
             }
 
             // --- Custom Buffer Logic: Calculator and Calendar ---
@@ -1239,52 +1272,6 @@ ${initialContent}
                     editor.selectionStart = editor.selectionEnd = start + 4;
                 }
 
-                if (
-                    e.key === "Enter" &&
-                    currentBufferId !== EXPANDER_BUFFER_ID
-                ) {
-                    const listMatch = line.match(/^(\s*)([*-]|\d+\.)\s/);
-
-                    if (listMatch) {
-                        e.preventDefault();
-                        const [indentation, marker] = [
-                            listMatch[1],
-                            listMatch[2],
-                        ];
-
-                        if (line.trim() === marker.trim()) {
-                            const newText =
-                                text.substring(0, lineStart) +
-                                text.substring(cursorPosition);
-                            editor.value = newText;
-                            editor.selectionStart = editor.selectionEnd =
-                                lineStart;
-                        } else {
-                            let newMarker = marker;
-                            if (marker.match(/\d+\./)) {
-                                const number =
-                                    parseInt(marker.replace(".", "")) + 1;
-                                newMarker = `${number}.`;
-                            }
-
-                            const newText =
-                                text.substring(0, cursorPosition) +
-                                "\n" +
-                                indentation +
-                                newMarker +
-                                " " +
-                                text.substring(cursorPosition);
-                            editor.value = newText;
-                            editor.selectionStart = editor.selectionEnd =
-                                cursorPosition +
-                                1 +
-                                indentation.length +
-                                newMarker.length +
-                                1;
-                        }
-                    }
-                }
-
                 if (e.ctrlKey || e.metaKey) {
                     switch (e.key) {
                         case "n":
@@ -1306,6 +1293,10 @@ ${initialContent}
                         case "p":
                             e.preventDefault();
                             togglePin();
+                            break;
+                        case "u":
+                            e.preventDefault();
+                            openURL();
                             break;
                         case "m":
                             if (e.shiftKey) {
