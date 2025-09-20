@@ -81,7 +81,7 @@
                 class="bg-gray-900 text-gray-400 text-xs px-3 py-1 flex items-center justify-between relative"
             >
                 <div class="flex items-center space-x-2">
-                    <span id="file-status">Untitled.txt</span>
+                    <span id="file-status">editr.txt</span>
                 </div>
 
                 <span
@@ -222,69 +222,82 @@
                     text: "New",
                     action: () => newFile(),
                     shortcut: "Ctrl + N",
+                    buffers: ["all"],
                 },
                 {
                     text: "Open",
                     action: () => openFile(),
                     shortcut: "Ctrl + O",
+                    buffers: ["all"],
                 },
                 {
                     text: "Save",
                     action: () => saveFile(),
                     shortcut: "Ctrl + S",
+                    buffers: ["all"],
                 },
                 {
                     text: "Close",
                     action: () => closeFile(),
                     shortcut: "Ctrl + W",
+                    buffers: ["all"],
                 },
-                { text: "---" }, // Separator
+                { text: "---", buffers: ["all"] }, // Separator
                 {
                     text: "Pin/Unpin",
                     action: () => togglePin(),
                     shortcut: "Ctrl + P",
+                    buffers: ["all"],
                 },
-                { text: "---" }, // Separator
+                { text: "---", buffers: ["all"] }, // Separator
                 {
                     text: "Open URL",
                     action: () => openURL(),
                     shortcut: "Ctrl + U",
+                    buffers: ["all"],
                 },
-                { text: "---" }, // Separator
+                { text: "---", buffers: ["all"] }, // Separator
                 {
                     text: "Calculator",
                     action: () => newCalculator(),
                     shortcut: "Ctrl + Shift + M",
+                    buffers: ["all"],
                 },
                 {
                     text: "Calendar",
                     action: () => newCalendar(),
                     shortcut: "Ctrl + Shift + C",
+                    buffers: ["all"],
                 },
-                { text: "---" }, // Separator
+                { text: "---", buffers: ["all"] }, // Separator
                 {
                     text: "Expander",
                     action: () => newExpanderBuffer(),
                     shortcut: "Ctrl + E",
+                    buffers: ["all"],
                 },
                 {
                     text: "Import",
                     action: () => importExpanderRules(),
+                    buffers: [EXPANDER_BUFFER_ID],
                 },
                 {
                     text: "Export",
                     action: () => exportExpanderRules(),
+                    buffers: [EXPANDER_BUFFER_ID],
                 },
-                { text: "---" }, // Separator
+                { text: "---", buffers: ["all"] }, // Separator
                 {
                     text: "Previous",
                     action: () => switchBuffer(-1),
                     shortcut: "Ctrl + ←",
+                    buffers: ["all"],
                 },
                 {
                     text: "Next",
                     action: () => switchBuffer(1),
                     shortcut: "Ctrl + →",
+                    buffers: ["all"],
                 },
             ];
 
@@ -293,11 +306,13 @@
                 menuList.innerHTML = "";
 
                 menuActions.forEach((item) => {
-                    // Check if the item should be hidden in the current buffer
-                    if (
-                        (item.text === "Import" || item.text === "Export") &&
-                        currentBufferId !== EXPANDER_BUFFER_ID
-                    ) {
+                    // Check if the item should be shown for the current buffer
+                    const showItem =
+                        item.buffers &&
+                        (item.buffers.includes("all") ||
+                            item.buffers.includes(currentBufferId));
+
+                    if (!showItem) {
                         return; // Skip this item
                     }
 
@@ -333,7 +348,8 @@
 
                         // Disable switching buttons if there's only one buffer
                         if (
-                            item.text.includes("Buffer") &&
+                            (item.text === "Previous" ||
+                                item.text === "Next") &&
                             bufferIds.length <= 1
                         ) {
                             listItem.classList.add(
@@ -485,7 +501,7 @@
                 const newId = `buffer-${Date.now()}`;
                 const newFileObject = {
                     id: newId,
-                    name: `Untitled-${bufferIds.length + 1}.txt`,
+                    name: `editr-${bufferIds.length + 1}.txt`,
                     content: "",
                     isPinned: false,
                     fileHandle: null, // New field to indicate if it's a local file
@@ -1005,7 +1021,55 @@ ${initialContent}
                 reader.onload = (event) => {
                     try {
                         const importedRules = JSON.parse(event.target.result);
+                        // Clear existing rules and add 'd' function before adding new ones
+                        expanderRules = {
+                            d: () => {
+                                const d = new Date();
+                                const yyyy = d.getFullYear();
+                                const mm = String(d.getMonth() + 1).padStart(
+                                    2,
+                                    "0",
+                                );
+                                const dd = String(d.getDate()).padStart(2, "0");
+                                return `${yyyy}${mm}${dd}`;
+                            },
+                        };
                         expanderRules = { ...expanderRules, ...importedRules };
+
+                        // Update the Expander Rules buffer with the new content
+                        const expanderBuffer = JSON.parse(
+                            localStorage.getItem(EXPANDER_BUFFER_ID),
+                        );
+                        if (expanderBuffer) {
+                            const newContent = JSON.stringify(
+                                importedRules,
+                                null,
+                                2,
+                            );
+                            expanderBuffer.content = `
+// Edit your text expansion rules here in JSON format.
+// Save this buffer to apply changes.
+// Example:
+// {
+//   "e": "you@email.com",
+//   "p": "(555) 555-5555"
+// }
+// Note: Add , to end of each expander line except last.
+// Note: 'd' reserved for YYYYMMDD.
+// -------------------------------------------------------------
+${newContent}
+`.trim();
+                            localStorage.setItem(
+                                EXPANDER_BUFFER_ID,
+                                JSON.stringify(expanderBuffer),
+                            );
+                            // Only update the editor if it's the current buffer
+                            if (currentBufferId === EXPANDER_BUFFER_ID) {
+                                editor.value = expanderBuffer.content;
+                                updateUI();
+                            }
+                        }
+
                         showMessage(
                             "Expander rules imported successfully from .txt file.",
                         );
