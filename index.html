@@ -1259,6 +1259,7 @@
                             </li>
                         </ul>
                     </div>
+
                     <div class="help-section">
                         <h3>Install</h3>
                         <ul>
@@ -1312,9 +1313,9 @@
                 const savePdfBtn = document.getElementById("menu-save-pdf");
                 const helpModal = document.getElementById("help-modal");
 
-                // --- ================================== ---
-                // --- SNO (Secure Note) INTEGRATION CODE ---
-                // --- ================================== ---
+                // --- ================================== --- //
+                // --- SNO (Secure Note) INTEGRATION CODE --- //
+                // --- ================================== --- //
 
                 let masterKey = null;
                 let notes = [];
@@ -1400,6 +1401,7 @@
                         keySize: 256 / 32,
                         iterations: 10000,
                     });
+
                     currentPasswordHash = sno_hashPassword(password);
                     const userVaults = sno_loadVaultsFromStorage();
 
@@ -1437,7 +1439,6 @@
 
                 function sno_saveSnoBuffer() {
                     if (!masterKey || !currentPasswordHash) return false;
-
                     const snoBuffer = buffers.find((b) => b.isSno);
                     if (!snoBuffer) return false;
 
@@ -1451,1824 +1452,981 @@
                             masterKey.toString(),
                         ).toString();
                         userVaults[currentPasswordHash] = encryptedNotes;
-                        return sno_saveVaultsToStorage(userVaults);
+                        sno_saveVaultsToStorage(userVaults);
+                        return true;
                     } catch (e) {
-                        console.error("Failed to save notes:", e);
+                        console.error("Encryption or storage error:", e);
+                        sno_showError(
+                            "Failed to save notes. Check browser storage.",
+                        );
                         return false;
                     }
                 }
 
-                function sno_encrypt(text) {
-                    if (!masterKey) return text;
-                    return CryptoJS.AES.encrypt(
-                        text,
-                        masterKey.toString(),
-                    ).toString();
-                }
-
-                function sno_decrypt(encryptedText) {
-                    if (!masterKey) return encryptedText;
-                    try {
-                        const bytes = CryptoJS.AES.decrypt(
-                            encryptedText,
-                            masterKey.toString(),
-                        );
-                        return (
-                            bytes.toString(CryptoJS.enc.Utf8) ||
-                            "[Decryption Error]"
-                        );
-                    } catch (e) {
-                        return "[Unable to decrypt]";
-                    }
-                }
-
-                function sno_formatNotesToText(notesArray) {
-                    if (!notesArray || notesArray.length === 0) {
-                        return `# My First Note\n---\nWelcome to your secure notes buffer.\n\n- Edit this note or create a new one below.\n- Separate notes with a line containing only three equal signs (===).\n- Closing this buffer will automatically encrypt and save your notes.\n===`;
-                    }
-
-                    return notesArray
-                        .map((note) => {
-                            const title = sno_decrypt(note.title);
-                            const content = sno_decrypt(note.content);
-                            return `# ${title}\n---\n${content}`;
-                        })
-                        .join("\n===\n");
+                function sno_formatNotesToText(notes) {
+                    return notes
+                        .map((note) => `\n---\n\n${note.content}`)
+                        .join("");
                 }
 
                 function sno_parseTextToNotes(text) {
-                    const newNotes = [];
-                    const noteChunks = text
-                        .split("\n===\n")
-                        .filter((chunk) => chunk.trim() !== "");
+                    if (!text || text.trim() === "") return [];
+                    return text
+                        .split(/\n---\n/)
+                        .map((content) => ({ content: content.trim() }))
+                        .filter((note) => note.content !== "");
+                }
 
-                    for (const chunk of noteChunks) {
-                        const parts = chunk.split("\n---\n");
-                        if (parts.length < 2) continue;
-
-                        let title = parts[0].trim();
-                        if (title.startsWith("# ")) {
-                            title = title.substring(2).trim();
-                        }
-
-                        const content = parts.slice(1).join("\n---\n").trim();
-                        const now = new Date().toISOString();
-
-                        if (title) {
-                            newNotes.push({
-                                id: Date.now().toString() + Math.random(), // Simple unique ID
-                                title: sno_encrypt(title),
-                                content: sno_encrypt(content),
-                                created: now,
-                                lastModified: now,
-                            });
-                        }
+                function sno_toggleLockScreen() {
+                    if (snoContainer.classList.contains("hidden")) {
+                        snoContainer.classList.remove("hidden");
+                        editContainer.style.display = "none";
+                    } else {
+                        snoContainer.classList.add("hidden");
+                        editContainer.style.display = "block";
                     }
-                    return newNotes;
                 }
 
-                function sno_lockVault() {
-                    sno_saveSnoBuffer();
-                    masterKey = null;
-                    notes = [];
-                    currentPasswordHash = null;
-                }
-
-                function sno_escapeHtml(text) {
-                    const div = document.createElement("div");
-                    div.textContent = text;
-                    return div.innerHTML;
-                }
-
-                // Attach SNO functions to window object so inline onclick handlers can find them
-                window.sno_unlockAndLoadBuffer = sno_unlockAndLoadBuffer;
-
-                // SNO Event Listeners
-                document
-                    .getElementById("masterPassword")
-                    .addEventListener("keypress", (e) => {
-                        if (e.key === "Enter") sno_unlockAndLoadBuffer();
-                    });
-
-                // --- ================= ---
-                // --- edit CORE CODE ---
-                // --- ================= ---
-
-                // --- VIEW STATE MANAGEMENT ---
-                let isMarkdownView = false;
-                let isCsvView = false;
-                const mdConverter = new showdown.Converter({
-                    tables: true,
-                    strikethrough: true,
-                    tasklists: true,
-                    emoji: true,
-                    ghCompatibleHeaderId: true,
-                });
-                let csvData = [];
-                let csvSortState = { columnIndex: -1, direction: "asc" };
-                let calendarUpdateInterval = null;
-
-                const getCurrentDateTimeString = () => {
-                    const now = new Date();
-                    const yyyy = now.getFullYear();
-                    const mm = String(now.getMonth() + 1).padStart(2, "0");
-                    const dd = String(now.getDate()).padStart(2, "0");
-                    const hh = String(now.getHours()).padStart(2, "0");
-                    const min = String(now.getMinutes()).padStart(2, "0");
-                    const ss = String(now.getSeconds()).padStart(2, "0");
-                    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
-                };
-
-                // --- HELPER FUNCTION for short IDs ---
-                const generateShortId = (length = 8) => {
-                    const chars =
-                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-                    let result = "";
-                    for (let i = 0; i < length; i++) {
-                        result += chars.charAt(
-                            Math.floor(Math.random() * chars.length),
-                        );
+                function sno_checkForExistingVaults() {
+                    const vaults = sno_loadVaultsFromStorage();
+                    const hasVaults = Object.keys(vaults).length > 0;
+                    if (hasVaults) {
+                        sno_toggleLockScreen();
+                    } else {
+                        editContainer.style.display = "block";
+                        snoContainer.classList.add("hidden");
                     }
-                    return result;
-                };
-
-                // --- SESSION MANAGEMENT ---
-                let sessionId = window.location.hash.substring(1);
-                if (!sessionId) {
-                    sessionId = generateShortId();
-                    history.replaceState(null, "", `#${sessionId}`);
                 }
-                const storageKey = `editTextSession-${sessionId}`;
 
-                // --- STATE MANAGEMENT ---
-                let buffers = [];
-                let activeBufferIndex = -1;
-                let fileHandles = new Map();
+                // --- ================================ --- //
+                // --- GENERAL APPLICATION CODE --- //
+                // --- ================================ --- //
 
-                let lastSearchTerm = "";
-                let searchResults = [];
-                let currentResultIndex = -1;
+                let buffers = [
+                    {
+                        content: "",
+                        fileName: "New Note.txt",
+                        isSno: false,
+                        originalContent: "",
+                        originalFileName: "New Note.txt",
+                    },
+                ];
+                let currentBufferIndex = 0;
+                let originalFileHandle = null;
 
-                const saveState = () => {
-                    const stateToSave = {
-                        buffers: buffers.filter((b) => !b.isSno), // Don't persist SNO buffer
-                        activeBufferIndex: activeBufferIndex,
-                    };
+                function updateStats() {
+                    const text = editor.value;
+                    const words = text.match(/\b\w+\b/g) || [];
+                    const lines = text.split(/\r*\n/);
+                    const currentLine =
+                        lines[
+                            editor.value
+                                .substr(0, editor.selectionStart)
+                                .split(/\r*\n/).length - 1
+                        ];
+                    const charCount = text.length;
+
+                    statsWords.textContent = `= ${words.length}`;
+                    statsChar.textContent = `→ ${charCount}`;
+                    statsLine.textContent = `↓ ${
+                        editor.value
+                            .substr(0, editor.selectionStart)
+                            .split(/\r*\n/).length
+                    }`;
+                }
+
+                function updateFileNameDisplay() {
+                    if (
+                        buffers[currentBufferIndex] &&
+                        buffers[currentBufferIndex].fileName
+                    ) {
+                        statsFileName.textContent =
+                            buffers[currentBufferIndex].fileName;
+                    } else {
+                        statsFileName.textContent = "";
+                    }
+                }
+
+                function saveState() {
                     localStorage.setItem(
-                        storageKey,
-                        JSON.stringify(stateToSave),
+                        "edit_app_buffers",
+                        JSON.stringify(buffers),
                     );
-                };
+                    localStorage.setItem(
+                        "edit_app_current_buffer_index",
+                        currentBufferIndex,
+                    );
+                }
 
-                const saveCurrentBufferState = () => {
-                    if (
-                        activeBufferIndex !== -1 &&
-                        buffers[activeBufferIndex]
-                    ) {
-                        const buffer = buffers[activeBufferIndex];
-                        // Don't save content for calendar buffer as it's dynamic
-                        if (!buffer.isCalendar) {
-                            buffer.content = editor.value;
+                function loadState() {
+                    const savedBuffers =
+                        localStorage.getItem("edit_app_buffers");
+                    const savedIndex = localStorage.getItem(
+                        "edit_app_current_buffer_index",
+                    );
+
+                    if (savedBuffers && savedIndex) {
+                        buffers = JSON.parse(savedBuffers);
+                        currentBufferIndex = parseInt(savedIndex, 10);
+                        if (buffers[currentBufferIndex]) {
+                            editor.value = buffers[currentBufferIndex].content;
+                            originalFileHandle =
+                                buffers[currentBufferIndex].originalFileHandle;
                         }
-                        buffer.selectionStart = editor.selectionStart;
-                        buffer.selectionEnd = editor.selectionEnd;
-                        if (!buffer.isSno) {
-                            saveState();
-                        }
+                    } else {
+                        buffers = [
+                            {
+                                content: "",
+                                fileName: "New Note.txt",
+                                isSno: false,
+                                originalContent: "",
+                            },
+                        ];
+                        currentBufferIndex = 0;
                     }
-                };
-
-                const renderActiveBuffer = () => {
-                    if (calendarUpdateInterval)
-                        clearInterval(calendarUpdateInterval);
-
-                    if (
-                        activeBufferIndex < 0 ||
-                        activeBufferIndex >= buffers.length
-                    ) {
-                        editor.value = "";
-                        document.title = "edit";
-                        statsFileName.textContent = "edit";
-                        updateStats();
-                        return;
-                    }
-                    const activeBuffer = buffers[activeBufferIndex];
-                    editor.value = activeBuffer.content;
-                    const displayName = activeBuffer.fileName
-                        ? activeBuffer.fileName
-                        : "edit";
-                    document.title = displayName;
-                    statsFileName.textContent = displayName;
-
-                    if (
-                        activeBuffer.selectionStart !== undefined &&
-                        activeBuffer.selectionEnd !== undefined
-                    ) {
-                        editor.focus();
-                        editor.setSelectionRange(
-                            activeBuffer.selectionStart,
-                            activeBuffer.selectionEnd,
-                        );
-                    }
+                    updateFileNameDisplay();
                     updateStats();
+                }
 
-                    if (activeBuffer.isCalendar) {
-                        calendarUpdateInterval = setInterval(() => {
-                            if (buffers[activeBufferIndex]?.isCalendar) {
-                                const firstLineEnd = editor.value.indexOf("\n");
-                                if (firstLineEnd !== -1) {
-                                    const newFirstLine = `Current date: ${getCurrentDateTimeString()}`;
-                                    const currentFirstLine =
-                                        editor.value.substring(0, firstLineEnd);
-                                    if (newFirstLine !== currentFirstLine) {
-                                        const selectionStart =
-                                            editor.selectionStart;
-                                        const selectionEnd =
-                                            editor.selectionEnd;
-                                        editor.value =
-                                            newFirstLine +
-                                            editor.value.substring(
-                                                firstLineEnd,
-                                            );
-                                        // Restore cursor only if it was not on the line being changed
-                                        if (selectionStart > firstLineEnd) {
-                                            editor.setSelectionRange(
-                                                selectionStart,
-                                                selectionEnd,
-                                            );
-                                        }
-                                    }
-                                }
-                            } else {
-                                clearInterval(calendarUpdateInterval);
-                                calendarUpdateInterval = null;
-                            }
-                        }, 1000);
-                    }
-                };
+                function saveCurrentBufferState() {
+                    buffers[currentBufferIndex].content = editor.value;
+                    buffers[currentBufferIndex].isDirty =
+                        buffers[currentBufferIndex].content !==
+                        buffers[currentBufferIndex].originalContent;
+                    saveState();
+                }
 
-                const createNewBuffer = (
-                    content = "",
-                    fileName = "New",
-                    fileHandle = null,
-                    options = {},
-                ) => {
-                    // Prevent multiple SNO buffers
-                    if (options.isSno) {
-                        const existingSnoIndex = buffers.findIndex(
-                            (b) => b.isSno,
-                        );
-                        if (existingSnoIndex !== -1) {
-                            activeBufferIndex = existingSnoIndex;
-                            renderActiveBuffer();
+                function saveCurrentFileAs() {
+                    const currentBuffer = buffers[currentBufferIndex];
+                    if (!currentBuffer) return;
+
+                    const blob = new Blob([currentBuffer.content], {
+                        type: "text/plain;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = currentBuffer.fileName;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+
+                async function saveFileToFileSystem() {
+                    try {
+                        const currentBuffer = buffers[currentBufferIndex];
+                        if (!currentBuffer) return;
+
+                        if (currentBuffer.originalFileHandle) {
+                            const writable =
+                                await currentBuffer.originalFileHandle.createWritable();
+                            await writable.write(currentBuffer.content);
+                            await writable.close();
+                            currentBuffer.isDirty = false;
+                        } else {
+                            const handle = await showSaveFilePicker({
+                                suggestedName: currentBuffer.fileName,
+                                types: [
+                                    {
+                                        description: "Text Files",
+                                        accept: {
+                                            "text/plain": [
+                                                ".txt",
+                                                ".md",
+                                                ".csv",
+                                            ],
+                                        },
+                                    },
+                                ],
+                            });
+                            const writable = await handle.createWritable();
+                            await writable.write(currentBuffer.content);
+                            await writable.close();
+                            currentBuffer.originalFileHandle = handle;
+                            currentBuffer.isDirty = false;
+                        }
+                    } catch (err) {
+                        console.error("Save file error:", err);
+                        if (err.name === "AbortError") {
+                            // User cancelled the save operation
                             return;
                         }
+                        alert(
+                            "Could not save file. Please try 'Save As' instead.",
+                        );
                     }
+                }
 
+                function loadFileFromSystem() {
+                    const input = document.createElement("input");
+                    input.type = "file";
+                    input.onchange = (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+
+                        const reader = new FileReader();
+                        reader.onload = (re) => {
+                            createNewBuffer(re.target.result, file.name);
+                        };
+                        reader.readAsText(file);
+                    };
+                    input.click();
+                }
+
+                function createNewBuffer(
+                    content = "",
+                    fileName = "New Note.txt",
+                    originalFileHandle = null,
+                    options = {},
+                ) {
+                    saveCurrentBufferState();
                     const newBuffer = {
-                        id: generateShortId(),
-                        content,
-                        fileName,
-                        selectionStart: 0,
-                        selectionEnd: 0,
-                        ...options, // Adds properties like isCalculator, isCalendar, isSno
+                        content: content,
+                        fileName: fileName,
+                        originalContent: content,
+                        originalFileHandle: originalFileHandle,
+                        isSno: options.isSno || false,
                     };
                     buffers.push(newBuffer);
-                    if (fileHandle) {
-                        fileHandles.set(newBuffer.id, fileHandle);
-                    }
-                    activeBufferIndex = buffers.length - 1;
-                    renderActiveBuffer();
-                    if (!newBuffer.isSno) {
-                        saveState();
-                    }
-                };
+                    currentBufferIndex = buffers.length - 1;
+                    editor.value = newBuffer.content;
+                    updateFileNameDisplay();
+                    updateStats();
+                    saveState();
+                }
 
-                const loadState = () => {
-                    const savedStateJSON = localStorage.getItem(storageKey);
-                    if (savedStateJSON) {
-                        try {
-                            const savedState = JSON.parse(savedStateJSON);
-                            buffers = savedState.buffers || [];
-                            activeBufferIndex =
-                                savedState.activeBufferIndex !== undefined
-                                    ? savedState.activeBufferIndex
-                                    : -1;
-                            if (buffers.length === 0) {
-                                createNewBuffer();
-                            } else {
-                                if (activeBufferIndex >= buffers.length) {
-                                    activeBufferIndex = 0;
-                                }
-                                renderActiveBuffer();
-                            }
-                        } catch (e) {
-                            console.error("Failed to parse saved state:", e);
-                            createNewBuffer();
+                function switchBuffer(direction) {
+                    saveCurrentBufferState();
+                    currentBufferIndex += direction;
+                    if (currentBufferIndex < 0) {
+                        currentBufferIndex = buffers.length - 1;
+                    } else if (currentBufferIndex >= buffers.length) {
+                        currentBufferIndex = 0;
+                    }
+                    editor.value = buffers[currentBufferIndex].content;
+                    updateFileNameDisplay();
+                    updateStats();
+                }
+
+                function closeCurrentBuffer() {
+                    if (buffers.length > 1) {
+                        buffers.splice(currentBufferIndex, 1);
+                        if (currentBufferIndex >= buffers.length) {
+                            currentBufferIndex = buffers.length - 1;
                         }
-                    } else {
-                        createNewBuffer();
-                    }
-                };
-
-                const updateLineIndicator = (currentLineNumber) => {
-                    const editorStyles = window.getComputedStyle(editor);
-                    const paddingTop = parseFloat(editorStyles.paddingTop);
-                    const lineHeight = parseFloat(editorStyles.lineHeight);
-                    const scrollTop = editor.scrollTop;
-
-                    const topPosition =
-                        paddingTop +
-                        (currentLineNumber - 1) * lineHeight -
-                        scrollTop;
-
-                    lineIndicator.style.top = `${topPosition}px`;
-                };
-
-                editor.addEventListener("input", () => {
-                    if (activeBufferIndex !== -1) {
-                        buffers[activeBufferIndex].content = editor.value;
-                        saveCurrentBufferState();
+                        editor.value = buffers[currentBufferIndex].content;
+                        updateFileNameDisplay();
                         updateStats();
-
-                        if (isMarkdownView) {
-                            const markdownText = editor.value;
-                            let html = mdConverter.makeHtml(markdownText);
-                            if (markdownText.includes("[TOC]")) {
-                                const tocHtml = generateTocHtml(markdownText);
-                                html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
-                            }
-                            markdownPreview.innerHTML = html;
-                        }
-                    }
-                });
-
-                const updateStats = () => {
-                    const text = editor.value;
-                    const cursorPos = editor.selectionStart;
-                    const words =
-                        text.trim() === "" ? [] : text.trim().split(/\s+/);
-                    statsWords.textContent = `= ${words.length}`;
-                    const textUpToCursor = text.substring(0, cursorPos);
-                    const lines = textUpToCursor.split("\n");
-                    const currentLineNumber = lines.length;
-                    const currentCharNumber =
-                        lines[lines.length - 1].length + 1;
-                    statsLine.textContent = `↓ ${currentLineNumber}`;
-                    statsChar.textContent = `→ ${currentCharNumber}`;
-                    updateLineIndicator(currentLineNumber);
-                };
-                editor.addEventListener("keyup", () => {
-                    updateStats();
-                    saveCurrentBufferState();
-                });
-                editor.addEventListener("click", () => {
-                    updateStats();
-                    saveCurrentBufferState();
-                });
-                editor.addEventListener("scroll", updateStats);
-
-                const pairMap = {
-                    "(": ")",
-                    "[": "]",
-                    "{": "}",
-                    '"': '"',
-                    "'": "'",
-                    "`": "`",
-                };
-                const openChars = Object.keys(pairMap);
-
-                editor.addEventListener("keydown", (e) => {
-                    // --- CALENDAR NAVIGATION LOGIC ---
-                    if (
-                        activeBufferIndex !== -1 &&
-                        buffers[activeBufferIndex]?.isCalendar &&
-                        (e.key.toLowerCase() === "n" ||
-                            e.key.toLowerCase() === "p")
-                    ) {
-                        e.preventDefault();
-                        const buffer = buffers[activeBufferIndex];
-                        let { calendarYear: year, calendarMonth: month } =
-                            buffer;
-
-                        if (e.key.toLowerCase() === "n") {
-                            month++;
-                            if (month > 11) {
-                                month = 0;
-                                year++;
-                            }
-                        } else {
-                            // 'p' was pressed
-                            month--;
-                            if (month < 0) {
-                                month = 11;
-                                year--;
-                            }
-                        }
-
-                        // Update buffer state
-                        buffer.calendarYear = year;
-                        buffer.calendarMonth = month;
-                        buffer.content = generateCalendarText(year, month);
-                        const mm = String(month + 1).padStart(2, "0");
-                        buffer.fileName = `Calendar-${year}-${mm}.txt`;
-
-                        // Re-render editor with new content
-                        renderActiveBuffer();
-                        return; // Stop further keydown processing
-                    }
-                    // --- END CALENDAR NAVIGATION LOGIC ---
-
-                    if (e.key === "Tab") {
-                        e.preventDefault();
-                        document.execCommand("insertText", false, "\t");
-                        return;
-                    }
-                    if (e.key === "Enter") {
-                        // --- CALCULATOR LOGIC ---
-                        if (
-                            activeBufferIndex !== -1 &&
-                            buffers[activeBufferIndex]?.isCalculator
-                        ) {
-                            e.preventDefault();
-                            const cursorPos = editor.selectionStart;
-                            const textBeforeCursor = editor.value.substring(
-                                0,
-                                cursorPos,
-                            );
-                            const currentLineStart =
-                                textBeforeCursor.lastIndexOf("\n") + 1;
-                            let lineEnd = editor.value.indexOf("\n", cursorPos);
-                            if (lineEnd === -1) {
-                                lineEnd = editor.value.length;
-                            }
-                            const currentLine = editor.value
-                                .substring(currentLineStart, lineEnd)
-                                .trim();
-
-                            if (currentLine && !currentLine.includes("=")) {
-                                const sanitizedExpression = currentLine.replace(
-                                    /[^0-9+\-*/().\s]/g,
-                                    "",
-                                );
-
-                                if (sanitizedExpression) {
-                                    try {
-                                        const result = new Function(
-                                            "return " + sanitizedExpression,
-                                        )();
-                                        const resultText = ` = ${result}`;
-                                        editor.setSelectionRange(
-                                            lineEnd,
-                                            lineEnd,
-                                        );
-                                        document.execCommand(
-                                            "insertText",
-                                            false,
-                                            resultText,
-                                        );
-                                        document.execCommand(
-                                            "insertText",
-                                            false,
-                                            "\n",
-                                        );
-                                    } catch (err) {
-                                        const errorText = ` = Error`;
-                                        editor.setSelectionRange(
-                                            lineEnd,
-                                            lineEnd,
-                                        );
-                                        document.execCommand(
-                                            "insertText",
-                                            false,
-                                            errorText,
-                                        );
-                                        document.execCommand(
-                                            "insertText",
-                                            false,
-                                            "\n",
-                                        );
-                                    }
-                                } else {
-                                    document.execCommand(
-                                        "insertText",
-                                        false,
-                                        "\n",
-                                    );
-                                }
-                            } else {
-                                document.execCommand("insertText", false, "\n");
-                            }
-                            return; // Stop other Enter logic
-                        }
-                        // --- END CALCULATOR LOGIC ---
-
-                        const cursorPos = editor.selectionStart;
-                        const textBeforeCursor = editor.value.substring(
-                            0,
-                            cursorPos,
-                        );
-
-                        const lastWord = textBeforeCursor.split(/\s+/).pop();
-                        if (handleTextExpansion(lastWord, e)) return;
-
-                        const currentLineStart =
-                            textBeforeCursor.lastIndexOf("\n") + 1;
-                        let lineEnd = editor.value.indexOf("\n", cursorPos);
-                        if (lineEnd === -1) {
-                            lineEnd = editor.value.length;
-                        }
-                        const currentLine = editor.value.substring(
-                            currentLineStart,
-                            lineEnd,
-                        );
-
-                        const bulletListMatch =
-                            currentLine.match(/^(\s*[-*+]\s+)(.*)/);
-                        const numberedListMatch = currentLine.match(
-                            /^(\s*)(\d+)(\.\s+)(.*)/,
-                        );
-
-                        if (bulletListMatch || numberedListMatch) {
-                            e.preventDefault();
-                            const content = bulletListMatch
-                                ? bulletListMatch[2]
-                                : numberedListMatch[4];
-
-                            if (content.trim() === "") {
-                                editor.setSelectionRange(
-                                    currentLineStart,
-                                    lineEnd,
-                                );
-                                document.execCommand("insertText", false, "");
-                            } else {
-                                let nextMarker;
-                                if (bulletListMatch) {
-                                    nextMarker = bulletListMatch[1];
-                                } else {
-                                    const indent = numberedListMatch[1];
-                                    const num = parseInt(
-                                        numberedListMatch[2],
-                                        10,
-                                    );
-                                    const markerSuffix = numberedListMatch[3];
-                                    nextMarker = `${indent}${num + 1}${markerSuffix}`;
-                                }
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    "\n" + nextMarker,
-                                );
-                            }
-                        } else {
-                            e.preventDefault();
-                            const lineUpToCursor = editor.value.substring(
-                                currentLineStart,
-                                cursorPos,
-                            );
-                            const leadingWhitespaceMatch =
-                                lineUpToCursor.match(/^\s*/);
-                            const indent = leadingWhitespaceMatch
-                                ? leadingWhitespaceMatch[0]
-                                : "";
-                            document.execCommand(
-                                "insertText",
-                                false,
-                                "\n" + indent,
-                            );
-                        }
-                        return;
-                    }
-                    if (e.key === " ") {
-                        const cursorPos = editor.selectionStart;
-                        const textBeforeCursor = editor.value.substring(
-                            0,
-                            cursorPos,
-                        );
-                        const lastWord = textBeforeCursor.split(/\s+/).pop();
-                        if (handleTextExpansion(lastWord, e)) return;
-                    }
-                    if (openChars.includes(e.key)) {
-                        e.preventDefault();
-                        const start = editor.selectionStart,
-                            end = editor.selectionEnd;
-                        const selectedText = editor.value.substring(start, end);
-                        const textToInsert =
-                            e.key + selectedText + pairMap[e.key];
-                        document.execCommand("insertText", false, textToInsert);
-                        if (start === end) {
-                            editor.selectionStart = editor.selectionEnd =
-                                start + 1;
-                        } else {
-                            editor.selectionStart = start + 1;
-                            editor.selectionEnd = end + 1;
-                        }
-                    }
-                });
-
-                // --- VIEW TOGGLE LOGIC ---
-                const generateTocHtml = (markdownText) => {
-                    const tocLines = [];
-                    const headingRegex = /^(#{1,6})\s+(.*)/gm;
-                    let match;
-
-                    while ((match = headingRegex.exec(markdownText)) !== null) {
-                        const level = match[1].length;
-                        const text = match[2].trim();
-                        // Replicate Showdown's ID generation
-                        const id = text
-                            .toLowerCase()
-                            .replace(/[^\w\s-]/g, "") // Remove non-word chars
-                            .replace(/\s+/g, "-"); // Replace spaces with hyphens
-
-                        tocLines.push({ level, text, id });
-                    }
-
-                    if (tocLines.length === 0) {
-                        return "";
-                    }
-
-                    let html =
-                        '<div class="toc"><h3>Table of Contents</h3><ul>';
-                    tocLines.forEach((line) => {
-                        html += `<li style="margin-left: ${
-                            (line.level - 1) * 1.5
-                        }em;">
-                        <a href="#${line.id}" style="color: #ffb74d; text-decoration: none;">${line.text}</a>
-                     </li>`;
-                    });
-                    html += "</ul></div><hr>";
-
-                    return html;
-                };
-
-                const toggleMarkdownPreview = () => {
-                    hideMenu();
-                    isMarkdownView = !isMarkdownView;
-
-                    mdMenuItems.forEach((item) =>
-                        item.classList.toggle("hidden", !isMarkdownView),
-                    );
-
-                    if (isCsvView) {
-                        isCsvView = false;
-                        csvGrid.classList.add("hidden");
-                        csvViewBtn.classList.remove("active");
-                    }
-
-                    if (isMarkdownView) {
-                        const markdownText = editor.value;
-                        let html = mdConverter.makeHtml(markdownText);
-
-                        // Check if the user wants a ToC and replace the placeholder
-                        if (markdownText.includes("[TOC]")) {
-                            const tocHtml = generateTocHtml(markdownText);
-                            html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
-                        }
-
-                        markdownPreview.innerHTML = html;
-                        editContainer.classList.add("hidden");
-                        markdownPreview.classList.remove("hidden");
-                        mdViewBtn.classList.add("active");
                     } else {
-                        editContainer.classList.remove("hidden");
-                        markdownPreview.classList.add("hidden");
-                        mdViewBtn.classList.remove("active");
-                        editor.focus();
-                    }
-                };
-
-                const toggleCsvGrid = () => {
-                    hideMenu();
-                    isCsvView = !isCsvView;
-
-                    if (isMarkdownView) {
-                        isMarkdownView = false;
-                        markdownPreview.classList.add("hidden");
-                        mdViewBtn.classList.remove("active");
-                        mdMenuItems.forEach((item) =>
-                            item.classList.add("hidden"),
-                        );
-                    }
-
-                    if (isCsvView) {
-                        editContainer.classList.add("hidden");
-                        csvGrid.classList.remove("hidden");
-                        csvViewBtn.classList.add("active");
-                        parseCsvAndRenderGrid();
-                    } else {
-                        editContainer.classList.remove("hidden");
-                        csvGrid.classList.add("hidden");
-                        csvViewBtn.classList.remove("active");
-                        editor.focus();
-                    }
-                };
-
-                mdViewBtn.addEventListener("click", toggleMarkdownPreview);
-                csvViewBtn.addEventListener("click", toggleCsvGrid);
-
-                // --- CSV Grid Functions ---
-                const sortCsvData = (columnIndex) => {
-                    if (csvData.length < 2) return; // Nothing to sort
-
-                    if (csvSortState.columnIndex === columnIndex) {
-                        csvSortState.direction =
-                            csvSortState.direction === "asc" ? "desc" : "asc";
-                    } else {
-                        csvSortState.columnIndex = columnIndex;
-                        csvSortState.direction = "asc";
-                    }
-
-                    const header = csvData[0];
-                    const dataRows = csvData.slice(1);
-
-                    dataRows.sort((a, b) => {
-                        const valA = a[columnIndex] || "";
-                        const valB = b[columnIndex] || "";
-
-                        const numA = parseFloat(valA);
-                        const numB = parseFloat(valB);
-
-                        let compareResult;
-                        if (!isNaN(numA) && !isNaN(numB)) {
-                            compareResult = numA - numB;
-                        } else {
-                            compareResult = valA.localeCompare(
-                                valB,
-                                undefined,
-                                {
-                                    sensitivity: "base",
-                                },
-                            );
-                        }
-
-                        return csvSortState.direction === "asc"
-                            ? compareResult
-                            : -compareResult;
-                    });
-
-                    csvData = [header, ...dataRows];
-                    updateEditorFromCsv();
-                    renderCsvGrid();
-                };
-
-                const parseCsvAndRenderGrid = () => {
-                    const text = editor.value.trim();
-                    csvSortState = { columnIndex: -1, direction: "asc" }; // Reset sort on parse
-                    csvData = text.split("\n").map((line) => line.split(","));
-                    if (
-                        csvData.length === 1 &&
-                        csvData[0].length === 1 &&
-                        csvData[0][0] === ""
-                    ) {
-                        csvData = [
-                            ["Header1", "Header2"],
-                            ["data1", "data2"],
-                        ]; // Default data
-                    }
-                    renderCsvGrid();
-                };
-
-                const updateEditorFromCsv = () => {
-                    const newText = csvData
-                        .map((row) => row.join(","))
-                        .join("\n");
-                    editor.value = newText;
-                    if (activeBufferIndex !== -1) {
-                        buffers[activeBufferIndex].content = newText;
+                        // Last buffer, clear content instead of closing
+                        editor.value = "";
+                        buffers[0].content = "";
+                        buffers[0].isDirty = false;
+                        buffers[0].originalContent = "";
+                        buffers[0].isSno = false;
+                        updateFileNameDisplay();
+                        updateStats();
                     }
                     saveState();
-                };
+                }
 
-                const renderCsvGrid = () => {
-                    csvGrid.innerHTML = "";
-                    if (!csvData || csvData.length === 0) return;
-
-                    const tableContainer = document.createElement("div");
-                    tableContainer.id = "csv-grid-table-container";
-
-                    const table = document.createElement("table");
-
-                    const thead = document.createElement("thead");
-                    const headerRow = document.createElement("tr");
-                    csvData[0].forEach((header, index) => {
-                        const th = document.createElement("th");
-                        th.innerHTML = `
-                            <span contenteditable="true" data-col-index="${index}" class="csv-header-sortable" title="Click to sort">${sno_escapeHtml(header)}</span>
-                            <button class="csv-action-btn delete-col-btn" data-col-index="${index}" title="Delete Column">🗑️</button>
-                        `;
-                        headerRow.appendChild(th);
-                    });
-                    headerRow.appendChild(document.createElement("th"));
-                    thead.appendChild(headerRow);
-                    table.appendChild(thead);
-
-                    const tbody = document.createElement("tbody");
-                    for (let i = 1; i < csvData.length; i++) {
-                        const dataRow = document.createElement("tr");
-                        csvData[i].forEach((cell, j) => {
-                            const td = document.createElement("td");
-                            td.textContent = cell;
-                            td.contentEditable = "true";
-                            td.dataset.rowIndex = i;
-                            td.dataset.colIndex = j;
-                            dataRow.appendChild(td);
-                        });
-                        const actionTd = document.createElement("td");
-                        actionTd.innerHTML = `<button class="csv-action-btn delete-row-btn" data-row-index="${i}" title="Delete Row">🗑️</button>`;
-                        dataRow.appendChild(actionTd);
-                        tbody.appendChild(dataRow);
-                    }
-                    table.appendChild(tbody);
-                    tableContainer.appendChild(table);
-
-                    const controls = document.createElement("div");
-                    controls.id = "csv-controls";
-                    controls.innerHTML = `
-                        <button id="add-row-btn" class="btn btn-secondary">+ Add Row</button>
-                        <button id="add-col-btn" class="btn btn-secondary">+ Add Column</button>
-                    `;
-
-                    csvGrid.appendChild(tableContainer);
-                    csvGrid.appendChild(controls);
-                };
-
-                csvGrid.addEventListener("click", (e) => {
-                    if (e.target.classList.contains("csv-header-sortable")) {
-                        const colIndex = parseInt(
-                            e.target.dataset.colIndex,
-                            10,
-                        );
-                        if (!isNaN(colIndex)) {
-                            sortCsvData(colIndex);
-                        }
-                        return;
-                    }
-
-                    if (e.target.id === "add-row-btn") {
-                        const numCols = csvData[0] ? csvData[0].length : 1;
-                        csvData.push(new Array(numCols).fill(""));
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    } else if (e.target.id === "add-col-btn") {
-                        const newHeader = prompt(
-                            "Enter new column header:",
-                            "NewColumn",
-                        );
-                        if (newHeader) {
-                            csvData.forEach((row, i) =>
-                                row.push(i === 0 ? newHeader : ""),
-                            );
-                            updateEditorFromCsv();
-                            renderCsvGrid();
-                        }
-                    } else if (e.target.classList.contains("delete-row-btn")) {
-                        const rowIndex = parseInt(
-                            e.target.dataset.rowIndex,
-                            10,
-                        );
-                        csvData.splice(rowIndex, 1);
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    } else if (e.target.classList.contains("delete-col-btn")) {
-                        const colIndex = parseInt(
-                            e.target.dataset.colIndex,
-                            10,
-                        );
-                        csvData.forEach((row) => row.splice(colIndex, 1));
-                        updateEditorFromCsv();
-                        renderCsvGrid();
-                    }
-                });
-
-                csvGrid.addEventListener(
-                    "blur",
-                    (e) => {
-                        if (e.target.contentEditable === "true") {
-                            if (e.target.tagName === "TD") {
-                                const rowIndex = parseInt(
-                                    e.target.dataset.rowIndex,
-                                    10,
-                                );
-                                const colIndex = parseInt(
-                                    e.target.dataset.colIndex,
-                                    10,
-                                );
-                                csvData[rowIndex][colIndex] =
-                                    e.target.textContent;
-                            } else if (e.target.tagName === "SPAN") {
-                                const colIndex = parseInt(
-                                    e.target.dataset.colIndex,
-                                    10,
-                                );
-                                csvData[0][colIndex] = e.target.textContent;
-                            }
-                            updateEditorFromCsv();
-                        }
-                    },
-                    true,
-                );
-
-                csvGrid.addEventListener("keydown", (e) => {
-                    if (e.target.contentEditable !== "true") return;
-
-                    if (
-                        ![
-                            "ArrowUp",
-                            "ArrowDown",
-                            "ArrowLeft",
-                            "ArrowRight",
-                        ].includes(e.key)
-                    ) {
-                        return;
-                    }
-
-                    e.preventDefault();
-
-                    const isHeader = e.target.tagName === "SPAN";
-                    let currentRow, currentCol;
-
-                    if (isHeader) {
-                        currentRow = 0;
-                        currentCol = parseInt(e.target.dataset.colIndex, 10);
-                    } else {
-                        currentRow = parseInt(e.target.dataset.rowIndex, 10);
-                        currentCol = parseInt(e.target.dataset.colIndex, 10);
-                    }
-
-                    let nextRow = currentRow;
-                    let nextCol = currentCol;
-
-                    switch (e.key) {
-                        case "ArrowUp":
-                            nextRow--;
-                            break;
-                        case "ArrowDown":
-                            nextRow++;
-                            break;
-                        case "ArrowLeft":
-                            nextCol--;
-                            break;
-                        case "ArrowRight":
-                            nextCol++;
-                            break;
-                    }
-
-                    let nextEl = null;
-                    if (nextRow === 0) {
-                        nextEl = csvGrid.querySelector(
-                            `th span[data-col-index="${nextCol}"]`,
-                        );
-                    } else {
-                        nextEl = csvGrid.querySelector(
-                            `td[data-row-index="${nextRow}"][data-col-index="${nextCol}"]`,
-                        );
-                    }
-
-                    if (nextEl) {
-                        nextEl.focus();
-                        const selection = window.getSelection();
-                        const range = document.createRange();
-                        range.selectNodeContents(nextEl);
-                        selection.removeAllRanges();
-                        selection.addRange(range);
-                    }
-                });
-
-                const showMenu = (x, y) => {
+                function openContextMenu(x, y) {
                     contextMenu.style.left = `${x}px`;
                     contextMenu.style.top = `${y}px`;
                     contextMenu.style.display = "block";
-                };
-                const hideMenu = () => (contextMenu.style.display = "none");
-                document.addEventListener("contextmenu", (e) => {
-                    e.preventDefault();
-                    showMenu(e.clientX, e.clientY);
+                }
+
+                function hideContextMenu() {
+                    contextMenu.style.display = "none";
+                }
+
+                function toggleView(view) {
+                    const currentView = editor.dataset.view;
+                    if (currentView === view) {
+                        showEditorView();
+                    } else {
+                        showView(view);
+                    }
+                }
+
+                function showView(view) {
+                    if (view === "md") {
+                        showMarkdownPreview();
+                    } else if (view === "csv") {
+                        showCsvGrid();
+                    }
+                }
+
+                function showEditorView() {
+                    markdownPreview.classList.add("hidden");
+                    csvGrid.classList.add("hidden");
+                    editContainer.classList.remove("hidden");
+                    editor.dataset.view = "editor";
+                    mdViewBtn.classList.remove("active");
+                    csvViewBtn.classList.remove("active");
+                    mdMenuItems.forEach((item) => item.classList.add("hidden"));
+                }
+
+                // --- Markdown preview functions ---
+                let markdownConverter = null;
+                function showMarkdownPreview() {
+                    if (!markdownConverter) {
+                        markdownConverter = new showdown.Converter({
+                            tables: true,
+                            tasklists: true,
+                            ghCodeBlocks: true,
+                        });
+                    }
+                    const text = editor.value;
+                    const html = markdownConverter.makeHtml(text);
+                    markdownPreview.innerHTML = html;
+                    markdownPreview.classList.remove("hidden");
+                    editContainer.classList.add("hidden");
+                    csvGrid.classList.add("hidden");
+                    editor.dataset.view = "md";
+                    mdViewBtn.classList.add("active");
+                    csvViewBtn.classList.remove("active");
+                    mdMenuItems.forEach((item) =>
+                        item.classList.remove("hidden"),
+                    );
+                    renderCheckboxes();
+                    renderTableOfContents();
+                }
+
+                function renderCheckboxes() {
+                    markdownPreview
+                        .querySelectorAll('input[type="checkbox"]')
+                        .forEach((checkbox) => {
+                            checkbox.disabled = false;
+                            checkbox.addEventListener("change", (event) => {
+                                const checked = event.target.checked;
+                                const listItem = event.target.closest("li");
+                                if (listItem) {
+                                    const lines = editor.value.split("\n");
+                                    const startLine = getLineNumber(listItem);
+                                    if (
+                                        startLine >= 0 &&
+                                        startLine < lines.length
+                                    ) {
+                                        let line = lines[startLine];
+                                        const checkboxText = checked
+                                            ? "- [x]"
+                                            : "- [ ]";
+                                        lines[startLine] = line.replace(
+                                            /- \[[ x]\]/,
+                                            checkboxText,
+                                        );
+                                        editor.value = lines.join("\n");
+                                        saveCurrentBufferState();
+                                        showMarkdownPreview();
+                                    }
+                                }
+                            });
+                        });
+                }
+
+                function getLineNumber(element) {
+                    let line = 0;
+                    let node = element;
+                    while (node.previousElementSibling) {
+                        node = node.previousElementSibling;
+                        if (node.tagName === "LI") {
+                            line++;
+                        }
+                    }
+                    const parent = element.parentNode;
+                    const markdownText = editor.value;
+                    const markdownLines = markdownText.split("\n");
+                    let foundList = false;
+                    for (let i = 0; i < markdownLines.length; i++) {
+                        if (
+                            markdownLines[i].startsWith("-") ||
+                            markdownLines[i].startsWith("*") ||
+                            markdownLines[i].match(/^\d+\./)
+                        ) {
+                            foundList = true;
+                            if (line === 0) {
+                                return i;
+                            }
+                            line--;
+                        } else if (foundList) {
+                            // End of list
+                            break;
+                        }
+                    }
+                    return -1;
+                }
+
+                function renderTableOfContents() {
+                    const tocElement = markdownPreview.querySelector(".toc");
+                    if (tocElement) {
+                        tocElement.innerHTML =
+                            "<h3>Table of Contents</h3><ul></ul>";
+                        const tocList = tocElement.querySelector("ul");
+                        let headings =
+                            markdownPreview.querySelectorAll("h1, h2, h3, h4");
+                        let headingIndex = 0;
+                        headings.forEach((heading) => {
+                            const headingId = `heading-${headingIndex++}`;
+                            heading.id = headingId;
+                            const li = document.createElement("li");
+                            const a = document.createElement("a");
+                            a.href = `#${headingId}`;
+                            a.textContent = heading.textContent;
+                            a.style.marginLeft = `${(heading.tagName[1] - 1) * 15}px`;
+                            li.appendChild(a);
+                            tocList.appendChild(li);
+                        });
+                    }
+                }
+
+                function saveAsHtml() {
+                    const text = editor.value;
+                    const html = markdownConverter.makeHtml(text);
+                    const fullHtml = `<!DOCTYPE html><html><head><title>${
+                        buffers[currentBufferIndex].fileName
+                    }</title><style>${
+                        document.querySelector("style[media='print']")
+                            .textContent
+                    }</style><style>${
+                        document.querySelector("style:not([media])").textContent
+                    }</style></head><body><div id="markdown-preview">${html}</div></body></html>`;
+                    const blob = new Blob([fullHtml], {
+                        type: "text/html;charset=utf-8",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download =
+                        buffers[currentBufferIndex].fileName.replace(
+                            /\.[^/.]+$/,
+                            "",
+                        ) + ".html";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }
+
+                function saveAsPdf() {
+                    showMarkdownPreview();
+                    window.print();
+                    showEditorView();
+                }
+
+                // --- CSV Grid Functions ---
+                function showCsvGrid() {
+                    const text = editor.value;
+                    const lines = text
+                        .split("\n")
+                        .map((line) => line.split(","));
+                    const tableHtml = `
+                    <div id="csv-grid-table-container">
+                        <table>
+                            <thead>
+                                <tr id="csv-header-row">
+                                    <th></th>
+                                    ${lines[0].map((header, i) => `<th><span class="csv-header-sortable" data-col="${i}">${header}</span><button class="csv-action-btn delete-col-btn" data-col="${i}">✕</button></th>`).join("")}
+                                    <th><button class="csv-action-btn add-col-btn">╋</button></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${lines
+                                    .slice(1)
+                                    .map(
+                                        (row, rowIndex) => `
+                                    <tr data-row="${rowIndex}">
+                                        <td><button class="csv-action-btn delete-row-btn" data-row="${rowIndex}">✕</button></td>
+                                        ${row.map((cell, colIndex) => `<td contenteditable="true" data-row="${rowIndex}" data-col="${colIndex}">${cell}</td>`).join("")}
+                                    </tr>
+                                `,
+                                    )
+                                    .join("")}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="csv-controls">
+                        <button class="btn add-row-btn">Add Row</button>
+                    </div>
+                    `;
+                    csvGrid.innerHTML = tableHtml;
+                    csvGrid.classList.remove("hidden");
+                    editContainer.classList.add("hidden");
+                    markdownPreview.classList.add("hidden");
+                    editor.dataset.view = "csv";
+                    mdViewBtn.classList.remove("active");
+                    csvViewBtn.classList.add("active");
+                    mdMenuItems.forEach((item) => item.classList.add("hidden"));
+                    setupCsvEvents();
+                }
+
+                function updateTextFromCsv() {
+                    const table = csvGrid.querySelector("table");
+                    if (!table) return;
+
+                    let newText = "";
+                    const headers = Array.from(
+                        table.querySelectorAll("th span"),
+                    ).map((th) => th.textContent.trim());
+                    newText += headers.join(",") + "\n";
+
+                    const rows = table.querySelectorAll("tbody tr");
+                    rows.forEach((row) => {
+                        const cells = Array.from(row.querySelectorAll("td"));
+                        const rowData = cells.map((cell) =>
+                            cell.textContent.trim(),
+                        );
+                        newText += rowData.join(",") + "\n";
+                    });
+
+                    editor.value = newText.trim();
+                    saveCurrentBufferState();
+                }
+
+                function setupCsvEvents() {
+                    csvGrid.addEventListener("input", (e) => {
+                        if (
+                            e.target.tagName === "TD" ||
+                            e.target.tagName === "SPAN"
+                        ) {
+                            updateTextFromCsv();
+                        }
+                    });
+
+                    csvGrid.addEventListener("click", (e) => {
+                        if (e.target.classList.contains("add-row-btn")) {
+                            const tbody = csvGrid.querySelector("tbody");
+                            const newRow = document.createElement("tr");
+                            const cols = tbody.querySelector("tr")
+                                ? tbody.querySelector("tr").children.length - 1
+                                : 1;
+                            newRow.innerHTML = `<td><button class="csv-action-btn delete-row-btn">✕</button></td>${Array.from(
+                                { length: cols },
+                            )
+                                .map(
+                                    (_, i) =>
+                                        `<td contenteditable="true"></td>`,
+                                )
+                                .join("")}`;
+                            tbody.appendChild(newRow);
+                            updateTextFromCsv();
+                        } else if (
+                            e.target.classList.contains("delete-row-btn")
+                        ) {
+                            const row = e.target.closest("tr");
+                            row.remove();
+                            updateTextFromCsv();
+                        } else if (e.target.classList.contains("add-col-btn")) {
+                            const headerRow =
+                                csvGrid.querySelector("#csv-header-row");
+                            const lastHeaderCell = headerRow.lastElementChild;
+                            const newHeader = document.createElement("th");
+                            newHeader.innerHTML = `<span contenteditable="true">New Col</span><button class="csv-action-btn delete-col-btn">✕</button>`;
+                            headerRow.insertBefore(newHeader, lastHeaderCell);
+
+                            const rows = csvGrid.querySelectorAll("tbody tr");
+                            rows.forEach((row) => {
+                                const newCell = document.createElement("td");
+                                newCell.contentEditable = true;
+                                row.appendChild(newCell);
+                            });
+                            updateTextFromCsv();
+                        } else if (
+                            e.target.classList.contains("delete-col-btn")
+                        ) {
+                            const colIndex =
+                                Array.from(
+                                    e.target.parentNode.parentNode.children,
+                                ).indexOf(e.target.parentNode) - 1;
+                            const headerCells = csvGrid.querySelectorAll("th");
+                            if (headerCells[colIndex + 1]) {
+                                headerCells[colIndex + 1].remove();
+                            }
+                            const rows = csvGrid.querySelectorAll("tbody tr");
+                            rows.forEach((row) => {
+                                if (row.children[colIndex + 1]) {
+                                    row.children[colIndex + 1].remove();
+                                }
+                            });
+                            updateTextFromCsv();
+                        }
+                    });
+                }
+
+                // --- Find bar functions ---
+                let findIndex = -1;
+                let findMatches = [];
+                let findText = "";
+
+                function showFindBar() {
+                    findBar.style.display = "flex";
+                    findInput.focus();
+                }
+
+                function hideFindBar() {
+                    findBar.style.display = "none";
+                    findInput.value = "";
+                    editor.setSelectionRange(0, 0);
+                    findIndex = -1;
+                    findMatches = [];
+                    findText = "";
+                }
+
+                function findNextMatch(direction) {
+                    const text = editor.value;
+                    const query = findInput.value;
+                    if (query === "") return;
+
+                    if (query !== findText) {
+                        findText = query;
+                        findMatches = [];
+                        let lastIndex = text.indexOf(query, 0);
+                        while (lastIndex !== -1) {
+                            findMatches.push(lastIndex);
+                            lastIndex = text.indexOf(query, lastIndex + 1);
+                        }
+                        findIndex = -1;
+                    }
+
+                    if (findMatches.length === 0) return;
+
+                    findIndex += direction;
+                    if (findIndex < 0) {
+                        findIndex = findMatches.length - 1;
+                    } else if (findIndex >= findMatches.length) {
+                        findIndex = 0;
+                    }
+
+                    const matchStart = findMatches[findIndex];
+                    const matchEnd = matchStart + query.length;
+                    editor.focus();
+                    editor.setSelectionRange(matchStart, matchEnd);
+                }
+
+                // --- Text Expander functions ---
+                let textExpansions = {};
+                const TEXT_EXPANSION_STORAGE_KEY = "edit_app_text_expansions";
+
+                function loadTextExpansions() {
+                    try {
+                        const stored = localStorage.getItem(
+                            TEXT_EXPANSION_STORAGE_KEY,
+                        );
+                        if (stored) {
+                            textExpansions = JSON.parse(stored);
+                        }
+                    } catch (e) {
+                        console.error("Error loading text expansions:", e);
+                    }
+                }
+
+                function saveTextExpansions() {
+                    try {
+                        localStorage.setItem(
+                            TEXT_EXPANSION_STORAGE_KEY,
+                            JSON.stringify(textExpansions),
+                        );
+                    } catch (e) {
+                        console.error("Error saving text expansions:", e);
+                    }
+                }
+
+                function applyTextExpansion(trigger, text) {
+                    if (textExpansions[trigger]) {
+                        const expansion = textExpansions[trigger];
+                        const start =
+                            editor.selectionStart - trigger.length - 1;
+                        const end = editor.selectionEnd;
+                        const newValue =
+                            editor.value.substring(0, start) +
+                            expansion +
+                            editor.value.substring(end);
+                        editor.value = newValue;
+                        const newCursorPos = start + expansion.length;
+                        editor.setSelectionRange(newCursorPos, newCursorPos);
+                        updateStats();
+                        return true;
+                    }
+                    return false;
+                }
+
+                function getFormattedDate(format) {
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = now.getMonth() + 1;
+                    const day = now.getDate();
+                    const shortYear = year.toString().slice(-2);
+                    const monthName = now.toLocaleString("default", {
+                        month: "long",
+                    });
+                    const shortMonthName = now.toLocaleString("default", {
+                        month: "short",
+                    });
+
+                    return format
+                        .replace(/YYYY/g, year)
+                        .replace(/YY/g, shortYear)
+                        .replace(/MMM/g, shortMonthName)
+                        .replace(/MM/g, String(month).padStart(2, "0"))
+                        .replace(/DD/g, String(day).padStart(2, "0"));
+                }
+
+                // --- Event Listeners and Handlers ---
+                editor.addEventListener("input", (e) => {
+                    const cursorPosition = editor.selectionStart;
+                    const textBeforeCursor = editor.value.substring(
+                        0,
+                        cursorPosition,
+                    );
+
+                    // Check for text expansions
+                    const lastSpace = textBeforeCursor.lastIndexOf(" ");
+                    const lastEnter = textBeforeCursor.lastIndexOf("\n");
+                    const startOfWord = Math.max(lastSpace, lastEnter) + 1;
+                    const lastWord = textBeforeCursor
+                        .substring(startOfWord)
+                        .trim();
+
+                    if (lastWord.startsWith(".") && lastWord.length > 1) {
+                        if (e.inputType === "insertText" && e.data === " ") {
+                            // Trim the space added by the expansion
+                            editor.value =
+                                editor.value.substring(0, cursorPosition - 1) +
+                                editor.value.substring(cursorPosition);
+                            editor.setSelectionRange(
+                                cursorPosition - 1,
+                                cursorPosition - 1,
+                            );
+
+                            if (
+                                applyTextExpansion(
+                                    lastWord.trim(),
+                                    textBeforeCursor,
+                                )
+                            ) {
+                                return;
+                            }
+                        } else if (e.inputType === "insertLineBreak") {
+                            editor.value =
+                                editor.value.substring(0, cursorPosition - 1) +
+                                editor.value.substring(cursorPosition);
+                            editor.setSelectionRange(
+                                cursorPosition - 1,
+                                cursorPosition - 1,
+                            );
+
+                            if (
+                                applyTextExpansion(
+                                    lastWord.trim(),
+                                    textBeforeCursor,
+                                )
+                            ) {
+                                return;
+                            }
+                        }
+                    }
+
+                    // Auto-indent for lists
+                    if (e.inputType === "insertLineBreak") {
+                        const lines = editor.value
+                            .substring(0, editor.selectionStart)
+                            .split("\n");
+                        const currentLine = lines[lines.length - 2];
+                        const match = currentLine.match(/^\s*([-*]|\d+\.)\s/);
+
+                        if (match) {
+                            const prefix = match[0];
+                            const isNumberedList = prefix.match(/^\s*\d+\.\s/);
+                            let newPrefix = prefix.replace(/\s+$/, "");
+
+                            if (isNumberedList) {
+                                const number = parseInt(
+                                    newPrefix.match(/\d+/)[0],
+                                    10,
+                                );
+                                newPrefix = newPrefix.replace(
+                                    /\d+/,
+                                    number + 1,
+                                );
+                            }
+
+                            if (currentLine.trim() === prefix.trim()) {
+                                // Double enter, exit list
+                                editor.value =
+                                    editor.value.substring(
+                                        0,
+                                        cursorPosition - prefix.length - 1,
+                                    ) + editor.value.substring(cursorPosition);
+                                editor.setSelectionRange(
+                                    cursorPosition - prefix.length - 1,
+                                    cursorPosition - prefix.length - 1,
+                                );
+                            } else {
+                                editor.value =
+                                    editor.value.substring(
+                                        0,
+                                        editor.selectionStart,
+                                    ) +
+                                    " ".repeat(prefix.length) +
+                                    editor.value.substring(
+                                        editor.selectionStart,
+                                    );
+                                editor.setSelectionRange(
+                                    cursorPosition + prefix.length,
+                                    cursorPosition + prefix.length,
+                                );
+                            }
+                        }
+                    }
+
+                    updateStats();
                 });
+
+                // --- Line indicator update ---
+                editor.addEventListener("scroll", () => {
+                    const scrollRatio =
+                        editor.scrollTop /
+                        (editor.scrollHeight - editor.clientHeight);
+                    const totalHeight =
+                        editor.clientHeight - lineIndicator.clientHeight;
+                    lineIndicator.style.top = `${2 + scrollRatio * totalHeight}px`;
+                });
+
+                editor.addEventListener("click", () => {
+                    hideContextMenu();
+                    updateStats();
+                });
+                editor.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    openContextMenu(e.clientX, e.clientY);
+                });
+
                 menuTrigger.addEventListener("click", (e) => {
                     e.stopPropagation();
                     const rect = menuTrigger.getBoundingClientRect();
-                    contextMenu.style.visibility = "hidden";
-                    contextMenu.style.display = "block";
-                    const menuWidth = contextMenu.offsetWidth;
-                    const x = rect.right - menuWidth;
-                    const y = rect.bottom + 4;
-                    contextMenu.style.left = `${x}px`;
-                    contextMenu.style.top = `${y}px`;
-                    contextMenu.style.visibility = "visible";
+                    openContextMenu(rect.left, rect.bottom + 8);
                 });
-                document.addEventListener("click", () => hideMenu());
 
-                const showFindBar = () => {
-                    hideMenu();
-                    findBar.style.display = "flex";
-                    findInput.focus();
-                    findInput.select();
-                };
-                const hideFindBar = () => {
-                    findBar.style.display = "none";
-                };
+                // Hide menu when clicking outside
+                document.addEventListener("click", (e) => {
+                    if (
+                        !contextMenu.contains(e.target) &&
+                        !menuTrigger.contains(e.target)
+                    ) {
+                        hideContextMenu();
+                    }
+                });
 
-                const selectResult = () => {
-                    if (currentResultIndex === -1 || searchResults.length === 0)
-                        return;
-                    const foundPos = searchResults[currentResultIndex];
-                    editor.focus();
-                    editor.setSelectionRange(
-                        foundPos,
-                        foundPos + lastSearchTerm.length,
-                    );
-                    const totalLines = editor.value.split("\n").length;
-                    const currentLine = editor.value
-                        .substring(0, foundPos)
-                        .split("\n").length;
-                    editor.scrollTop =
-                        (currentLine / totalLines) * editor.scrollHeight -
-                        editor.clientHeight / 2;
-                };
-
-                const findNextMatch = () => {
-                    const searchTerm = findInput.value;
-                    if (!searchTerm) return;
-
-                    if (searchTerm !== lastSearchTerm) {
-                        lastSearchTerm = searchTerm;
-                        searchResults = [];
-                        const text = editor.value;
-                        const regex = new RegExp(searchTerm, "gi");
-                        let match;
-                        while ((match = regex.exec(text)) !== null) {
-                            searchResults.push(match.index);
+                // --- Keyboard Shortcuts ---
+                document.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape") {
+                        if (findBar.style.display !== "none") {
+                            hideFindBar();
+                            e.preventDefault();
+                        } else if (!snoContainer.classList.contains("hidden")) {
+                            sno_toggleLockScreen();
+                            e.preventDefault();
                         }
-                        currentResultIndex = -1;
+                    }
+                    if (e.ctrlKey && e.key === "n") {
+                        createNewBuffer();
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "o") {
+                        loadFileFromSystem();
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "s") {
+                        saveFileToFileSystem();
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "w") {
+                        closeCurrentBuffer();
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "ArrowRight") {
+                        switchBuffer(1);
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "ArrowLeft") {
+                        switchBuffer(-1);
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "f") {
+                        showFindBar();
+                        e.preventDefault();
+                    }
+                    if (e.ctrlKey && e.key === "=") {
+                        sno_toggleLockScreen();
+                        e.preventDefault();
                     }
 
-                    if (searchResults.length === 0) return;
-                    currentResultIndex =
-                        (currentResultIndex + 1) % searchResults.length;
-                    selectResult();
-                };
-
-                const findPrevMatch = () => {
-                    if (!findInput.value) return;
-                    if (findInput.value !== lastSearchTerm) {
-                        findNextMatch();
-                        return;
+                    if (e.key === "Enter" && findInput.value !== "") {
+                        findNextMatch(e.shiftKey ? -1 : 1);
+                        e.preventDefault();
                     }
-                    if (searchResults.length === 0) return;
-                    currentResultIndex =
-                        (currentResultIndex - 1 + searchResults.length) %
-                        searchResults.length;
-                    selectResult();
-                };
+                });
 
+                // --- Find bar events ---
+                findInput.addEventListener("input", () => {
+                    findIndex = -1; // Reset search on input change
+                    findNextMatch(1);
+                });
+                findPrev.addEventListener("click", () => findNextMatch(-1));
+                findNext.addEventListener("click", () => findNextMatch(1));
+                findClose.addEventListener("click", hideFindBar);
+
+                // --- Menu item events ---
+                document
+                    .getElementById("menu-new")
+                    .addEventListener("click", () => createNewBuffer());
+                document
+                    .getElementById("menu-open")
+                    .addEventListener("click", loadFileFromSystem);
+                document
+                    .getElementById("menu-save")
+                    .addEventListener("click", saveFileToFileSystem);
+                document
+                    .getElementById("menu-save-as")
+                    .addEventListener("click", saveCurrentFileAs);
+                document
+                    .getElementById("menu-close-file")
+                    .addEventListener("click", closeCurrentBuffer);
+                document
+                    .getElementById("menu-next-file")
+                    .addEventListener("click", () => switchBuffer(1));
+                document
+                    .getElementById("menu-prev-file")
+                    .addEventListener("click", () => switchBuffer(-1));
                 document
                     .getElementById("menu-find")
                     .addEventListener("click", showFindBar);
-                findClose.addEventListener("click", hideFindBar);
-                findNext.addEventListener("click", findNextMatch);
-                findPrev.addEventListener("click", findPrevMatch);
+                document
+                    .getElementById("menu-sno")
+                    .addEventListener("click", sno_toggleLockScreen);
+                mdViewBtn.addEventListener("click", () => toggleView("md"));
+                csvViewBtn.addEventListener("click", () => toggleView("csv"));
+                saveHtmlBtn.addEventListener("click", saveAsHtml);
+                savePdfBtn.addEventListener("click", saveAsPdf);
 
-                findInput.addEventListener("keydown", (e) => {
-                    // Standard find logic
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        e.shiftKey ? findPrevMatch() : findNextMatch();
-                    }
-                    if (e.key === "Escape") {
-                        hideFindBar();
-                    }
-                });
-
-                const newFile = () => {
-                    hideMenu();
-                    window.open(
-                        window.location.origin + window.location.pathname,
-                        "_blank",
-                    );
-                };
-
-                const openFile = async () => {
-                    hideMenu();
-                    try {
-                        const [fileHandle] = await window.showOpenFilePicker({
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: {
-                                        "text/plain": [
-                                            ".txt",
-                                            ".md",
-                                            ".js",
-                                            ".html",
-                                            ".css",
-                                            ".json",
-                                            ".xml",
-                                            ".csv",
-                                        ],
-                                    },
-                                },
-                            ],
-                        });
-                        const file = await fileHandle.getFile();
-                        const content = await file.text();
-                        createNewBuffer(content, file.name, fileHandle);
-                    } catch (err) {
-                        if (err.name !== "AbortError")
-                            console.error("Error opening file:", err);
-                    }
-                };
-
-                const saveFile = async () => {
-                    hideMenu();
-                    if (activeBufferIndex === -1) return;
-                    const activeBuffer = buffers[activeBufferIndex];
-                    const fileHandle = fileHandles.get(activeBuffer.id);
-
-                    if (fileHandle) {
-                        try {
-                            const writable = await fileHandle.createWritable();
-                            await writable.write(activeBuffer.content);
-                            await writable.close();
-                        } catch (err) {
-                            console.error("Error saving file:", err);
-                        }
-                    } else {
-                        saveFileAs();
-                    }
-                };
-
-                const saveFileAs = async (suggestedName = null) => {
-                    hideMenu();
-                    if (activeBufferIndex === -1) return;
-                    const activeBuffer = buffers[activeBufferIndex];
-
-                    if (activeBuffer.isSno) {
-                        alert(
-                            "Secure notes can only be saved to the encrypted local vault, not to a file.",
-                        );
-                        return;
-                    }
-
-                    try {
-                        const options = {
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                            ],
-                        };
-                        if (suggestedName) {
-                            options.suggestedName = suggestedName;
-                        }
-                        const newFileHandle =
-                            await window.showSaveFilePicker(options);
-                        fileHandles.set(activeBuffer.id, newFileHandle);
-                        activeBuffer.fileName = newFileHandle.name;
-                        const writable = await newFileHandle.createWritable();
-                        await writable.write(activeBuffer.content);
-                        await writable.close();
-                        renderActiveBuffer();
-                        saveState();
-                    } catch (err) {
-                        if (err.name !== "AbortError")
-                            console.error("Error saving file as:", err);
-                    }
-                };
-
-                const saveAsHtml = () => {
-                    hideMenu();
-                    if (!isMarkdownView || activeBufferIndex === -1) return;
-
-                    const htmlContent = markdownPreview.innerHTML;
-                    const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Document</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;}img{max-width:100%;height:auto;}pre{white-space:pre-wrap;word-wrap:break-word;}</style></head><body>${htmlContent}</body></html>`;
-
-                    const blob = new Blob([fullHtml], { type: "text/html" });
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement("a");
-                    const activeBuffer = buffers[activeBufferIndex];
-                    const baseName = activeBuffer.fileName.includes(".")
-                        ? activeBuffer.fileName
-                              .split(".")
-                              .slice(0, -1)
-                              .join(".")
-                        : activeBuffer.fileName;
-                    a.download = `${baseName}.html`;
-                    a.href = url;
-                    a.click();
-                    URL.revokeObjectURL(url);
-                };
-
-                const saveAsPdf = () => {
-                    hideMenu();
-                    if (!isMarkdownView) return;
-                    window.print();
-                };
-
-                const closeFile = () => {
-                    hideMenu();
-                    if (buffers.length <= 0 || activeBufferIndex < 0) return;
-
-                    const bufferToClose = buffers[activeBufferIndex];
-                    if (bufferToClose.isSno) {
-                        sno_lockVault();
-                    }
-
-                    fileHandles.delete(bufferToClose.id);
-                    buffers.splice(activeBufferIndex, 1);
-
-                    if (buffers.length === 0) {
-                        createNewBuffer();
-                    } else {
-                        if (activeBufferIndex >= buffers.length) {
-                            activeBufferIndex = buffers.length - 1;
-                        }
-                        renderActiveBuffer();
-                    }
-                    saveState();
-                };
-
-                const nextFile = () => {
-                    hideMenu();
-                    saveCurrentBufferState();
-                    if (buffers.length > 1) {
-                        activeBufferIndex =
-                            (activeBufferIndex + 1) % buffers.length;
-                        renderActiveBuffer();
-                        saveState();
-                    }
-                };
-                const prevFile = () => {
-                    hideMenu();
-                    saveCurrentBufferState();
-                    if (buffers.length > 1) {
-                        activeBufferIndex =
-                            (activeBufferIndex - 1 + buffers.length) %
-                            buffers.length;
-                        renderActiveBuffer();
-                        saveState();
-                    }
-                };
-
-                const generateCalendarText = (year, month) => {
-                    const monthNames = [
-                        "January",
-                        "February",
-                        "March",
-                        "April",
-                        "May",
-                        "June",
-                        "July",
-                        "August",
-                        "September",
-                        "October",
-                        "November",
-                        "December",
-                    ];
-
-                    let content = `Current date: ${getCurrentDateTimeString()}\n\n`;
-                    content += `## ${monthNames[month]} ${year}\n`;
-                    content += `(p)revious month | (n)ext month\n\n`;
-
-                    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
-                    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-                    content += "Su Mo Tu We Th Fr Sa\n";
-
-                    let calendarLine = "";
-                    for (let i = 0; i < firstDay; i++) {
-                        calendarLine += "   "; // 3 spaces for alignment
-                    }
-
-                    for (let i = 1; i <= daysInMonth; i++) {
-                        calendarLine += String(i).padStart(2, " ") + " ";
-                        if ((firstDay + i) % 7 === 0 || i === daysInMonth) {
-                            content += calendarLine.trimEnd() + "\n";
-                            calendarLine = "";
-                        }
-                    }
-                    return content;
-                };
-
-                const createNewJournalBuffer = () => {
-                    hideMenu();
-                    const now = new Date();
-                    const year = now.getFullYear();
-                    const month = now.getMonth(); // 0-indexed
-                    const mm = String(month + 1).padStart(2, "0");
-                    const fileName = `Calendar-${year}-${mm}.txt`;
-
-                    const content = generateCalendarText(year, month);
-
-                    createNewBuffer(content, fileName, null, {
-                        isCalendar: true,
-                        calendarYear: year,
-                        calendarMonth: month,
-                    });
-                };
-
-                const createNewCalculatorBuffer = () => {
-                    hideMenu();
-                    const content = `# Basic Calculator\n\nType a math problem and press Enter.\nExample: 5 * (10 + 2) / 3\n\n---\n\n`;
-                    const fileName = "Calculator";
-                    createNewBuffer(content, fileName, null, {
-                        isCalculator: true,
-                    });
-                };
-
-                const openLink = () => {
-                    hideMenu();
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const fullText = editor.value;
-                    const urlRegex = /https?:\/\/[^\s]+/; // Finds the first URL
-                    const urlRegexGlobal = /https?:\/\/[^\s]+/g; // Finds all URLs
-
-                    let textToScan = "";
-                    let urlsToOpen = [];
-
-                    // Case 1: User has selected/highlighted text
-                    if (start !== end) {
-                        textToScan = fullText.substring(start, end);
-                        urlsToOpen = textToScan.match(urlRegexGlobal);
-                    }
-                    // Case 2: No selection, just a cursor on a line
-                    else {
-                        // Find the boundaries of the current line
-                        const lineStart =
-                            fullText.lastIndexOf("\n", start - 1) + 1;
-                        let lineEnd = fullText.indexOf("\n", start);
-                        if (lineEnd === -1) {
-                            lineEnd = fullText.length;
-                        }
-                        textToScan = fullText.substring(lineStart, lineEnd);
-
-                        // Find the first URL on that line
-                        const singleUrlMatch = textToScan.match(urlRegex);
-                        if (singleUrlMatch) {
-                            urlsToOpen = [singleUrlMatch[0]];
-                        }
-                    }
-
-                    if (urlsToOpen && urlsToOpen.length > 0) {
-                        if (urlsToOpen.length > 1) {
-                            alert(
-                                `Found ${urlsToOpen.length} links. Your browser's pop-up blocker may prevent some from opening.`,
-                            );
-                        }
-                        urlsToOpen.forEach((url) => {
-                            try {
-                                new URL(url);
-                                window.open(
-                                    url,
-                                    "_blank",
-                                    "noopener,noreferrer",
-                                );
-                            } catch (e) {
-                                console.warn(`Skipping invalid URL: ${url}`);
-                            }
-                        });
-                    } else {
-                        alert(
-                            "No valid URL found in the current selection or on the current line.",
-                        );
-                    }
-                };
-
-                const emailFile = () => {
-                    hideMenu();
-                    if (activeBufferIndex === -1) return;
-                    const activeBuffer = buffers[activeBufferIndex];
-                    const subject = activeBuffer.fileName || "My Note";
-                    let body = activeBuffer.content;
-
-                    // Replace newlines with CRLF for better mail client compatibility
-                    body = body.replace(/\n/g, "\r\n");
-
-                    const mailtoLink = `mailto:?subject=${encodeURIComponent(
-                        subject,
-                    )}&body=${encodeURIComponent(body)}`;
-                    window.location.href = mailtoLink;
-                };
-
-                const showSnoView = () => {
-                    hideMenu();
-                    const snoBufferIndex = buffers.findIndex((b) => b.isSno);
-                    if (snoBufferIndex !== -1) {
-                        activeBufferIndex = snoBufferIndex;
-                        renderActiveBuffer();
-                    } else {
-                        if (!sno_isLocalStorageAvailable()) {
-                            alert(
-                                "This feature requires local storage to function. Please enable it in your browser settings.",
-                            );
-                            return;
-                        }
-                        editContainer.style.display = "none";
-                        snoContainer.classList.remove("hidden");
-                        document.getElementById("masterPassword").focus();
-                    }
-                };
-
-                // --- Help Modal Logic ---
-                const showHelpModal = () => {
-                    hideMenu();
+                // --- Help modal events ---
+                const helpLink = document.getElementById("menu-help");
+                const closeHelpBtn =
+                    document.getElementById("close-help-modal");
+                helpLink.addEventListener("click", () => {
                     helpModal.classList.add("active");
-                };
-                const hideHelpModal = () => {
+                });
+                closeHelpBtn.addEventListener("click", () => {
                     helpModal.classList.remove("active");
-                };
-
-                // --- ======================= ---
-                // --- TEXT EXPANDER CODE ---
-                // --- ======================= ---
-
-                const textExpanderModal = document.getElementById(
-                    "text-expander-modal",
-                );
-                const expansionsList =
-                    document.getElementById("expansions-list");
-                const shortcutInput = document.getElementById(
-                    "expansion-shortcut-input",
-                );
-                const valueInput = document.getElementById(
-                    "expansion-value-input",
-                );
-                const addExpansionBtn =
-                    document.getElementById("add-expansion-btn");
-                const importBtn = document.getElementById(
-                    "import-expansions-btn",
-                );
-                const exportBtn = document.getElementById(
-                    "export-expansions-btn",
-                );
-                const importFileInput = document.getElementById(
-                    "import-expansions-input",
-                );
-                const dateFormatInput =
-                    document.getElementById("date-format-input");
-                const saveDateFormatBtn = document.getElementById(
-                    "save-date-format-btn",
-                );
-
-                const EXPANSIONS_STORAGE_KEY = "editTextExpansions";
-                const DATE_FORMAT_STORAGE_KEY = "editTextDateFormat";
-                const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
-                let textExpansions = {};
-
-                const loadTextExpansions = () => {
-                    const stored = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
-                    if (stored) {
-                        try {
-                            textExpansions = JSON.parse(stored);
-                        } catch (e) {
-                            console.error("Could not parse text expansions", e);
-                            textExpansions = {};
-                        }
-                    }
-                    renderExpansionsList();
-                };
-
-                const saveTextExpansions = () => {
-                    localStorage.setItem(
-                        EXPANSIONS_STORAGE_KEY,
-                        JSON.stringify(textExpansions),
-                    );
-                };
-
-                const renderExpansionsList = () => {
-                    expansionsList.innerHTML = "";
-                    if (Object.keys(textExpansions).length === 0) {
-                        expansionsList.innerHTML = `<div class="expansion-item" style="color: #888888;">No custom shortcuts defined.</div>`;
-                        return;
-                    }
-
-                    const sortedKeys = Object.keys(textExpansions).sort();
-
-                    for (const shortcut of sortedKeys) {
-                        const value = textExpansions[shortcut];
-                        const item = document.createElement("div");
-                        item.className = "expansion-item";
-                        item.innerHTML = `
-                            <span class="expansion-item-shortcut">${sno_escapeHtml(shortcut)}</span>
-                            <span class="expansion-item-value">${sno_escapeHtml(value)}</span>
-                            <div class="expansion-item-actions">
-                                <button class="btn btn-small" data-shortcut="${shortcut}">Edit</button>
-                                <button class="btn btn-small btn-danger" data-shortcut="${shortcut}">Del</button>
-                            </div>
-                        `;
-                        expansionsList.appendChild(item);
-                    }
-                };
-
-                const showTextExpanderModal = () => {
-                    hideMenu();
-                    renderExpansionsList();
-                    dateFormatInput.value =
-                        localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
-                        DEFAULT_DATE_FORMAT;
-                    textExpanderModal.classList.add("active");
-                };
-
-                const hideTextExpanderModal = () => {
-                    textExpanderModal.classList.remove("active");
-                    shortcutInput.value = "";
-                    valueInput.value = "";
-                };
-
-                const addOrUpdateExpansion = () => {
-                    const shortcut = shortcutInput.value.trim();
-                    const value = valueInput.value;
-
-                    if (!shortcut.startsWith(".") || shortcut.length < 2) {
-                        alert(
-                            "Shortcut must start with '.' and be at least 2 characters long.",
-                        );
-                        return;
-                    }
-                    if (shortcut === ".d") {
-                        alert(
-                            "'.d' is a reserved shortcut for the current date and cannot be modified.",
-                        );
-                        return;
-                    }
-                    if (!value) {
-                        alert("Expansion value cannot be empty.");
-                        return;
-                    }
-
-                    textExpansions[shortcut] = value;
-                    saveTextExpansions();
-                    renderExpansionsList();
-                    shortcutInput.value = "";
-                    valueInput.value = "";
-                    shortcutInput.focus();
-                };
-
-                expansionsList.addEventListener("click", (e) => {
-                    const shortcut = e.target.dataset.shortcut;
-                    if (!shortcut) return;
-
-                    if (e.target.textContent === "Edit") {
-                        shortcutInput.value = shortcut;
-                        valueInput.value = textExpansions[shortcut];
-                        valueInput.focus();
-                    } else if (e.target.textContent === "Del") {
-                        if (
-                            confirm(
-                                `Are you sure you want to delete the shortcut "${shortcut}"?`,
-                            )
-                        ) {
-                            delete textExpansions[shortcut];
-                            saveTextExpansions();
-                            renderExpansionsList();
-                        }
+                });
+                window.addEventListener("click", (event) => {
+                    if (event.target == helpModal) {
+                        helpModal.classList.remove("active");
                     }
                 });
 
-                const handleTextExpansion = (shortcut, event) => {
-                    let expansion = null;
-                    if (shortcut === ".d") {
-                        const format =
-                            localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
-                            DEFAULT_DATE_FORMAT;
-                        const d = new Date();
-                        const year = d.getFullYear();
-                        const month = d.getMonth(); // 0-indexed
-                        const day = d.getDate();
-                        const monthNames = [
-                            "Jan",
-                            "Feb",
-                            "Mar",
-                            "Apr",
-                            "May",
-                            "Jun",
-                            "Jul",
-                            "Aug",
-                            "Sep",
-                            "Oct",
-                            "Nov",
-                            "Dec",
-                        ];
-
-                        expansion = format
-                            .replace(/YYYY/g, year)
-                            .replace(/YY/g, String(year).slice(-2))
-                            .replace(/MMM/g, monthNames[month])
-                            .replace(/MM/g, String(month + 1).padStart(2, "0"))
-                            .replace(/DD/g, String(day).padStart(2, "0"));
-                    } else if (textExpansions[shortcut]) {
-                        expansion = textExpansions[shortcut];
-                    }
-
-                    if (expansion !== null) {
-                        event.preventDefault();
-                        const startPos =
-                            editor.selectionStart - shortcut.length;
-                        const endPos = editor.selectionStart;
-
-                        // Replace the shortcut with the expansion
-                        editor.setSelectionRange(startPos, endPos);
-                        document.execCommand("insertText", false, expansion);
-
-                        return true; // Indicate that an expansion happened
-                    }
-                    return false;
-                };
-
-                const exportExpansions = () => {
-                    const dataStr =
-                        "data:text/json;charset=utf-8," +
-                        encodeURIComponent(
-                            JSON.stringify(textExpansions, null, 2),
-                        );
-                    const downloadAnchorNode = document.createElement("a");
-                    downloadAnchorNode.setAttribute("href", dataStr);
-                    downloadAnchorNode.setAttribute(
-                        "download",
-                        "edit-expansions.txt",
-                    );
-                    document.body.appendChild(downloadAnchorNode);
-                    downloadAnchorNode.click();
-                    downloadAnchorNode.remove();
-                };
-
-                const importExpansions = (event) => {
-                    const file = event.target.files[0];
-                    if (!file) return;
-
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        try {
-                            const imported = JSON.parse(e.target.result);
-                            if (
-                                typeof imported !== "object" ||
-                                imported === null
-                            ) {
-                                throw new Error("Invalid format");
-                            }
-                            // Simple merge: imported keys overwrite existing ones
-                            textExpansions = { ...textExpansions, ...imported };
-                            saveTextExpansions();
-                            renderExpansionsList();
-                            alert("Shortcuts imported successfully!");
-                        } catch (err) {
-                            alert(
-                                "Error importing file. Please make sure it's a valid JSON file.",
-                            );
-                            console.error("Import error:", err);
-                        } finally {
-                            // Reset file input to allow importing the same file again
-                            importFileInput.value = "";
-                        }
-                    };
-                    reader.readAsText(file);
-                };
-
-                const saveDateFormat = () => {
-                    const newFormat = dateFormatInput.value.trim();
-                    // Basic validation to ensure only allowed characters are used
-                    if (!/^[YMD\/-]+$/.test(newFormat) && newFormat !== "") {
-                        alert(
-                            "Invalid characters in date format. Only use Y, M, D, -, and /.",
-                        );
-                        return;
-                    }
-                    localStorage.setItem(DATE_FORMAT_STORAGE_KEY, newFormat);
-                    alert("Date format saved!");
-                };
-
-                // --- Helper functions for markdown shortcuts ---
-                const applyMarkdownFormatting = (prefix, suffix = prefix) => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const selectedText = editor.value.substring(start, end);
-                    const textToInsert = prefix + selectedText + suffix;
-                    document.execCommand("insertText", false, textToInsert);
-
-                    if (start === end) {
-                        // No selection, place cursor in the middle
-                        editor.selectionStart = editor.selectionEnd =
-                            start + prefix.length;
-                    } else {
-                        // Text was selected, re-select it without the markers
-                        editor.selectionStart = start + prefix.length;
-                        editor.selectionEnd = end + prefix.length;
-                    }
-                };
-
-                const applyLinkFormatting = () => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const selectedText = editor.value.substring(start, end);
-
-                    if (start === end) {
-                        document.execCommand("insertText", false, "[]()");
-                        editor.selectionStart = editor.selectionEnd = start + 1; // Cursor in []
-                    } else {
-                        document.execCommand(
-                            "insertText",
-                            false,
-                            `[${selectedText}]()`,
-                        );
-                        editor.selectionStart = editor.selectionEnd =
-                            start + selectedText.length + 3; // Cursor in ()
-                    }
-                };
-
-                const applyImageFormatting = () => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    document.execCommand("insertText", false, "![alt text]()");
-                    editor.selectionStart = editor.selectionEnd = start + 14; // Cursor in ()
-                };
-
-                const applyHeadingFormatting = () => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const val = editor.value;
-                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-                    let lineEnd = val.indexOf("\n", start);
-                    if (lineEnd === -1) lineEnd = val.length;
-
-                    const line = val.substring(lineStart, lineEnd);
-                    const match = line.match(/^(#*)\s*(.*)/);
-
-                    if (match) {
-                        let hashes = match[1];
-                        const content = match[2];
-
-                        hashes = hashes.length >= 6 ? "" : hashes + "#";
-
-                        const newLine = hashes
-                            ? `${hashes} ${content}`
-                            : content;
-
-                        editor.setSelectionRange(lineStart, lineEnd);
-                        document.execCommand("insertText", false, newLine);
-
-                        const newCursorPos =
-                            lineStart +
-                            (hashes ? hashes.length + 1 : 0) +
-                            content.length;
-                        editor.selectionStart = editor.selectionEnd = Math.min(
-                            newCursorPos,
-                            lineStart + newLine.length,
-                        );
-                    }
-                };
-
-                const toggleLinePrefix = (prefix) => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const end = editor.selectionEnd;
-                    const val = editor.value;
-
-                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-                    let lineEnd = val.indexOf("\n", end);
-                    if (lineEnd === -1) lineEnd = val.length;
-
-                    const selectedLinesText = val.substring(lineStart, lineEnd);
-                    const lines = selectedLinesText.split("\n");
-                    const allPrefixed = lines.every((line) =>
-                        line.trim().startsWith(prefix.trim()),
-                    );
-
-                    let newLinesText = "";
-                    if (allPrefixed) {
-                        newLinesText = lines
-                            .map((line) => line.replace(prefix, ""))
-                            .join("\n");
-                    } else {
-                        newLinesText = lines
-                            .map((line) => `${prefix}${line}`)
-                            .join("\n");
-                    }
-
-                    editor.setSelectionRange(lineStart, lineEnd);
-                    document.execCommand("insertText", false, newLinesText);
-                    const newEndPos = lineStart + newLinesText.length;
-                    editor.setSelectionRange(newEndPos, newEndPos);
-                };
-
-                const insertTodoItem = () => {
-                    if (document.activeElement !== editor) return;
-                    const start = editor.selectionStart;
-                    const val = editor.value;
-                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
-                    const prefix = "- [ ] ";
-
-                    editor.setSelectionRange(lineStart, lineStart);
-                    document.execCommand("insertText", false, prefix);
-
-                    const newCursorPos = lineStart + prefix.length;
-                    editor.setSelectionRange(newCursorPos, newCursorPos);
-                };
-
-                // --- PWA Install Logic ---
+                // --- PWA install button ---
                 let deferredPrompt;
                 const pwaInstallLink =
                     document.getElementById("pwa-install-link");
@@ -3276,282 +2434,192 @@
                 window.addEventListener("beforeinstallprompt", (e) => {
                     e.preventDefault();
                     deferredPrompt = e;
-                    if (pwaInstallLink) {
-                        pwaInstallLink.style.display = "block";
-                    }
+                    pwaInstallLink.style.display = "block";
+                    pwaInstallLink.addEventListener("click", () => {
+                        deferredPrompt.prompt();
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === "accepted") {
+                                console.log("User accepted the install prompt");
+                            } else {
+                                console.log(
+                                    "User dismissed the install prompt",
+                                );
+                            }
+                            deferredPrompt = null;
+                        });
+                    });
                 });
 
-                if (pwaInstallLink) {
-                    pwaInstallLink.addEventListener("click", async (e) => {
-                        e.preventDefault();
-                        if (deferredPrompt) {
-                            deferredPrompt.prompt();
-                            const { outcome } = await deferredPrompt.userChoice;
-                            console.log(
-                                `User response to the install prompt: ${outcome}`,
-                            );
-                            deferredPrompt = null;
-                            pwaInstallLink.style.display = "none";
+                // --- Text Expander Modal ---
+                const textExpanderLink =
+                    document.getElementById("menu-text-expander");
+                const textExpanderModal = document.getElementById(
+                    "text-expander-modal",
+                );
+                const closeExpanderBtn = document.getElementById(
+                    "close-expander-modal",
+                );
+                const addExpansionBtn =
+                    document.getElementById("add-expansion-btn");
+                const expansionsList =
+                    document.getElementById("expansions-list");
+                const expansionShortcutInput = document.getElementById(
+                    "expansion-shortcut-input",
+                );
+                const expansionValueInput = document.getElementById(
+                    "expansion-value-input",
+                );
+                const dateFormatInput =
+                    document.getElementById("date-format-input");
+                const saveDateFormatBtn = document.getElementById(
+                    "save-date-format-btn",
+                );
+                const importExpansionsBtn = document.getElementById(
+                    "import-expansions-btn",
+                );
+                const exportExpansionsBtn = document.getElementById(
+                    "export-expansions-btn",
+                );
+                const importExpansionsInput = document.getElementById(
+                    "import-expansions-input",
+                );
+
+                function renderExpansions() {
+                    expansionsList.innerHTML = "";
+                    for (const shortcut in textExpansions) {
+                        const value = textExpansions[shortcut];
+                        if (shortcut === ".d") {
+                            dateFormatInput.value = value;
+                            continue;
                         }
-                    });
+                        const item = document.createElement("div");
+                        item.className = "expansion-item";
+                        item.innerHTML = `
+                            <span class="expansion-item-shortcut">${shortcut}</span>
+                            <span class="expansion-item-value">${value}</span>
+                            <div class="expansion-item-actions">
+                                <button class="btn btn-small btn-secondary edit-btn">Edit</button>
+                                <button class="btn btn-small btn-danger delete-btn">Delete</button>
+                            </div>
+                        `;
+                        item.querySelector(".edit-btn").addEventListener(
+                            "click",
+                            () => {
+                                expansionShortcutInput.value = shortcut;
+                                expansionValueInput.value = value;
+                            },
+                        );
+                        item.querySelector(".delete-btn").addEventListener(
+                            "click",
+                            () => {
+                                delete textExpansions[shortcut];
+                                saveTextExpansions();
+                                renderExpansions();
+                            },
+                        );
+                        expansionsList.appendChild(item);
+                    }
                 }
 
-                // --- MENU & SHORTCUT LISTENERS ---
-                document
-                    .getElementById("menu-new")
-                    .addEventListener("click", newFile);
-                document
-                    .getElementById("menu-open")
-                    .addEventListener("click", openFile);
-                document
-                    .getElementById("menu-save")
-                    .addEventListener("click", saveFile);
-                document
-                    .getElementById("menu-save-as")
-                    .addEventListener("click", saveFileAs);
-                saveHtmlBtn.addEventListener("click", saveAsHtml);
-                savePdfBtn.addEventListener("click", saveAsPdf);
-                document
-                    .getElementById("menu-close-file")
-                    .addEventListener("click", closeFile);
-                document
-                    .getElementById("menu-next-file")
-                    .addEventListener("click", nextFile);
-                document
-                    .getElementById("menu-prev-file")
-                    .addEventListener("click", prevFile);
-                document
-                    .getElementById("menu-sno")
-                    .addEventListener("click", showSnoView);
-                document
-                    .getElementById("menu-help")
-                    .addEventListener("click", showHelpModal);
-                document
-                    .getElementById("close-help-modal")
-                    .addEventListener("click", hideHelpModal);
-                helpModal.addEventListener("click", (e) => {
-                    if (e.target === e.currentTarget) hideHelpModal();
+                textExpanderLink.addEventListener("click", () => {
+                    renderExpansions();
+                    textExpanderModal.classList.add("active");
                 });
-                document
-                    .getElementById("menu-text-expander")
-                    .addEventListener("click", showTextExpanderModal);
-                document
-                    .getElementById("close-expander-modal")
-                    .addEventListener("click", hideTextExpanderModal);
-                textExpanderModal.addEventListener("click", (e) => {
-                    if (e.target === e.currentTarget) hideTextExpanderModal();
+                closeExpanderBtn.addEventListener("click", () => {
+                    textExpanderModal.classList.remove("active");
                 });
-                addExpansionBtn.addEventListener("click", addOrUpdateExpansion);
-                exportBtn.addEventListener("click", exportExpansions);
-                importBtn.addEventListener("click", () =>
-                    importFileInput.click(),
-                );
-                importFileInput.addEventListener("change", importExpansions);
-                saveDateFormatBtn.addEventListener("click", saveDateFormat);
-
-                document.addEventListener("keydown", (e) => {
-                    if (isMarkdownView || isCsvView) {
-                        if (e.key === "Escape") {
-                            if (isMarkdownView) toggleMarkdownPreview();
-                            if (isCsvView) toggleCsvGrid();
-                        }
-                        return;
+                window.addEventListener("click", (event) => {
+                    if (event.target == textExpanderModal) {
+                        textExpanderModal.classList.remove("active");
                     }
+                });
 
+                addExpansionBtn.addEventListener("click", () => {
+                    const shortcut = expansionShortcutInput.value.trim();
+                    const value = expansionValueInput.value.trim();
                     if (
-                        findBar.style.display === "flex" &&
-                        e.target === findInput
-                    )
-                        return;
-                    if (snoContainer.classList.contains("hidden") === false) {
-                        if (e.key === "Escape") {
-                            snoContainer.classList.add("hidden");
-                            editContainer.style.display = "block";
-                        }
-                        return;
-                    }
-                    if (textExpanderModal.classList.contains("active")) {
-                        if (e.key === "Escape") hideTextExpanderModal();
-                        if (
-                            e.key === "Enter" &&
-                            (e.target === shortcutInput ||
-                                e.target === valueInput)
-                        ) {
-                            addOrUpdateExpansion();
-                        }
-                        return;
-                    }
-                    if (helpModal.classList.contains("active")) {
-                        if (e.key === "Escape") hideHelpModal();
-                        return;
-                    }
-
-                    if (e.ctrlKey || e.metaKey) {
-                        // Shortcuts that are NOT Shift-sensitive
-                        switch (e.key.toLowerCase()) {
-                            case "n":
-                                e.preventDefault();
-                                newFile();
-                                break;
-                            case "o":
-                                e.preventDefault();
-                                openFile();
-                                break;
-                            case "s":
-                                e.preventDefault();
-                                saveFile();
-                                break;
-                            case "u":
-                                e.preventDefault();
-                                openLink();
-                                break;
-                            case "f":
-                                e.preventDefault();
-                                showFindBar();
-                                break;
-                            case "b":
-                                e.preventDefault();
-                                applyMarkdownFormatting("**");
-                                break;
-                            case "i":
-                                e.preventDefault();
-                                applyMarkdownFormatting("*");
-                                break;
-                            case "k":
-                                e.preventDefault();
-                                applyLinkFormatting();
-                                break;
-                            case "h":
-                                e.preventDefault();
-                                applyHeadingFormatting();
-                                break;
-                            case "e":
-                                e.preventDefault();
-                                applyMarkdownFormatting("`");
-                                break;
-                            case "t":
-                                e.preventDefault();
-                                const tableTemplate =
-                                    "| Header 1 | Header 2 |\n|:---------|:---------|\n| Cell 1   | Cell 2   |\n";
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    tableTemplate,
-                                );
-                                break;
-                            case "-":
-                                e.preventDefault();
-                                document.execCommand(
-                                    "insertText",
-                                    false,
-                                    "\n\n---\n\n",
-                                );
-                                break;
-                            case "w":
-                                e.preventDefault();
-                                closeFile();
-                                break;
-                            case "arrowright":
-                                e.preventDefault();
-                                nextFile();
-                                break;
-                            case "arrowleft":
-                                e.preventDefault();
-                                prevFile();
-                                break;
-                            case "=":
-                                e.preventDefault();
-                                showSnoView();
-                                break;
-                            case "j": // Journal/Calendar
-                                e.preventDefault();
-                                createNewJournalBuffer();
-                                break;
-                            case "m": // Math / Calculator
-                                e.preventDefault();
-                                createNewCalculatorBuffer();
-                                break;
-                        }
-
-                        // Shortcuts that ARE Shift-sensitive
-                        if (e.shiftKey) {
-                            switch (e.key.toLowerCase()) {
-                                case "s":
-                                    e.preventDefault();
-                                    applyMarkdownFormatting("~~");
-                                    break;
-                                case "i":
-                                    e.preventDefault();
-                                    applyImageFormatting();
-                                    break;
-                                case ">":
-                                    e.preventDefault();
-                                    toggleLinePrefix("> ");
-                                    break;
-                                case "c":
-                                    e.preventDefault();
-                                    insertTodoItem();
-                                    break;
-                                case "e":
-                                    e.preventDefault();
-                                    emailFile();
-                                    break;
-                            }
-                        }
-                    }
-                    if (e.key === "Escape") {
-                        hideFindBar();
+                        shortcut.length > 1 &&
+                        shortcut.startsWith(".") &&
+                        value
+                    ) {
+                        textExpansions[shortcut] = value;
+                        saveTextExpansions();
+                        renderExpansions();
+                        expansionShortcutInput.value = "";
+                        expansionValueInput.value = "";
+                    } else {
+                        alert(
+                            "Shortcut must start with '.' and be at least 2 characters.",
+                        );
                     }
                 });
 
-                body.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    body.classList.add("dragover");
+                saveDateFormatBtn.addEventListener("click", () => {
+                    const format = dateFormatInput.value.trim();
+                    textExpansions[".d"] = format;
+                    saveTextExpansions();
+                    renderExpansions();
                 });
-                body.addEventListener("dragleave", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    body.classList.remove("dragover");
-                });
-                body.addEventListener("drop", (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    body.classList.remove("dragover");
 
-                    if (e.dataTransfer.files.length > 0) {
-                        for (const file of e.dataTransfer.files) {
+                importExpansionsBtn.addEventListener("click", () => {
+                    importExpansionsInput.click();
+                });
+
+                importExpansionsInput.addEventListener("change", (e) => {
+                    const file = e.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (re) => {
+                        const importedText = re.target.result;
+                        try {
+                            const importedExpansions = JSON.parse(importedText);
                             if (
-                                file &&
-                                (file.type.startsWith("text/") ||
-                                    file.type === "" ||
-                                    file.name.match(
-                                        /\.(txt|md|js|html|css|json|xml|csv)$/,
-                                    ))
+                                typeof importedExpansions === "object" &&
+                                importedExpansions !== null
                             ) {
-                                const reader = new FileReader();
-                                reader.onload = (re) => {
-                                    createNewBuffer(
-                                        re.target.result,
-                                        file.name,
-                                    );
+                                textExpansions = {
+                                    ...textExpansions,
+                                    ...importedExpansions,
                                 };
-                                reader.readAsText(file);
+                                saveTextExpansions();
+                                renderExpansions();
+                                alert("Shortcuts imported successfully!");
+                            } else {
+                                throw new Error("Invalid format");
                             }
+                        } catch (e) {
+                            alert(
+                                "Failed to import shortcuts. Invalid file format.",
+                            );
                         }
-                    }
+                    };
+                    reader.readAsText(file);
                 });
 
-                window.addEventListener("beforeunload", () => {
-                    saveCurrentBufferState();
-                    if (masterKey && currentPasswordHash) {
-                        sno_saveSnoBuffer();
-                    }
+                exportExpansionsBtn.addEventListener("click", () => {
+                    const expansionsJson = JSON.stringify(
+                        textExpansions,
+                        null,
+                        2,
+                    );
+                    const blob = new Blob([expansionsJson], {
+                        type: "application/json",
+                    });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "text-expansions.json";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
                 });
 
                 // --- INITIALIZATION ---
                 loadState();
                 loadTextExpansions();
+                sno_checkForExistingVaults();
             });
 
             // --- SERVICE WORKER REGISTRATION ---
