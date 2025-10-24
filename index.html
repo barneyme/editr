@@ -649,6 +649,227 @@
                 font-size: 12px;
                 border-radius: 4px;
             }
+            /* --- Light Mode Styles --- */
+            body.light-mode {
+                background-color: #fafafa;
+                color: #1a1a1a;
+                transition:
+                    background-color 0.3s,
+                    color 0.3s;
+            }
+
+            /* --- Editor + Preview --- */
+            body.light-mode #editor {
+                background-color: transparent;
+                color: #111;
+            }
+
+            body.light-mode #markdown-preview {
+                background-color: #ffffff;
+                color: #1a1a1a;
+            }
+
+            body.light-mode #markdown-preview h1,
+            body.light-mode #markdown-preview h2,
+            body.light-mode #markdown-preview h3,
+            body.light-mode #markdown-preview h4 {
+                color: #1565c0;
+                border-bottom-color: #ccc;
+            }
+
+            body.light-mode #markdown-preview a {
+                color: #1565c0;
+            }
+
+            body.light-mode #markdown-preview code {
+                background-color: #eaeaea;
+                color: #111;
+            }
+
+            body.light-mode #markdown-preview pre {
+                background-color: #f5f5f5;
+                border-color: #ddd;
+            }
+
+            body.light-mode #markdown-preview blockquote {
+                border-left-color: #bbb;
+                color: #555;
+            }
+
+            body.light-mode #markdown-preview th,
+            body.light-mode #markdown-preview td {
+                border-color: #ccc;
+            }
+
+            /* --- Menu Button + Context Menu --- */
+            body.light-mode #menu-trigger svg {
+                fill: #222 !important;
+            }
+
+            body.light-mode #menu-trigger:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+
+            body.light-mode #context-menu {
+                background-color: #fff;
+                border-color: #ccc;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+
+            body.light-mode .menu-item {
+                color: #222;
+            }
+
+            body.light-mode .menu-item .shortcut {
+                color: #1565c0;
+            }
+
+            body.light-mode .menu-item:hover {
+                background-color: #e6e6e6;
+            }
+
+            body.light-mode .menu-separator {
+                background-color: #ddd;
+            }
+
+            body.light-mode .view-btn {
+                border-color: #ccc;
+                color: #333;
+                background-color: #f8f8f8;
+            }
+
+            body.light-mode .view-btn:hover {
+                background-color: #1565c0;
+                border-color: #1565c0;
+                color: #fff;
+            }
+
+            body.light-mode .view-btn.active {
+                background-color: #42a5f5;
+                border-color: #42a5f5;
+                color: #fff;
+            }
+
+            /* --- Top Right Stats Bar --- */
+            body.light-mode #stats-display {
+                background-color: rgba(200, 200, 200, 0.4);
+                color: #333;
+            }
+
+            body.light-mode #stats-filename {
+                color: #222;
+            }
+
+            /* --- Find Bar --- */
+            body.light-mode #find-bar {
+                background-color: #fff;
+                border-color: #ccc;
+            }
+
+            body.light-mode #find-input {
+                background-color: #f9f9f9;
+                color: #111;
+                border-color: #ccc;
+            }
+
+            body.light-mode .find-btn {
+                color: #333;
+            }
+
+            body.light-mode .find-btn:hover {
+                background-color: #e0e0e0;
+            }
+
+            /* --- Modal Windows --- */
+            body.light-mode .modal-content {
+                background-color: #ffffff;
+                border-color: #ccc;
+                color: #111;
+            }
+
+            body.light-mode .modal-header h2 {
+                color: #1565c0;
+            }
+
+            body.light-mode .close-btn {
+                color: #666;
+            }
+
+            body.light-mode .close-btn:hover {
+                color: #000;
+            }
+
+            /* --- Buttons --- */
+            body.light-mode .btn {
+                background-color: #1565c0;
+                border-color: #1565c0;
+                color: #fff;
+            }
+
+            body.light-mode .btn:hover {
+                background-color: #1976d2;
+            }
+
+            body.light-mode .btn-secondary {
+                background-color: #90caf9;
+                border-color: #90caf9;
+                color: #0d47a1;
+            }
+
+            body.light-mode .btn-secondary:hover {
+                background-color: #64b5f6;
+            }
+
+            body.light-mode .btn-danger {
+                background-color: #e57373;
+                border-color: #e57373;
+                color: #fff;
+            }
+
+            body.light-mode .btn-danger:hover {
+                background-color: #ef5350;
+            }
+
+            /* --- CSV Grid --- */
+            body.light-mode #csv-grid thead {
+                background-color: #f2f2f2;
+                color: #222;
+            }
+
+            body.light-mode #csv-grid th,
+            body.light-mode #csv-grid td {
+                border-color: #ccc;
+            }
+
+            body.light-mode #csv-grid tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            body.light-mode #csv-grid th .csv-header-sortable:hover {
+                color: #1565c0;
+            }
+
+            /* --- Login Screen --- */
+            body.light-mode .login-screen {
+                background-color: #ffffff;
+                border-color: #ccc;
+                color: #111;
+            }
+
+            body.light-mode #sno-container label {
+                color: #111;
+            }
+
+            body.light-mode #sno-container input[type="password"] {
+                background-color: #fafafa;
+                color: #111;
+                border-color: #ccc;
+            }
+
+            /* --- Highlight + Selection --- */
+            body.light-mode ::selection {
+                background: #bbdefb;
+            }
         </style>
 
         <style media="print">
@@ -1256,6 +1477,10 @@
                                 Opens a text-based calculator. Type an equation
                                 (e.g., `(5+3)*2`) and press Enter to see the
                                 result.
+                            </li>
+                            <li>
+                                <strong>Light Mode:</strong> `Ctrl + L` -
+                                Switches from Dark Mode to Light Mode.
                             </li>
                         </ul>
                     </div>
@@ -3570,6 +3795,33 @@
                         );
                 });
             }
+            // --- THEME TOGGLE (Light/Dark) ---
+            const THEME_KEY = "editThemeMode";
+            const applyTheme = (mode) => {
+                if (mode === "light") {
+                    document.body.classList.add("light-mode");
+                } else {
+                    document.body.classList.remove("light-mode");
+                }
+                localStorage.setItem(THEME_KEY, mode);
+            };
+
+            // Load theme from localStorage on start
+            const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+            applyTheme(savedTheme);
+
+            // Keyboard shortcut: Ctrl + L
+            document.addEventListener("keydown", (e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === "l") {
+                    e.preventDefault();
+                    const newMode = document.body.classList.contains(
+                        "light-mode",
+                    )
+                        ? "dark"
+                        : "light";
+                    applyTheme(newMode);
+                }
+            });
         </script>
     </body>
 </html>
