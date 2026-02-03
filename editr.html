@@ -1,0 +1,3827 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+        <link rel="manifest" href="manifest.json" />
+
+        <meta name="theme-color" content="#3d3d3d" />
+
+        <link
+            rel="icon"
+            href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">e</text></svg>'
+        />
+        <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+
+        <style>
+            /* --- edit Base Styles --- */
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: "Inter", sans-serif;
+                background-color: #2d2d2d; /* New Orange Theme background */
+                transition: background-color 0.2s;
+                color: #f0f0f0;
+            }
+
+            #edit-container {
+                width: 100%;
+                height: 100%;
+                position: relative;
+            }
+
+            #line-indicator {
+                position: absolute;
+                top: 2rem;
+                left: 0;
+                width: 4px;
+                height: 25.6px;
+                background-color: #ffb74d; /* Light Orange */
+                z-index: 1;
+                transition: top 0.1s ease-out;
+                opacity: 0.5;
+                pointer-events: none;
+            }
+
+            #editor {
+                width: 100%;
+                height: 100%;
+                padding: 2rem;
+                border: none;
+                outline: none;
+                resize: none;
+                background-color: transparent;
+                color: #f8f8f2; /* <<< KEPT THIS COLOR AS REQUESTED */
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 16px;
+                line-height: 1.6;
+                box-sizing: border-box;
+            }
+
+            body.dragover {
+                background-color: #383838;
+            }
+            #editor {
+                border: 2px dashed transparent;
+                box-sizing: border-box;
+            }
+            body.dragover #editor {
+                border-color: #ff9800; /* Main Orange */
+            }
+
+            #editor::placeholder {
+                color: #888888; /* Subtle */
+                opacity: 1;
+            }
+
+            /* --- Markdown Preview Styles --- */
+            #markdown-preview {
+                padding: 2rem 4rem;
+                height: 100vh;
+                overflow-y: auto;
+                box-sizing: border-box;
+                color: #f0f0f0;
+                max-width: 800px;
+                margin: 0 auto;
+                line-height: 1.7;
+            }
+            #markdown-preview h1 {
+                font-size: 2.5em;
+                font-weight: 600;
+                margin-top: 0;
+                margin-bottom: 0.7em;
+                color: #ff9800; /* Main Orange */
+                border-bottom: 1px solid #888888;
+                padding-bottom: 0.3em;
+            }
+            #markdown-preview h2 {
+                font-size: 2em;
+                font-weight: 600;
+                margin-top: 1.5em;
+                margin-bottom: 0.6em;
+                color: #ff9800; /* Main Orange */
+                border-bottom: 1px solid #888888;
+                padding-bottom: 0.3em;
+            }
+            #markdown-preview h3 {
+                font-size: 1.5em;
+                font-weight: 600;
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+                color: #ff9800; /* Main Orange */
+            }
+            #markdown-preview h4 {
+                font-size: 1.2em;
+                font-weight: 600;
+                margin-top: 1.5em;
+                margin-bottom: 0.5em;
+                color: #ff9800; /* Main Orange */
+            }
+            #markdown-preview p {
+                margin-bottom: 1.2em;
+            }
+            #markdown-preview a {
+                color: #ffb74d;
+                text-decoration: none;
+            } /* Light Orange */
+            #markdown-preview a:hover {
+                text-decoration: underline;
+            }
+            #markdown-preview code {
+                background-color: #3d3d3d;
+                padding: 0.2em 0.4em;
+                border-radius: 4px;
+                font-family: "Fira Code", monospace;
+                font-size: 0.9em;
+            }
+            #markdown-preview pre {
+                background-color: #262626;
+                padding: 1em;
+                border-radius: 5px;
+                border: 1px solid #3d3d3d;
+                overflow-x: auto;
+                margin-bottom: 1.2em;
+            }
+            #markdown-preview pre code {
+                background-color: transparent;
+                padding: 0;
+                font-size: 1em;
+            }
+            #markdown-preview blockquote {
+                border-left: 4px solid #888888;
+                padding-left: 1em;
+                color: #a9b1d6;
+                margin-left: 0;
+                margin-bottom: 1.2em;
+            }
+            #markdown-preview ul,
+            #markdown-preview ol {
+                padding-left: 2em;
+                margin-bottom: 1.2em;
+            }
+            #markdown-preview li {
+                margin-bottom: 0.5em;
+            }
+            #markdown-preview table {
+                border-collapse: collapse;
+                width: 100%;
+                margin: 1.5em 0;
+            }
+            #markdown-preview th,
+            #markdown-preview td {
+                border: 1px solid #888888;
+                padding: 0.6em 0.8em;
+            }
+            #markdown-preview th {
+                background-color: #3d3d3d;
+                font-weight: 600;
+            }
+            #markdown-preview hr {
+                border: 0;
+                height: 1px;
+                background-color: #888888;
+                margin: 2.5em 0;
+            }
+            #markdown-preview .toc {
+                background-color: #3d3d3d;
+                border: 1px solid #888888;
+                border-radius: 5px;
+                padding: 1em 1.5em;
+                margin-bottom: 2em;
+            }
+            #markdown-preview .toc h3 {
+                margin-top: 0;
+                color: #f0f0f0;
+            }
+            #markdown-preview .toc ul {
+                padding-left: 1em;
+                list-style-type: none;
+            }
+            #markdown-preview .toc li {
+                margin-bottom: 0.7em;
+            }
+
+            /* --- CSV Grid Styles --- */
+            #csv-grid {
+                padding: 2rem;
+                height: 100vh;
+                overflow: auto;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }
+            #csv-grid-table-container {
+                flex-grow: 1;
+                overflow: auto;
+            }
+            #csv-grid table {
+                width: 100%;
+                border-collapse: collapse;
+                font-family: "Fira Code", monospace;
+                font-size: 14px;
+            }
+            #csv-grid th,
+            #csv-grid td {
+                border: 1px solid #3d3d3d;
+                padding: 8px 12px;
+                text-align: left;
+                white-space: nowrap;
+            }
+            #csv-grid th .csv-header-sortable {
+                cursor: pointer;
+                user-select: none;
+            }
+            #csv-grid th .csv-header-sortable:hover {
+                color: #ffb74d; /* Light Orange */
+            }
+            #csv-grid thead {
+                background-color: #3d3d3d;
+                color: #f0f0f0;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+            #csv-grid tbody tr:nth-child(even) {
+                background-color: #383838;
+            }
+            #csv-grid td[contenteditable="true"],
+            #csv-grid th span[contenteditable="true"] {
+                background-color: #2d2d2d;
+                outline: none;
+            }
+            #csv-grid td[contenteditable="true"]:focus,
+            #csv-grid th span[contenteditable="true"]:focus {
+                background-color: #3d3d3d;
+                outline: 2px solid #ff9800;
+                box-shadow: 0 0 0 2px #2d2d2d;
+            }
+            .csv-action-btn {
+                background: none;
+                border: none;
+                cursor: pointer;
+                padding: 2px;
+                font-size: 14px;
+                color: #ff5555;
+                opacity: 0.5;
+                transition: opacity 0.2s;
+            }
+            .csv-action-btn:hover {
+                opacity: 1;
+            }
+            #csv-grid th .csv-action-btn {
+                color: #ff9800; /* Main Orange */
+            }
+            #csv-controls {
+                padding-top: 1rem;
+                flex-shrink: 0;
+                display: flex;
+                gap: 0.5rem;
+            }
+
+            #top-right-container {
+                position: fixed;
+                top: 16px;
+                right: 24px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                z-index: 1001;
+            }
+
+            #menu-trigger {
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 4px;
+                transition: background-color 0.2s;
+            }
+
+            #menu-trigger:hover {
+                background-color: rgba(255, 255, 255, 0.1);
+            }
+
+            #context-menu {
+                position: fixed;
+                display: none;
+                z-index: 1000;
+                background-color: #3d3d3d;
+                border: 1px solid #888888;
+                border-radius: 8px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                min-width: 180px;
+                padding: 8px 0;
+            }
+
+            .menu-item {
+                padding: 10px 20px;
+                cursor: pointer;
+                color: #f0f0f0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                font-size: 14px;
+            }
+
+            .menu-item:hover {
+                background-color: #888888;
+            }
+
+            .menu-item .shortcut {
+                color: #ff9800; /* Main Orange */
+                font-size: 12px;
+            }
+
+            .menu-item .view-btn {
+                padding: 4px 10px;
+                border: 1px solid #888888;
+                border-radius: 4px;
+                background-color: transparent;
+                color: #f0f0f0;
+                cursor: pointer;
+                font-size: 12px;
+                transition: background-color 0.2s;
+            }
+            .menu-item .view-btn:hover {
+                background-color: #ff9800;
+                border-color: #ff9800;
+            }
+            .menu-item .view-btn.active {
+                background-color: #ffd600; /* Yellow */
+                border-color: #ffd600;
+            }
+
+            .menu-item a {
+                color: inherit;
+                text-decoration: none;
+                cursor: pointer;
+                display: block;
+                width: 100%;
+            }
+
+            .menu-separator {
+                height: 1px;
+                background-color: #888888;
+                margin: 8px 0;
+            }
+
+            #stats-display {
+                color: #888888;
+                font-family: "Fira Code", "Courier New", monospace;
+                font-size: 14px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                background-color: rgba(61, 61, 61, 0.5);
+                padding: 4px 12px;
+                border-radius: 6px;
+                transition: opacity 0.3s;
+            }
+            #stats-filename {
+                color: #e0e0e0;
+                max-width: 200px;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+            }
+
+            .hidden {
+                display: none !important;
+            }
+
+            #find-bar {
+                position: fixed;
+                bottom: 16px;
+                right: 16px;
+                background-color: #3d3d3d;
+                border: 1px solid #888888;
+                border-radius: 8px;
+                padding: 8px;
+                display: none;
+                align-items: center;
+                gap: 8px;
+                z-index: 1001;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            }
+
+            #find-input {
+                background-color: #2d2d2d;
+                border: 1px solid #888888;
+                color: #f0f0f0;
+                border-radius: 4px;
+                padding: 4px 8px;
+                outline: none;
+                width: 200px;
+            }
+
+            #find-input:focus {
+                border-color: #ff9800;
+            }
+
+            .find-btn {
+                background-color: transparent;
+                border: none;
+                color: #f0f0f0;
+                cursor: pointer;
+                padding: 4px;
+                border-radius: 4px;
+            }
+            .find-btn:hover {
+                background-color: #888888;
+            }
+
+            /* --- Integrated SNO Styles (Orange Themed) --- */
+            #sno-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 10px;
+                height: 100vh;
+            }
+
+            .login-screen {
+                background: #2d2d2d;
+                border-radius: 8px;
+                padding: 30px;
+                border: 1px solid #888888;
+                max-width: 400px;
+                margin: 0 auto;
+            }
+
+            #sno-container h1 {
+                color: #f0f0f0;
+                margin-bottom: 25px;
+                font-size: 1.8em;
+                font-weight: 600;
+                text-align: center;
+            }
+
+            .input-group {
+                margin-bottom: 15px;
+                text-align: left;
+            }
+
+            #sno-container label {
+                display: block;
+                margin-bottom: 5px;
+                color: #f0f0f0;
+                font-weight: 500;
+                font-size: 14px;
+            }
+
+            #sno-container input[type="password"] {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #888888;
+                border-radius: 4px;
+                font-size: 14px;
+                background: #2d2d2d;
+                color: #f0f0f0;
+            }
+
+            #sno-container input[type="password"]:focus {
+                outline: none;
+                border-color: #ff9800; /* Main Orange */
+            }
+
+            .btn {
+                background: #ff9800; /* Main Orange */
+                color: #2d2d2d;
+                border: 1px solid #ff9800;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: background 0.2s ease;
+                font-weight: 500;
+            }
+
+            .btn:hover {
+                background: #ffb74d;
+            }
+
+            .error-message {
+                color: #ff5555;
+                font-size: 13px;
+                margin-top: 5px;
+                text-align: left;
+            }
+
+            .storage-info {
+                font-size: 12px;
+                color: #888888;
+                margin-top: 20px;
+                text-align: center;
+            }
+
+            /* Text Expander Modal Styles */
+            #text-expander-modal .modal-content {
+                max-width: 800px;
+            }
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                z-index: 1000;
+            }
+
+            .modal.active {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .modal-content {
+                background: #2d2d2d;
+                border-radius: 8px;
+                padding: 25px;
+                max-width: 700px;
+                width: 90%;
+                max-height: 80vh;
+                overflow-y: auto;
+                border: 1px solid #ff9800;
+            }
+            .modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .modal-header h2 {
+                font-size: 1.4em;
+                color: #f0f0f0;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 22px;
+                cursor: pointer;
+                color: #888888;
+            }
+            #expansions-list {
+                max-height: 30vh;
+                overflow-y: auto;
+                border: 1px solid #3d3d3d;
+                border-radius: 4px;
+                margin-bottom: 15px;
+            }
+            .expansion-item {
+                display: flex;
+                align-items: center;
+                padding: 8px 12px;
+                border-bottom: 1px solid #3d3d3d;
+            }
+            .expansion-item:last-child {
+                border-bottom: none;
+            }
+            .expansion-item-shortcut {
+                font-family: "Fira Code", monospace;
+                color: #ffb74d; /* Light Orange */
+                width: 100px;
+                flex-shrink: 0;
+            }
+            .expansion-item-value {
+                flex-grow: 1;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                color: #f0f0f0;
+            }
+            .expansion-item-actions {
+                margin-left: 15px;
+            }
+            #new-expansion-form {
+                display: grid;
+                grid-template-columns: 150px 1fr;
+                gap: 10px;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            #new-expansion-form input,
+            #new-expansion-form textarea {
+                width: 100%;
+                padding: 8px 12px;
+                border: 1px solid #888888;
+                border-radius: 4px;
+                font-size: 14px;
+                background: #2d2d2d;
+                color: #f0f0f0;
+                font-family: inherit;
+            }
+            #new-expansion-form textarea {
+                grid-column: 1 / -1;
+                resize: vertical;
+                min-height: 80px;
+            }
+            .btn-secondary {
+                background: #ffb74d; /* Light Orange */
+                border-color: #ffb74d;
+                color: #2d2d2d;
+                margin-left: 8px;
+            }
+            .btn-secondary:hover {
+                background: #ffcc80;
+            }
+
+            .btn-danger {
+                background: #ff5555; /* Red */
+                border-color: #ff5555;
+            }
+            .btn-danger:hover {
+                background: #ff7070;
+            }
+            .btn-small {
+                padding: 5px 10px;
+                font-size: 12px;
+                border-radius: 4px;
+            }
+            /* --- Light Mode Styles --- */
+            body.light-mode {
+                background-color: #fafafa;
+                color: #1a1a1a;
+                transition:
+                    background-color 0.3s,
+                    color 0.3s;
+            }
+
+            /* --- Editor + Preview --- */
+            body.light-mode #editor {
+                background-color: transparent;
+                color: #111;
+            }
+
+            body.light-mode #markdown-preview {
+                background-color: #ffffff;
+                color: #1a1a1a;
+            }
+
+            body.light-mode #markdown-preview h1,
+            body.light-mode #markdown-preview h2,
+            body.light-mode #markdown-preview h3,
+            body.light-mode #markdown-preview h4 {
+                color: #1565c0;
+                border-bottom-color: #ccc;
+            }
+
+            body.light-mode #markdown-preview a {
+                color: #1565c0;
+            }
+
+            body.light-mode #markdown-preview code {
+                background-color: #eaeaea;
+                color: #111;
+            }
+
+            body.light-mode #markdown-preview pre {
+                background-color: #f5f5f5;
+                border-color: #ddd;
+            }
+
+            body.light-mode #markdown-preview blockquote {
+                border-left-color: #bbb;
+                color: #555;
+            }
+
+            body.light-mode #markdown-preview th,
+            body.light-mode #markdown-preview td {
+                border-color: #ccc;
+            }
+
+            /* --- Menu Button + Context Menu --- */
+            body.light-mode #menu-trigger svg {
+                fill: #222 !important;
+            }
+
+            body.light-mode #menu-trigger:hover {
+                background-color: rgba(0, 0, 0, 0.05);
+            }
+
+            body.light-mode #context-menu {
+                background-color: #fff;
+                border-color: #ccc;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            }
+
+            body.light-mode .menu-item {
+                color: #222;
+            }
+
+            body.light-mode .menu-item .shortcut {
+                color: #1565c0;
+            }
+
+            body.light-mode .menu-item:hover {
+                background-color: #e6e6e6;
+            }
+
+            body.light-mode .menu-separator {
+                background-color: #ddd;
+            }
+
+            body.light-mode .view-btn {
+                border-color: #ccc;
+                color: #333;
+                background-color: #f8f8f8;
+            }
+
+            body.light-mode .view-btn:hover {
+                background-color: #1565c0;
+                border-color: #1565c0;
+                color: #fff;
+            }
+
+            body.light-mode .view-btn.active {
+                background-color: #42a5f5;
+                border-color: #42a5f5;
+                color: #fff;
+            }
+
+            /* --- Top Right Stats Bar --- */
+            body.light-mode #stats-display {
+                background-color: rgba(200, 200, 200, 0.4);
+                color: #333;
+            }
+
+            body.light-mode #stats-filename {
+                color: #222;
+            }
+
+            /* --- Find Bar --- */
+            body.light-mode #find-bar {
+                background-color: #fff;
+                border-color: #ccc;
+            }
+
+            body.light-mode #find-input {
+                background-color: #f9f9f9;
+                color: #111;
+                border-color: #ccc;
+            }
+
+            body.light-mode .find-btn {
+                color: #333;
+            }
+
+            body.light-mode .find-btn:hover {
+                background-color: #e0e0e0;
+            }
+
+            /* --- Modal Windows --- */
+            body.light-mode .modal-content {
+                background-color: #ffffff;
+                border-color: #ccc;
+                color: #111;
+            }
+
+            body.light-mode .modal-header h2 {
+                color: #1565c0;
+            }
+
+            body.light-mode .close-btn {
+                color: #666;
+            }
+
+            body.light-mode .close-btn:hover {
+                color: #000;
+            }
+
+            /* --- Buttons --- */
+            body.light-mode .btn {
+                background-color: #1565c0;
+                border-color: #1565c0;
+                color: #fff;
+            }
+
+            body.light-mode .btn:hover {
+                background-color: #1976d2;
+            }
+
+            body.light-mode .btn-secondary {
+                background-color: #90caf9;
+                border-color: #90caf9;
+                color: #0d47a1;
+            }
+
+            body.light-mode .btn-secondary:hover {
+                background-color: #64b5f6;
+            }
+
+            body.light-mode .btn-danger {
+                background-color: #e57373;
+                border-color: #e57373;
+                color: #fff;
+            }
+
+            body.light-mode .btn-danger:hover {
+                background-color: #ef5350;
+            }
+
+            /* --- CSV Grid --- */
+            body.light-mode #csv-grid thead {
+                background-color: #f2f2f2;
+                color: #222;
+            }
+
+            body.light-mode #csv-grid th,
+            body.light-mode #csv-grid td {
+                border-color: #ccc;
+            }
+
+            body.light-mode #csv-grid tbody tr:nth-child(even) {
+                background-color: #f9f9f9;
+            }
+
+            body.light-mode #csv-grid th .csv-header-sortable:hover {
+                color: #1565c0;
+            }
+
+            /* --- Login Screen --- */
+            body.light-mode .login-screen {
+                background-color: #ffffff;
+                border-color: #ccc;
+                color: #111;
+            }
+
+            body.light-mode #sno-container label {
+                color: #111;
+            }
+
+            body.light-mode #sno-container input[type="password"] {
+                background-color: #fafafa;
+                color: #111;
+                border-color: #ccc;
+            }
+
+            /* --- Highlight + Selection --- */
+            body.light-mode ::selection {
+                background: #bbdefb;
+            }
+        </style>
+
+        <style media="print">
+            /* --- Print Styles --- */
+            body * {
+                visibility: hidden;
+            }
+            #markdown-preview,
+            #markdown-preview * {
+                visibility: visible;
+            }
+            #markdown-preview {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: auto;
+                padding: 2cm;
+                color: #000 !important;
+                background-color: #fff !important;
+                max-width: 100%;
+            }
+            #markdown-preview h1,
+            #markdown-preview h2,
+            #markdown-preview h3,
+            #markdown-preview h4,
+            #markdown-preview a {
+                color: #000 !important;
+            }
+        </style>
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Inter:wght@400;500;600&display=swap"
+            rel="stylesheet"
+        />
+    </head>
+    <body>
+        <div id="edit-container">
+            <div id="line-indicator"></div>
+            <textarea
+                id="editor"
+                spellcheck="false"
+                placeholder="Right-click or ☰ for menu."
+            ></textarea>
+        </div>
+
+        <div id="markdown-preview" class="hidden"></div>
+        <div id="csv-grid" class="hidden"></div>
+
+        <div id="top-right-container">
+            <div id="stats-display">
+                <span id="stats-filename"></span>
+                <span id="stats-line">↓ 1</span>
+                <span id="stats-char">→ 1</span>
+                <span id="stats-words">= 0</span>
+            </div>
+
+            <div id="menu-trigger" title="Menu">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="#f0f0f0"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"
+                    ></path>
+                </svg>
+            </div>
+        </div>
+
+        <div id="context-menu">
+            <div class="menu-item" id="menu-new">
+                <span>New</span>
+                <span class="shortcut">Ctrl + N</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-open">
+                <span>Open</span>
+                <span class="shortcut">Ctrl + O</span>
+            </div>
+            <div
+                class="menu-item"
+                style="
+                    padding: 0;
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                "
+            >
+                <div
+                    style="
+                        display: flex;
+                        gap: 0.5rem;
+                        align-items: center;
+                        padding: 10px 20px;
+                    "
+                >
+                    <a id="menu-save" style="cursor: pointer">Save</a>
+                    <a id="menu-save-as" style="cursor: pointer">(As)</a>
+                </div>
+                <span class="shortcut" style="padding-right: 20px"
+                    >Ctrl + S</span
+                >
+            </div>
+            <div class="menu-item" id="menu-close-file">
+                <span>Close</span>
+                <span class="shortcut">Ctrl + W</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-next-file">
+                <span>Next</span>
+                <span class="shortcut">Ctrl + →</span>
+            </div>
+            <div class="menu-item" id="menu-prev-file">
+                <span>Last</span>
+                <span class="shortcut">Ctrl + ←</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-find">
+                <span>Find</span>
+                <span class="shortcut">Ctrl + F</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div class="menu-item" id="menu-sno">
+                <span>Lock</span>
+                <span class="shortcut">Ctrl + =</span>
+            </div>
+            <div class="menu-separator menu-item-md hidden"></div>
+            <div class="menu-item menu-item-md hidden" id="menu-save-html">
+                <span>HTML</span>
+            </div>
+            <div class="menu-item menu-item-md hidden" id="menu-save-pdf">
+                <span>PDF</span>
+            </div>
+            <div class="menu-separator"></div>
+            <div
+                class="menu-item"
+                style="display: flex; gap: 1rem; padding: 10px 20px"
+            >
+                <a id="menu-help" style="cursor: pointer">Help</a>
+                <a id="menu-text-expander" style="cursor: pointer">Text</a>
+                <div style="flex-grow: 1"></div>
+                <button id="menu-csv-view" class="view-btn">CSV</button>
+                <button id="menu-md-view" class="view-btn">MD</button>
+            </div>
+        </div>
+
+        <div id="find-bar">
+            <input type="text" id="find-input" placeholder="Find..." />
+            <button
+                id="find-prev"
+                class="find-btn"
+                title="Previous (Shift+Enter)"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M224,128a8,8,0,0,1-8,8H122.34l58.35,58.34a8,8,0,0,1-11.32,11.32l-72-72a8,8,0,0,1,0-11.32l72-72a8,8,0,0,1,11.32,11.32L122.34,120H216A8,8,0,0,1,224,128ZM40,40a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48A8,8,0,0,0,40,40Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-next" class="find-btn" title="Next (Enter)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M216,40a8,8,0,0,0-8-8H48a8,8,0,0,0-8,8V208a8,8,0,0,0,16,0V48H208A8,8,0,0,0,216,40ZM133.66,122.34,75.31,64.05a8,8,0,0,0-11.31,11.31L122.34,128,64,180.69a8,8,0,0,0,11.31,11.31L133.66,133.66a8,8,0,0,0,0-11.32Z"
+                    ></path>
+                </svg>
+            </button>
+            <button id="find-close" class="find-btn" title="Close (Esc)">
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    fill="currentColor"
+                    viewBox="0 0 256 256"
+                >
+                    <path
+                        d="M208.49,191.51a12,12,0,0,1-17,17L128,145,64.49,208.49a12,12,0,0,1-17-17L111,128,47.51,64.49a12,12,0,0,1,17-17L128,111,63.51-63.52a12,12,0,0,1,17,17L145,128Z"
+                    ></path>
+                </svg>
+            </button>
+        </div>
+
+        <div id="sno-container" class="hidden">
+            <div id="loginScreen" class="login-screen">
+                <h1>Lock</h1>
+                <div class="input-group">
+                    <label for="masterPassword">Password</label>
+                    <input
+                        type="password"
+                        id="masterPassword"
+                        placeholder="Enter your password"
+                    />
+                    <div id="loginError" class="error-message"></div>
+                </div>
+                <button class="btn" onclick="sno_unlockAndLoadBuffer()">
+                    Unlock
+                </button>
+                <div class="storage-info">
+                    Data is encrypted and stored locally in your browser.
+                </div>
+            </div>
+        </div>
+
+        <div id="text-expander-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Text Expander</h2>
+                    <button id="close-expander-modal" class="close-btn">
+                        &times;
+                    </button>
+                </div>
+
+                <h3>Date Shortcut (.d)</h3>
+                <div
+                    style="
+                        display: flex;
+                        gap: 10px;
+                        align-items: center;
+                        margin-bottom: 20px;
+                    "
+                >
+                    <input
+                        type="text"
+                        id="date-format-input"
+                        placeholder="e.g., YYYY-MM-DD"
+                        style="
+                            flex-grow: 1;
+                            padding: 8px 12px;
+                            border: 1px solid #888888;
+                            border-radius: 4px;
+                            font-size: 14px;
+                            background: #2d2d2d;
+                            color: #f0f0f0;
+                            font-family: &quot;Fira Code&quot;, monospace;
+                        "
+                    />
+                    <button id="save-date-format-btn" class="btn">
+                        Save Format
+                    </button>
+                </div>
+                <p
+                    style="
+                        font-size: 12px;
+                        color: #888;
+                        margin-top: -15px;
+                        margin-bottom: 20px;
+                    "
+                >
+                    Use: DD, MM, MMM, YY, YYYY. Separators: - /
+                </p>
+
+                <h3>My Shortcuts</h3>
+                <div id="expansions-list"></div>
+
+                <h3>Add/Edit Shortcut</h3>
+                <div id="new-expansion-form">
+                    <input
+                        type="text"
+                        id="expansion-shortcut-input"
+                        placeholder=".letter (EG .a)"
+                    />
+                    <button id="add-expansion-btn" class="btn">
+                        Add/Update
+                    </button>
+                    <textarea
+                        id="expansion-value-input"
+                        placeholder="Enter the text to expand to..."
+                    ></textarea>
+                </div>
+
+                <div
+                    style="
+                        text-align: right;
+                        margin-top: 20px;
+                        display: flex;
+                        justify-content: flex-end;
+                        gap: 10px;
+                    "
+                >
+                    <button
+                        id="import-expansions-btn"
+                        class="btn btn-secondary"
+                    >
+                        Import
+                    </button>
+                    <button
+                        id="export-expansions-btn"
+                        class="btn btn-secondary"
+                    >
+                        Export
+                    </button>
+                </div>
+                <input
+                    type="file"
+                    id="import-expansions-input"
+                    class="hidden"
+                    accept=".txt"
+                />
+            </div>
+        </div>
+
+        <div id="help-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Help</h2>
+                    <button id="close-help-modal" class="close-btn">
+                        &times;
+                    </button>
+                </div>
+                <div
+                    style="
+                        max-height: 60vh;
+                        overflow-y: auto;
+                        padding-right: 15px;
+                    "
+                >
+                    <style>
+                        .help-section {
+                            margin-top: 1.5rem;
+                            margin-bottom: 1.5rem;
+                            padding-bottom: 1rem;
+                            border-bottom: 1px solid #555;
+                        }
+                        .help-section:last-child {
+                            border-bottom: none;
+                            margin-bottom: 0;
+                        }
+                        .help-section h3 {
+                            font-size: 1.25em;
+                            font-weight: 600;
+                            margin-bottom: 0.75rem;
+                            color: #ffb74d;
+                        }
+                        .help-section h4 {
+                            font-size: 1.1em;
+                            font-weight: 500;
+                            margin-top: 1rem;
+                            margin-bottom: 0.5rem;
+                            color: #e0e0e0;
+                        }
+                        .help-section ul {
+                            padding-left: 20px;
+                            line-height: 1.6;
+                        }
+                        .help-section li {
+                            margin-bottom: 0.5rem;
+                        }
+                        .help-section pre {
+                            background-color: #262626;
+                            padding: 0.5em 1em;
+                            border-radius: 4px;
+                            margin-top: 0.5rem;
+                        }
+                        .help-section code {
+                            font-family: "Fira Code", monospace;
+                            color: #ffb74d;
+                        }
+                        .help-section li code {
+                            color: #ffb74d;
+                            background-color: #3d3d3d;
+                            padding: 2px 5px;
+                            border-radius: 3px;
+                        }
+                        .help-section strong {
+                            color: #f0f0f0;
+                        }
+                    </style>
+                    <div class="help-section">
+                        <h3>File Management</h3>
+                        <ul>
+                            <li>
+                                <strong>New (Ctrl + N):</strong> Opens a new
+                                editor in a new browser tab.
+                            </li>
+                            <li>
+                                <strong>Open (Ctrl + O):</strong> Open a text,
+                                markdown, or CSV file from your computer.
+                            </li>
+                            <li>
+                                <strong>Save (Ctrl + S):</strong> Saves the
+                                current file. If opened from your computer, it
+                                will try to save back to the original file.
+                                Otherwise, it will prompt you to "Save As".
+                            </li>
+                            <li>
+                                <strong>Save As:</strong> Lets you save the
+                                current text to a new file on your computer.
+                            </li>
+                            <li>
+                                <strong
+                                    >Next/Last File (Ctrl + → / Ctrl +
+                                    ←):</strong
+                                >
+                                Cycle between open files (buffers).
+                            </li>
+                            <li>
+                                <strong>Close File (Ctrl + W):</strong> Closes
+                                the current file.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Core Editing</h3>
+                        <ul>
+                            <li>
+                                <strong>Standard Text Editing:</strong> Supports
+                                features like tab indentation, auto-pairing of
+                                brackets `()`, `[]`, `{}`, quotes `""`, `''`,
+                                and backticks ` `` `.
+                            </li>
+                            <li>
+                                <strong>Auto-Indented Lists:</strong> Pressing
+                                `Enter` in a bulleted (`*`, `-`) or numbered
+                                (`1.`) list automatically continues the list.
+                                Press `Enter` on an empty list item to exit the
+                                list.
+                            </li>
+                            <li>
+                                <strong>Drag & Drop:</strong> Drag a text file
+                                from your computer and drop it onto the window
+                                to open it.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Markdown Shortcuts</h3>
+                        <ul>
+                            <li><strong>Bold:</strong> `Ctrl + B`</li>
+                            <li><strong>Italics:</strong> `Ctrl + I`</li>
+                            <li>
+                                <strong>Strikethrough:</strong> `Ctrl + Shift +
+                                S`
+                            </li>
+                            <li>
+                                <strong>To-Do Item:</strong> `Ctrl + Shift + C`
+                            </li>
+                            <li><strong>Link:</strong> `Ctrl + K`</li>
+                            <li><strong>Image:</strong> `Ctrl + Shift + I`</li>
+                            <li>
+                                <strong>Heading:</strong> `Ctrl + H` to cycle
+                                levels
+                            </li>
+                            <li>
+                                <strong>Blockquote:</strong> `Ctrl + Shift +> `
+                            </li>
+                            <li><strong>Inline Code:</strong> `Ctrl + E`</li>
+                            <li><strong>Insert Table:</strong> `Ctrl + T`</li>
+                            <li>
+                                <strong>Insert Horizontal Rule:</strong> `Ctrl +
+                                -`
+                            </li>
+                        </ul>
+                        <ul>
+                            <li>
+                                <strong>Table Column Alignment:</strong> You can
+                                align content in table columns by adding colons
+                                to the header separator line.
+                                <pre><code>| Left | Center | Right |
+|:---|:------:|------:|
+| a  |    b   |     c |</code></pre>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Views</h3>
+                        <ul>
+                            <li>
+                                <strong>CSV View:</strong> Renders
+                                comma-separated text in an editable grid. You
+                                can add/delete rows and columns, edit cells, and
+                                the underlying text is updated automatically.
+                            </li>
+                            <li>
+                                <strong>MD View:</strong> Renders Markdown text
+                                as formatted HTML. From this view, you can save
+                                the content as a self-contained HTML file or
+                                print it (e.g., to a PDF).
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Table of Contents</h3>
+                        <ul>
+                            <li>
+                                For long documents, you can automatically
+                                generate a Table of Contents (ToC).
+                            </li>
+                            <li>
+                                Simply type <code>[TOC]</code> on its own line
+                                where you want the table of contents to appear.
+                            </li>
+                            <li>
+                                When you switch to <strong>MD View</strong>,
+                                this tag will be replaced with a clickable list
+                                of all the headings (e.g.,
+                                <code># Heading 1</code>,
+                                <code>## Subheading</code>) in your document.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>To-Do Lists</h3>
+                        <ul>
+                            <li>
+                                You can create interactive to-do lists directly
+                                in your text. This is powered by Markdown.
+                            </li>
+                            <li>
+                                Use <code>- [ ]</code> for an incomplete task
+                                and <code>- [x]</code> for a completed task.
+                            </li>
+                            <li>
+                                When viewed in <strong>MD View</strong>, these
+                                will be rendered as clickable checkboxes.
+                            </li>
+                            <li>
+                                <strong>Shortcut:</strong> Use
+                                <code>Ctrl + Shift + C</code> to insert a new
+                                to-do item on the current line.
+                            </li>
+                        </ul>
+                        <pre><code>- [ ] Finish report
+- [x] Send email
+- [ ] Start new project</code></pre>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Text Expander</h3>
+                        <ul>
+                            <li>
+                                <strong>Open Manager:</strong> Click "Text" in
+                                the main menu to add, edit, or remove text
+                                expansion shortcuts.
+                            </li>
+                            <li>
+                                <strong>Usage:</strong> In the editor, type a
+                                shortcut (e.g., <code>.sig</code>) followed by a
+                                <strong>space</strong> or
+                                <strong>Enter</strong> to replace it with its
+                                full text.
+                            </li>
+                            <li>
+                                <strong>Rules:</strong> Shortcuts must start
+                                with a period (<code>.</code>) and be at least
+                                two characters long.
+                            </li>
+                            <li>
+                                <strong>Built-in Date Shortcut:</strong> The
+                                shortcut <code>.d</code> expands to the current
+                                date. You can customize its format in the Text
+                                Expander manager using <code>DD</code>,
+                                <code>MM</code>, <code>MMM</code>,
+                                <code>YY</code>, <code>YYYY</code> with
+                                <code>-</code> or <code>/</code> separators.
+                            </li>
+                            <li>
+                                <strong>Import/Export:</strong> You can back up
+                                your shortcuts to a file or import them from
+                                another machine using the manager.
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="help-section">
+                        <h3>Productivity Shortcuts</h3>
+                        <ul>
+                            <li><strong>Find:</strong> `Ctrl + F`</li>
+                            <li>
+                                <strong>Open Link in Text:</strong> `Ctrl + U`
+                            </li>
+                            <li><strong>Lock Note:</strong> `Ctrl + =`</li>
+                            <li>
+                                <strong>Email File:</strong> `Ctrl + Shift + E`
+                                - Opens your default email client with the
+                                current file's content in a new message.
+                            </li>
+                            <li>
+                                <strong>New Calendar:</strong> `Ctrl + J` -
+                                Opens a new buffer with the current date and a
+                                text-based calendar for the current month.
+                            </li>
+                            <li>
+                                <strong>New Calculator:</strong> `Ctrl + M` -
+                                Opens a text-based calculator. Type an equation
+                                (e.g., `(5+3)*2`) and press Enter to see the
+                                result.
+                            </li>
+                            <li>
+                                <strong>Light Mode:</strong> `Ctrl + L` -
+                                Switches from Dark Mode to Light Mode.
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="help-section">
+                        <h3>Install</h3>
+                        <ul>
+                            <li>
+                                <a
+                                    href="https://sourceforge.net/projects/edit/files/latest/download"
+                                    >Download for Windows and Mac</a
+                                >
+                            </li>
+                            <li>
+                                <a
+                                    href="#"
+                                    id="pwa-install-link"
+                                    style="display: none; cursor: pointer"
+                                    >Install as an App (PWA)</a
+                                >
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", () => {
+                // --- DOM ELEMENTS ---
+                const editor = document.getElementById("editor");
+                const lineIndicator = document.getElementById("line-indicator");
+                const contextMenu = document.getElementById("context-menu");
+                const menuTrigger = document.getElementById("menu-trigger");
+                const statsDisplay = document.getElementById("stats-display");
+                const statsFileName = document.getElementById("stats-filename");
+                const statsLine = document.getElementById("stats-line");
+                const statsChar = document.getElementById("stats-char");
+                const statsWords = document.getElementById("stats-words");
+                const findBar = document.getElementById("find-bar");
+                const findInput = document.getElementById("find-input");
+                const findPrev = document.getElementById("find-prev");
+                const findNext = document.getElementById("find-next");
+                const findClose = document.getElementById("find-close");
+                const body = document.body;
+                const editContainer = document.getElementById("edit-container");
+                const snoContainer = document.getElementById("sno-container");
+                const markdownPreview =
+                    document.getElementById("markdown-preview");
+                const csvGrid = document.getElementById("csv-grid");
+                const mdViewBtn = document.getElementById("menu-md-view");
+                const csvViewBtn = document.getElementById("menu-csv-view");
+                const mdMenuItems = document.querySelectorAll(".menu-item-md");
+                const saveHtmlBtn = document.getElementById("menu-save-html");
+                const savePdfBtn = document.getElementById("menu-save-pdf");
+                const helpModal = document.getElementById("help-modal");
+
+                // --- ================================== ---
+                // --- SNO (Secure Note) INTEGRATION CODE ---
+                // --- ================================== ---
+
+                let masterKey = null;
+                let notes = [];
+                let currentPasswordHash = null;
+                const STORAGE_KEY = "sno_secure_note_vault";
+                const VAULT_VERSION = "1.0";
+
+                function sno_showError(message) {
+                    const loginScreen = document.getElementById("loginScreen");
+                    let errorDiv = document.getElementById("criticalError");
+                    if (!errorDiv) {
+                        errorDiv = document.createElement("div");
+                        errorDiv.id = "criticalError";
+                        errorDiv.style.color = "#ff5555";
+                        errorDiv.style.marginTop = "15px";
+                        errorDiv.style.fontWeight = "bold";
+                        loginScreen.appendChild(errorDiv);
+                    }
+                    errorDiv.textContent = message;
+                }
+
+                function sno_isLocalStorageAvailable() {
+                    try {
+                        const test = "__storage_test__";
+                        localStorage.setItem(test, test);
+                        localStorage.removeItem(test);
+                        return true;
+                    } catch (e) {
+                        return false;
+                    }
+                }
+
+                function sno_loadVaultsFromStorage() {
+                    try {
+                        const stored = localStorage.getItem(STORAGE_KEY);
+                        if (stored) {
+                            const data = JSON.parse(stored);
+                            if (data.version === VAULT_VERSION) {
+                                return data.vaults || {};
+                            }
+                        }
+                    } catch (e) {
+                        console.error("Error loading vaults from storage:", e);
+                    }
+                    return {};
+                }
+
+                function sno_saveVaultsToStorage(vaults) {
+                    try {
+                        const data = {
+                            version: VAULT_VERSION,
+                            vaults: vaults,
+                            lastUpdated: new Date().toISOString(),
+                        };
+                        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+                        return true;
+                    } catch (e) {
+                        console.error("Error saving vaults to storage:", e);
+                        if (e.name === "QuotaExceededError") {
+                            sno_showError(
+                                "Storage quota exceeded. Please delete some notes.",
+                            );
+                        }
+                        return false;
+                    }
+                }
+
+                function sno_hashPassword(password) {
+                    return CryptoJS.SHA256(password + "sno-salt-v1").toString();
+                }
+
+                function sno_unlockAndLoadBuffer() {
+                    const password =
+                        document.getElementById("masterPassword").value;
+                    const errorElement = document.getElementById("loginError");
+
+                    if (!password) {
+                        errorElement.textContent = "Please enter a password";
+                        return;
+                    }
+
+                    masterKey = CryptoJS.PBKDF2(password, "sno-salt-v1", {
+                        keySize: 256 / 32,
+                        iterations: 10000,
+                    });
+                    currentPasswordHash = sno_hashPassword(password);
+                    const userVaults = sno_loadVaultsFromStorage();
+
+                    if (userVaults[currentPasswordHash]) {
+                        try {
+                            const encryptedNotes =
+                                userVaults[currentPasswordHash];
+                            const decryptedData = CryptoJS.AES.decrypt(
+                                encryptedNotes,
+                                masterKey.toString(),
+                            ).toString(CryptoJS.enc.Utf8);
+                            if (!decryptedData)
+                                throw new Error("Decryption failed");
+                            notes = JSON.parse(decryptedData);
+                        } catch (e) {
+                            console.error("Decryption error:", e);
+                            errorElement.textContent =
+                                "Invalid password - unable to decrypt notes.";
+                            return;
+                        }
+                    } else {
+                        notes = []; // New vault
+                    }
+
+                    errorElement.textContent = "";
+                    document.getElementById("masterPassword").value = "";
+                    snoContainer.classList.add("hidden");
+                    editContainer.style.display = "block";
+
+                    const notesText = sno_formatNotesToText(notes);
+                    createNewBuffer(notesText, "Locked-Notes.txt", null, {
+                        isSno: true,
+                    });
+                }
+
+                function sno_saveSnoBuffer() {
+                    if (!masterKey || !currentPasswordHash) return false;
+
+                    const snoBuffer = buffers.find((b) => b.isSno);
+                    if (!snoBuffer) return false;
+
+                    const newNotes = sno_parseTextToNotes(snoBuffer.content);
+
+                    try {
+                        const userVaults = sno_loadVaultsFromStorage();
+                        const notesJson = JSON.stringify(newNotes);
+                        const encryptedNotes = CryptoJS.AES.encrypt(
+                            notesJson,
+                            masterKey.toString(),
+                        ).toString();
+                        userVaults[currentPasswordHash] = encryptedNotes;
+                        return sno_saveVaultsToStorage(userVaults);
+                    } catch (e) {
+                        console.error("Failed to save notes:", e);
+                        return false;
+                    }
+                }
+
+                function sno_encrypt(text) {
+                    if (!masterKey) return text;
+                    return CryptoJS.AES.encrypt(
+                        text,
+                        masterKey.toString(),
+                    ).toString();
+                }
+
+                function sno_decrypt(encryptedText) {
+                    if (!masterKey) return encryptedText;
+                    try {
+                        const bytes = CryptoJS.AES.decrypt(
+                            encryptedText,
+                            masterKey.toString(),
+                        );
+                        return (
+                            bytes.toString(CryptoJS.enc.Utf8) ||
+                            "[Decryption Error]"
+                        );
+                    } catch (e) {
+                        return "[Unable to decrypt]";
+                    }
+                }
+
+                function sno_formatNotesToText(notesArray) {
+                    if (!notesArray || notesArray.length === 0) {
+                        return `# My First Note\n---\nWelcome to your secure notes buffer.\n\n- Edit this note or create a new one below.\n- Separate notes with a line containing only three equal signs (===).\n- Closing this buffer will automatically encrypt and save your notes.\n===`;
+                    }
+
+                    return notesArray
+                        .map((note) => {
+                            const title = sno_decrypt(note.title);
+                            const content = sno_decrypt(note.content);
+                            return `# ${title}\n---\n${content}`;
+                        })
+                        .join("\n===\n");
+                }
+
+                function sno_parseTextToNotes(text) {
+                    const newNotes = [];
+                    const noteChunks = text
+                        .split("\n===\n")
+                        .filter((chunk) => chunk.trim() !== "");
+
+                    for (const chunk of noteChunks) {
+                        const parts = chunk.split("\n---\n");
+                        if (parts.length < 2) continue;
+
+                        let title = parts[0].trim();
+                        if (title.startsWith("# ")) {
+                            title = title.substring(2).trim();
+                        }
+
+                        const content = parts.slice(1).join("\n---\n").trim();
+                        const now = new Date().toISOString();
+
+                        if (title) {
+                            newNotes.push({
+                                id: Date.now().toString() + Math.random(), // Simple unique ID
+                                title: sno_encrypt(title),
+                                content: sno_encrypt(content),
+                                created: now,
+                                lastModified: now,
+                            });
+                        }
+                    }
+                    return newNotes;
+                }
+
+                function sno_lockVault() {
+                    sno_saveSnoBuffer();
+                    masterKey = null;
+                    notes = [];
+                    currentPasswordHash = null;
+                }
+
+                function sno_escapeHtml(text) {
+                    const div = document.createElement("div");
+                    div.textContent = text;
+                    return div.innerHTML;
+                }
+
+                // Attach SNO functions to window object so inline onclick handlers can find them
+                window.sno_unlockAndLoadBuffer = sno_unlockAndLoadBuffer;
+
+                // SNO Event Listeners
+                document
+                    .getElementById("masterPassword")
+                    .addEventListener("keypress", (e) => {
+                        if (e.key === "Enter") sno_unlockAndLoadBuffer();
+                    });
+
+                // --- ================= ---
+                // --- edit CORE CODE ---
+                // --- ================= ---
+
+                // --- VIEW STATE MANAGEMENT ---
+                let isMarkdownView = false;
+                let isCsvView = false;
+                const mdConverter = new showdown.Converter({
+                    tables: true,
+                    strikethrough: true,
+                    tasklists: true,
+                    emoji: true,
+                    ghCompatibleHeaderId: true,
+                });
+                let csvData = [];
+                let csvSortState = { columnIndex: -1, direction: "asc" };
+                let calendarUpdateInterval = null;
+
+                const getCurrentDateTimeString = () => {
+                    const now = new Date();
+                    const yyyy = now.getFullYear();
+                    const mm = String(now.getMonth() + 1).padStart(2, "0");
+                    const dd = String(now.getDate()).padStart(2, "0");
+                    const hh = String(now.getHours()).padStart(2, "0");
+                    const min = String(now.getMinutes()).padStart(2, "0");
+                    const ss = String(now.getSeconds()).padStart(2, "0");
+                    return `${yyyy}-${mm}-${dd} ${hh}:${min}:${ss}`;
+                };
+
+                // --- HELPER FUNCTION for short IDs ---
+                const generateShortId = (length = 8) => {
+                    const chars =
+                        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+                    let result = "";
+                    for (let i = 0; i < length; i++) {
+                        result += chars.charAt(
+                            Math.floor(Math.random() * chars.length),
+                        );
+                    }
+                    return result;
+                };
+
+                // --- SESSION MANAGEMENT ---
+                let sessionId = window.location.hash.substring(1);
+                if (!sessionId) {
+                    sessionId = generateShortId();
+                    history.replaceState(null, "", `#${sessionId}`);
+                }
+                const storageKey = `editTextSession-${sessionId}`;
+
+                // --- STATE MANAGEMENT ---
+                let buffers = [];
+                let activeBufferIndex = -1;
+                let fileHandles = new Map();
+
+                let lastSearchTerm = "";
+                let searchResults = [];
+                let currentResultIndex = -1;
+
+                const saveState = () => {
+                    const stateToSave = {
+                        buffers: buffers.filter((b) => !b.isSno), // Don't persist SNO buffer
+                        activeBufferIndex: activeBufferIndex,
+                    };
+                    localStorage.setItem(
+                        storageKey,
+                        JSON.stringify(stateToSave),
+                    );
+                };
+
+                const saveCurrentBufferState = () => {
+                    if (
+                        activeBufferIndex !== -1 &&
+                        buffers[activeBufferIndex]
+                    ) {
+                        const buffer = buffers[activeBufferIndex];
+                        // Don't save content for calendar buffer as it's dynamic
+                        if (!buffer.isCalendar) {
+                            buffer.content = editor.value;
+                        }
+                        buffer.selectionStart = editor.selectionStart;
+                        buffer.selectionEnd = editor.selectionEnd;
+                        if (!buffer.isSno) {
+                            saveState();
+                        }
+                    }
+                };
+
+                const renderActiveBuffer = () => {
+                    if (calendarUpdateInterval)
+                        clearInterval(calendarUpdateInterval);
+
+                    if (
+                        activeBufferIndex < 0 ||
+                        activeBufferIndex >= buffers.length
+                    ) {
+                        editor.value = "";
+                        document.title = "edit";
+                        statsFileName.textContent = "edit";
+                        updateStats();
+                        return;
+                    }
+                    const activeBuffer = buffers[activeBufferIndex];
+                    editor.value = activeBuffer.content;
+                    const displayName = activeBuffer.fileName
+                        ? activeBuffer.fileName
+                        : "edit";
+                    document.title = displayName;
+                    statsFileName.textContent = displayName;
+
+                    if (
+                        activeBuffer.selectionStart !== undefined &&
+                        activeBuffer.selectionEnd !== undefined
+                    ) {
+                        editor.focus();
+                        editor.setSelectionRange(
+                            activeBuffer.selectionStart,
+                            activeBuffer.selectionEnd,
+                        );
+                    }
+                    updateStats();
+
+                    if (activeBuffer.isCalendar) {
+                        calendarUpdateInterval = setInterval(() => {
+                            if (buffers[activeBufferIndex]?.isCalendar) {
+                                const firstLineEnd = editor.value.indexOf("\n");
+                                if (firstLineEnd !== -1) {
+                                    const newFirstLine = `Current date: ${getCurrentDateTimeString()}`;
+                                    const currentFirstLine =
+                                        editor.value.substring(0, firstLineEnd);
+                                    if (newFirstLine !== currentFirstLine) {
+                                        const selectionStart =
+                                            editor.selectionStart;
+                                        const selectionEnd =
+                                            editor.selectionEnd;
+                                        editor.value =
+                                            newFirstLine +
+                                            editor.value.substring(
+                                                firstLineEnd,
+                                            );
+                                        // Restore cursor only if it was not on the line being changed
+                                        if (selectionStart > firstLineEnd) {
+                                            editor.setSelectionRange(
+                                                selectionStart,
+                                                selectionEnd,
+                                            );
+                                        }
+                                    }
+                                }
+                            } else {
+                                clearInterval(calendarUpdateInterval);
+                                calendarUpdateInterval = null;
+                            }
+                        }, 1000);
+                    }
+                };
+
+                const createNewBuffer = (
+                    content = "",
+                    fileName = "New",
+                    fileHandle = null,
+                    options = {},
+                ) => {
+                    // Prevent multiple SNO buffers
+                    if (options.isSno) {
+                        const existingSnoIndex = buffers.findIndex(
+                            (b) => b.isSno,
+                        );
+                        if (existingSnoIndex !== -1) {
+                            activeBufferIndex = existingSnoIndex;
+                            renderActiveBuffer();
+                            return;
+                        }
+                    }
+
+                    const newBuffer = {
+                        id: generateShortId(),
+                        content,
+                        fileName,
+                        selectionStart: 0,
+                        selectionEnd: 0,
+                        ...options, // Adds properties like isCalculator, isCalendar, isSno
+                    };
+                    buffers.push(newBuffer);
+                    if (fileHandle) {
+                        fileHandles.set(newBuffer.id, fileHandle);
+                    }
+                    activeBufferIndex = buffers.length - 1;
+                    renderActiveBuffer();
+                    if (!newBuffer.isSno) {
+                        saveState();
+                    }
+                };
+
+                const loadState = () => {
+                    const savedStateJSON = localStorage.getItem(storageKey);
+                    if (savedStateJSON) {
+                        try {
+                            const savedState = JSON.parse(savedStateJSON);
+                            buffers = savedState.buffers || [];
+                            activeBufferIndex =
+                                savedState.activeBufferIndex !== undefined
+                                    ? savedState.activeBufferIndex
+                                    : -1;
+                            if (buffers.length === 0) {
+                                createNewBuffer();
+                            } else {
+                                if (activeBufferIndex >= buffers.length) {
+                                    activeBufferIndex = 0;
+                                }
+                                renderActiveBuffer();
+                            }
+                        } catch (e) {
+                            console.error("Failed to parse saved state:", e);
+                            createNewBuffer();
+                        }
+                    } else {
+                        createNewBuffer();
+                    }
+                };
+
+                const updateLineIndicator = (currentLineNumber) => {
+                    const editorStyles = window.getComputedStyle(editor);
+                    const paddingTop = parseFloat(editorStyles.paddingTop);
+                    const lineHeight = parseFloat(editorStyles.lineHeight);
+                    const scrollTop = editor.scrollTop;
+
+                    const topPosition =
+                        paddingTop +
+                        (currentLineNumber - 1) * lineHeight -
+                        scrollTop;
+
+                    lineIndicator.style.top = `${topPosition}px`;
+                };
+
+                editor.addEventListener("input", () => {
+                    if (activeBufferIndex !== -1) {
+                        buffers[activeBufferIndex].content = editor.value;
+                        saveCurrentBufferState();
+                        updateStats();
+
+                        if (isMarkdownView) {
+                            const markdownText = editor.value;
+                            let html = mdConverter.makeHtml(markdownText);
+                            if (markdownText.includes("[TOC]")) {
+                                const tocHtml = generateTocHtml(markdownText);
+                                html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
+                            }
+                            markdownPreview.innerHTML = html;
+                        }
+                    }
+                });
+
+                const updateStats = () => {
+                    const text = editor.value;
+                    const cursorPos = editor.selectionStart;
+                    const words =
+                        text.trim() === "" ? [] : text.trim().split(/\s+/);
+                    statsWords.textContent = `= ${words.length}`;
+                    const textUpToCursor = text.substring(0, cursorPos);
+                    const lines = textUpToCursor.split("\n");
+                    const currentLineNumber = lines.length;
+                    const currentCharNumber =
+                        lines[lines.length - 1].length + 1;
+                    statsLine.textContent = `↓ ${currentLineNumber}`;
+                    statsChar.textContent = `→ ${currentCharNumber}`;
+                    updateLineIndicator(currentLineNumber);
+                };
+                editor.addEventListener("keyup", () => {
+                    updateStats();
+                    saveCurrentBufferState();
+                });
+                editor.addEventListener("click", () => {
+                    updateStats();
+                    saveCurrentBufferState();
+                });
+                editor.addEventListener("scroll", updateStats);
+
+                const pairMap = {
+                    "(": ")",
+                    "[": "]",
+                    "{": "}",
+                    '"': '"',
+                    "'": "'",
+                    "`": "`",
+                };
+                const openChars = Object.keys(pairMap);
+
+                editor.addEventListener("keydown", (e) => {
+                    // --- CALENDAR NAVIGATION LOGIC ---
+                    if (
+                        activeBufferIndex !== -1 &&
+                        buffers[activeBufferIndex]?.isCalendar &&
+                        (e.key.toLowerCase() === "n" ||
+                            e.key.toLowerCase() === "p")
+                    ) {
+                        e.preventDefault();
+                        const buffer = buffers[activeBufferIndex];
+                        let { calendarYear: year, calendarMonth: month } =
+                            buffer;
+
+                        if (e.key.toLowerCase() === "n") {
+                            month++;
+                            if (month > 11) {
+                                month = 0;
+                                year++;
+                            }
+                        } else {
+                            // 'p' was pressed
+                            month--;
+                            if (month < 0) {
+                                month = 11;
+                                year--;
+                            }
+                        }
+
+                        // Update buffer state
+                        buffer.calendarYear = year;
+                        buffer.calendarMonth = month;
+                        buffer.content = generateCalendarText(year, month);
+                        const mm = String(month + 1).padStart(2, "0");
+                        buffer.fileName = `Calendar-${year}-${mm}.txt`;
+
+                        // Re-render editor with new content
+                        renderActiveBuffer();
+                        return; // Stop further keydown processing
+                    }
+                    // --- END CALENDAR NAVIGATION LOGIC ---
+
+                    if (e.key === "Tab") {
+                        e.preventDefault();
+                        document.execCommand("insertText", false, "\t");
+                        return;
+                    }
+                    if (e.key === "Enter") {
+                        // --- CALCULATOR LOGIC ---
+                        if (
+                            activeBufferIndex !== -1 &&
+                            buffers[activeBufferIndex]?.isCalculator
+                        ) {
+                            e.preventDefault();
+                            const cursorPos = editor.selectionStart;
+                            const textBeforeCursor = editor.value.substring(
+                                0,
+                                cursorPos,
+                            );
+                            const currentLineStart =
+                                textBeforeCursor.lastIndexOf("\n") + 1;
+                            let lineEnd = editor.value.indexOf("\n", cursorPos);
+                            if (lineEnd === -1) {
+                                lineEnd = editor.value.length;
+                            }
+                            const currentLine = editor.value
+                                .substring(currentLineStart, lineEnd)
+                                .trim();
+
+                            if (currentLine && !currentLine.includes("=")) {
+                                const sanitizedExpression = currentLine.replace(
+                                    /[^0-9+\-*/().\s]/g,
+                                    "",
+                                );
+
+                                if (sanitizedExpression) {
+                                    try {
+                                        const result = new Function(
+                                            "return " + sanitizedExpression,
+                                        )();
+                                        const resultText = ` = ${result}`;
+                                        editor.setSelectionRange(
+                                            lineEnd,
+                                            lineEnd,
+                                        );
+                                        document.execCommand(
+                                            "insertText",
+                                            false,
+                                            resultText,
+                                        );
+                                        document.execCommand(
+                                            "insertText",
+                                            false,
+                                            "\n",
+                                        );
+                                    } catch (err) {
+                                        const errorText = ` = Error`;
+                                        editor.setSelectionRange(
+                                            lineEnd,
+                                            lineEnd,
+                                        );
+                                        document.execCommand(
+                                            "insertText",
+                                            false,
+                                            errorText,
+                                        );
+                                        document.execCommand(
+                                            "insertText",
+                                            false,
+                                            "\n",
+                                        );
+                                    }
+                                } else {
+                                    document.execCommand(
+                                        "insertText",
+                                        false,
+                                        "\n",
+                                    );
+                                }
+                            } else {
+                                document.execCommand("insertText", false, "\n");
+                            }
+                            return; // Stop other Enter logic
+                        }
+                        // --- END CALCULATOR LOGIC ---
+
+                        const cursorPos = editor.selectionStart;
+                        const textBeforeCursor = editor.value.substring(
+                            0,
+                            cursorPos,
+                        );
+
+                        const lastWord = textBeforeCursor.split(/\s+/).pop();
+                        if (handleTextExpansion(lastWord, e)) return;
+
+                        const currentLineStart =
+                            textBeforeCursor.lastIndexOf("\n") + 1;
+                        let lineEnd = editor.value.indexOf("\n", cursorPos);
+                        if (lineEnd === -1) {
+                            lineEnd = editor.value.length;
+                        }
+                        const currentLine = editor.value.substring(
+                            currentLineStart,
+                            lineEnd,
+                        );
+
+                        const bulletListMatch =
+                            currentLine.match(/^(\s*[-*+]\s+)(.*)/);
+                        const numberedListMatch = currentLine.match(
+                            /^(\s*)(\d+)(\.\s+)(.*)/,
+                        );
+
+                        if (bulletListMatch || numberedListMatch) {
+                            e.preventDefault();
+                            const content = bulletListMatch
+                                ? bulletListMatch[2]
+                                : numberedListMatch[4];
+
+                            if (content.trim() === "") {
+                                editor.setSelectionRange(
+                                    currentLineStart,
+                                    lineEnd,
+                                );
+                                document.execCommand("insertText", false, "");
+                            } else {
+                                let nextMarker;
+                                if (bulletListMatch) {
+                                    nextMarker = bulletListMatch[1];
+                                } else {
+                                    const indent = numberedListMatch[1];
+                                    const num = parseInt(
+                                        numberedListMatch[2],
+                                        10,
+                                    );
+                                    const markerSuffix = numberedListMatch[3];
+                                    nextMarker = `${indent}${num + 1}${markerSuffix}`;
+                                }
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n" + nextMarker,
+                                );
+                            }
+                        } else {
+                            e.preventDefault();
+                            const lineUpToCursor = editor.value.substring(
+                                currentLineStart,
+                                cursorPos,
+                            );
+                            const leadingWhitespaceMatch =
+                                lineUpToCursor.match(/^\s*/);
+                            const indent = leadingWhitespaceMatch
+                                ? leadingWhitespaceMatch[0]
+                                : "";
+                            document.execCommand(
+                                "insertText",
+                                false,
+                                "\n" + indent,
+                            );
+                        }
+                        return;
+                    }
+                    if (e.key === " ") {
+                        const cursorPos = editor.selectionStart;
+                        const textBeforeCursor = editor.value.substring(
+                            0,
+                            cursorPos,
+                        );
+                        const lastWord = textBeforeCursor.split(/\s+/).pop();
+                        if (handleTextExpansion(lastWord, e)) return;
+                    }
+                    if (openChars.includes(e.key)) {
+                        e.preventDefault();
+                        const start = editor.selectionStart,
+                            end = editor.selectionEnd;
+                        const selectedText = editor.value.substring(start, end);
+                        const textToInsert =
+                            e.key + selectedText + pairMap[e.key];
+                        document.execCommand("insertText", false, textToInsert);
+                        if (start === end) {
+                            editor.selectionStart = editor.selectionEnd =
+                                start + 1;
+                        } else {
+                            editor.selectionStart = start + 1;
+                            editor.selectionEnd = end + 1;
+                        }
+                    }
+                });
+
+                // --- VIEW TOGGLE LOGIC ---
+                const generateTocHtml = (markdownText) => {
+                    const tocLines = [];
+                    const headingRegex = /^(#{1,6})\s+(.*)/gm;
+                    let match;
+
+                    while ((match = headingRegex.exec(markdownText)) !== null) {
+                        const level = match[1].length;
+                        const text = match[2].trim();
+                        // Replicate Showdown's ID generation
+                        const id = text
+                            .toLowerCase()
+                            .replace(/[^\w\s-]/g, "") // Remove non-word chars
+                            .replace(/\s+/g, "-"); // Replace spaces with hyphens
+
+                        tocLines.push({ level, text, id });
+                    }
+
+                    if (tocLines.length === 0) {
+                        return "";
+                    }
+
+                    let html =
+                        '<div class="toc"><h3>Table of Contents</h3><ul>';
+                    tocLines.forEach((line) => {
+                        html += `<li style="margin-left: ${
+                            (line.level - 1) * 1.5
+                        }em;">
+                        <a href="#${line.id}" style="color: #ffb74d; text-decoration: none;">${line.text}</a>
+                     </li>`;
+                    });
+                    html += "</ul></div><hr>";
+
+                    return html;
+                };
+
+                const toggleMarkdownPreview = () => {
+                    hideMenu();
+                    isMarkdownView = !isMarkdownView;
+
+                    mdMenuItems.forEach((item) =>
+                        item.classList.toggle("hidden", !isMarkdownView),
+                    );
+
+                    if (isCsvView) {
+                        isCsvView = false;
+                        csvGrid.classList.add("hidden");
+                        csvViewBtn.classList.remove("active");
+                    }
+
+                    if (isMarkdownView) {
+                        const markdownText = editor.value;
+                        let html = mdConverter.makeHtml(markdownText);
+
+                        // Check if the user wants a ToC and replace the placeholder
+                        if (markdownText.includes("[TOC]")) {
+                            const tocHtml = generateTocHtml(markdownText);
+                            html = html.replace(/<p>\[TOC\]<\/p>/, tocHtml);
+                        }
+
+                        markdownPreview.innerHTML = html;
+                        editContainer.classList.add("hidden");
+                        markdownPreview.classList.remove("hidden");
+                        mdViewBtn.classList.add("active");
+                    } else {
+                        editContainer.classList.remove("hidden");
+                        markdownPreview.classList.add("hidden");
+                        mdViewBtn.classList.remove("active");
+                        editor.focus();
+                    }
+                };
+
+                const toggleCsvGrid = () => {
+                    hideMenu();
+                    isCsvView = !isCsvView;
+
+                    if (isMarkdownView) {
+                        isMarkdownView = false;
+                        markdownPreview.classList.add("hidden");
+                        mdViewBtn.classList.remove("active");
+                        mdMenuItems.forEach((item) =>
+                            item.classList.add("hidden"),
+                        );
+                    }
+
+                    if (isCsvView) {
+                        editContainer.classList.add("hidden");
+                        csvGrid.classList.remove("hidden");
+                        csvViewBtn.classList.add("active");
+                        parseCsvAndRenderGrid();
+                    } else {
+                        editContainer.classList.remove("hidden");
+                        csvGrid.classList.add("hidden");
+                        csvViewBtn.classList.remove("active");
+                        editor.focus();
+                    }
+                };
+
+                mdViewBtn.addEventListener("click", toggleMarkdownPreview);
+                csvViewBtn.addEventListener("click", toggleCsvGrid);
+
+                // --- CSV Grid Functions ---
+                const sortCsvData = (columnIndex) => {
+                    if (csvData.length < 2) return; // Nothing to sort
+
+                    if (csvSortState.columnIndex === columnIndex) {
+                        csvSortState.direction =
+                            csvSortState.direction === "asc" ? "desc" : "asc";
+                    } else {
+                        csvSortState.columnIndex = columnIndex;
+                        csvSortState.direction = "asc";
+                    }
+
+                    const header = csvData[0];
+                    const dataRows = csvData.slice(1);
+
+                    dataRows.sort((a, b) => {
+                        const valA = a[columnIndex] || "";
+                        const valB = b[columnIndex] || "";
+
+                        const numA = parseFloat(valA);
+                        const numB = parseFloat(valB);
+
+                        let compareResult;
+                        if (!isNaN(numA) && !isNaN(numB)) {
+                            compareResult = numA - numB;
+                        } else {
+                            compareResult = valA.localeCompare(
+                                valB,
+                                undefined,
+                                {
+                                    sensitivity: "base",
+                                },
+                            );
+                        }
+
+                        return csvSortState.direction === "asc"
+                            ? compareResult
+                            : -compareResult;
+                    });
+
+                    csvData = [header, ...dataRows];
+                    updateEditorFromCsv();
+                    renderCsvGrid();
+                };
+
+                const parseCsvAndRenderGrid = () => {
+                    const text = editor.value.trim();
+                    csvSortState = { columnIndex: -1, direction: "asc" }; // Reset sort on parse
+                    csvData = text.split("\n").map((line) => line.split(","));
+                    if (
+                        csvData.length === 1 &&
+                        csvData[0].length === 1 &&
+                        csvData[0][0] === ""
+                    ) {
+                        csvData = [
+                            ["Header1", "Header2"],
+                            ["data1", "data2"],
+                        ]; // Default data
+                    }
+                    renderCsvGrid();
+                };
+
+                const updateEditorFromCsv = () => {
+                    const newText = csvData
+                        .map((row) => row.join(","))
+                        .join("\n");
+                    editor.value = newText;
+                    if (activeBufferIndex !== -1) {
+                        buffers[activeBufferIndex].content = newText;
+                    }
+                    saveState();
+                };
+
+                const renderCsvGrid = () => {
+                    csvGrid.innerHTML = "";
+                    if (!csvData || csvData.length === 0) return;
+
+                    const tableContainer = document.createElement("div");
+                    tableContainer.id = "csv-grid-table-container";
+
+                    const table = document.createElement("table");
+
+                    const thead = document.createElement("thead");
+                    const headerRow = document.createElement("tr");
+                    csvData[0].forEach((header, index) => {
+                        const th = document.createElement("th");
+                        th.innerHTML = `
+                            <span contenteditable="true" data-col-index="${index}" class="csv-header-sortable" title="Click to sort">${sno_escapeHtml(header)}</span>
+                            <button class="csv-action-btn delete-col-btn" data-col-index="${index}" title="Delete Column">🗑️</button>
+                        `;
+                        headerRow.appendChild(th);
+                    });
+                    headerRow.appendChild(document.createElement("th"));
+                    thead.appendChild(headerRow);
+                    table.appendChild(thead);
+
+                    const tbody = document.createElement("tbody");
+                    for (let i = 1; i < csvData.length; i++) {
+                        const dataRow = document.createElement("tr");
+                        csvData[i].forEach((cell, j) => {
+                            const td = document.createElement("td");
+                            td.textContent = cell;
+                            td.contentEditable = "true";
+                            td.dataset.rowIndex = i;
+                            td.dataset.colIndex = j;
+                            dataRow.appendChild(td);
+                        });
+                        const actionTd = document.createElement("td");
+                        actionTd.innerHTML = `<button class="csv-action-btn delete-row-btn" data-row-index="${i}" title="Delete Row">🗑️</button>`;
+                        dataRow.appendChild(actionTd);
+                        tbody.appendChild(dataRow);
+                    }
+                    table.appendChild(tbody);
+                    tableContainer.appendChild(table);
+
+                    const controls = document.createElement("div");
+                    controls.id = "csv-controls";
+                    controls.innerHTML = `
+                        <button id="add-row-btn" class="btn btn-secondary">+ Add Row</button>
+                        <button id="add-col-btn" class="btn btn-secondary">+ Add Column</button>
+                    `;
+
+                    csvGrid.appendChild(tableContainer);
+                    csvGrid.appendChild(controls);
+                };
+
+                csvGrid.addEventListener("click", (e) => {
+                    if (e.target.classList.contains("csv-header-sortable")) {
+                        const colIndex = parseInt(
+                            e.target.dataset.colIndex,
+                            10,
+                        );
+                        if (!isNaN(colIndex)) {
+                            sortCsvData(colIndex);
+                        }
+                        return;
+                    }
+
+                    if (e.target.id === "add-row-btn") {
+                        const numCols = csvData[0] ? csvData[0].length : 1;
+                        csvData.push(new Array(numCols).fill(""));
+                        updateEditorFromCsv();
+                        renderCsvGrid();
+                    } else if (e.target.id === "add-col-btn") {
+                        const newHeader = prompt(
+                            "Enter new column header:",
+                            "NewColumn",
+                        );
+                        if (newHeader) {
+                            csvData.forEach((row, i) =>
+                                row.push(i === 0 ? newHeader : ""),
+                            );
+                            updateEditorFromCsv();
+                            renderCsvGrid();
+                        }
+                    } else if (e.target.classList.contains("delete-row-btn")) {
+                        const rowIndex = parseInt(
+                            e.target.dataset.rowIndex,
+                            10,
+                        );
+                        csvData.splice(rowIndex, 1);
+                        updateEditorFromCsv();
+                        renderCsvGrid();
+                    } else if (e.target.classList.contains("delete-col-btn")) {
+                        const colIndex = parseInt(
+                            e.target.dataset.colIndex,
+                            10,
+                        );
+                        csvData.forEach((row) => row.splice(colIndex, 1));
+                        updateEditorFromCsv();
+                        renderCsvGrid();
+                    }
+                });
+
+                csvGrid.addEventListener(
+                    "blur",
+                    (e) => {
+                        if (e.target.contentEditable === "true") {
+                            if (e.target.tagName === "TD") {
+                                const rowIndex = parseInt(
+                                    e.target.dataset.rowIndex,
+                                    10,
+                                );
+                                const colIndex = parseInt(
+                                    e.target.dataset.colIndex,
+                                    10,
+                                );
+                                csvData[rowIndex][colIndex] =
+                                    e.target.textContent;
+                            } else if (e.target.tagName === "SPAN") {
+                                const colIndex = parseInt(
+                                    e.target.dataset.colIndex,
+                                    10,
+                                );
+                                csvData[0][colIndex] = e.target.textContent;
+                            }
+                            updateEditorFromCsv();
+                        }
+                    },
+                    true,
+                );
+
+                csvGrid.addEventListener("keydown", (e) => {
+                    if (e.target.contentEditable !== "true") return;
+
+                    if (
+                        ![
+                            "ArrowUp",
+                            "ArrowDown",
+                            "ArrowLeft",
+                            "ArrowRight",
+                        ].includes(e.key)
+                    ) {
+                        return;
+                    }
+
+                    e.preventDefault();
+
+                    const isHeader = e.target.tagName === "SPAN";
+                    let currentRow, currentCol;
+
+                    if (isHeader) {
+                        currentRow = 0;
+                        currentCol = parseInt(e.target.dataset.colIndex, 10);
+                    } else {
+                        currentRow = parseInt(e.target.dataset.rowIndex, 10);
+                        currentCol = parseInt(e.target.dataset.colIndex, 10);
+                    }
+
+                    let nextRow = currentRow;
+                    let nextCol = currentCol;
+
+                    switch (e.key) {
+                        case "ArrowUp":
+                            nextRow--;
+                            break;
+                        case "ArrowDown":
+                            nextRow++;
+                            break;
+                        case "ArrowLeft":
+                            nextCol--;
+                            break;
+                        case "ArrowRight":
+                            nextCol++;
+                            break;
+                    }
+
+                    let nextEl = null;
+                    if (nextRow === 0) {
+                        nextEl = csvGrid.querySelector(
+                            `th span[data-col-index="${nextCol}"]`,
+                        );
+                    } else {
+                        nextEl = csvGrid.querySelector(
+                            `td[data-row-index="${nextRow}"][data-col-index="${nextCol}"]`,
+                        );
+                    }
+
+                    if (nextEl) {
+                        nextEl.focus();
+                        const selection = window.getSelection();
+                        const range = document.createRange();
+                        range.selectNodeContents(nextEl);
+                        selection.removeAllRanges();
+                        selection.addRange(range);
+                    }
+                });
+
+                const showMenu = (x, y) => {
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.display = "block";
+                };
+                const hideMenu = () => (contextMenu.style.display = "none");
+                document.addEventListener("contextmenu", (e) => {
+                    e.preventDefault();
+                    showMenu(e.clientX, e.clientY);
+                });
+                menuTrigger.addEventListener("click", (e) => {
+                    e.stopPropagation();
+                    const rect = menuTrigger.getBoundingClientRect();
+                    contextMenu.style.visibility = "hidden";
+                    contextMenu.style.display = "block";
+                    const menuWidth = contextMenu.offsetWidth;
+                    const x = rect.right - menuWidth;
+                    const y = rect.bottom + 4;
+                    contextMenu.style.left = `${x}px`;
+                    contextMenu.style.top = `${y}px`;
+                    contextMenu.style.visibility = "visible";
+                });
+                document.addEventListener("click", () => hideMenu());
+
+                const showFindBar = () => {
+                    hideMenu();
+                    findBar.style.display = "flex";
+                    findInput.focus();
+                    findInput.select();
+                };
+                const hideFindBar = () => {
+                    findBar.style.display = "none";
+                };
+
+                const selectResult = () => {
+                    if (currentResultIndex === -1 || searchResults.length === 0)
+                        return;
+                    const foundPos = searchResults[currentResultIndex];
+                    editor.focus();
+                    editor.setSelectionRange(
+                        foundPos,
+                        foundPos + lastSearchTerm.length,
+                    );
+                    const totalLines = editor.value.split("\n").length;
+                    const currentLine = editor.value
+                        .substring(0, foundPos)
+                        .split("\n").length;
+                    editor.scrollTop =
+                        (currentLine / totalLines) * editor.scrollHeight -
+                        editor.clientHeight / 2;
+                };
+
+                const findNextMatch = () => {
+                    const searchTerm = findInput.value;
+                    if (!searchTerm) return;
+
+                    if (searchTerm !== lastSearchTerm) {
+                        lastSearchTerm = searchTerm;
+                        searchResults = [];
+                        const text = editor.value;
+                        const regex = new RegExp(searchTerm, "gi");
+                        let match;
+                        while ((match = regex.exec(text)) !== null) {
+                            searchResults.push(match.index);
+                        }
+                        currentResultIndex = -1;
+                    }
+
+                    if (searchResults.length === 0) return;
+                    currentResultIndex =
+                        (currentResultIndex + 1) % searchResults.length;
+                    selectResult();
+                };
+
+                const findPrevMatch = () => {
+                    if (!findInput.value) return;
+                    if (findInput.value !== lastSearchTerm) {
+                        findNextMatch();
+                        return;
+                    }
+                    if (searchResults.length === 0) return;
+                    currentResultIndex =
+                        (currentResultIndex - 1 + searchResults.length) %
+                        searchResults.length;
+                    selectResult();
+                };
+
+                document
+                    .getElementById("menu-find")
+                    .addEventListener("click", showFindBar);
+                findClose.addEventListener("click", hideFindBar);
+                findNext.addEventListener("click", findNextMatch);
+                findPrev.addEventListener("click", findPrevMatch);
+
+                findInput.addEventListener("keydown", (e) => {
+                    // Standard find logic
+                    if (e.key === "Enter") {
+                        e.preventDefault();
+                        e.shiftKey ? findPrevMatch() : findNextMatch();
+                    }
+                    if (e.key === "Escape") {
+                        hideFindBar();
+                    }
+                });
+
+                const newFile = () => {
+                    hideMenu();
+                    window.open(
+                        window.location.origin + window.location.pathname,
+                        "_blank",
+                    );
+                };
+
+                const openFile = async () => {
+                    hideMenu();
+                    try {
+                        const [fileHandle] = await window.showOpenFilePicker({
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: {
+                                        "text/plain": [
+                                            ".txt",
+                                            ".md",
+                                            ".js",
+                                            ".html",
+                                            ".css",
+                                            ".json",
+                                            ".xml",
+                                            ".csv",
+                                        ],
+                                    },
+                                },
+                            ],
+                        });
+                        const file = await fileHandle.getFile();
+                        const content = await file.text();
+                        createNewBuffer(content, file.name, fileHandle);
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error opening file:", err);
+                    }
+                };
+
+                const saveFile = async () => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const fileHandle = fileHandles.get(activeBuffer.id);
+
+                    if (fileHandle) {
+                        try {
+                            const writable = await fileHandle.createWritable();
+                            await writable.write(activeBuffer.content);
+                            await writable.close();
+                        } catch (err) {
+                            console.error("Error saving file:", err);
+                        }
+                    } else {
+                        saveFileAs();
+                    }
+                };
+
+                const saveFileAs = async (suggestedName = null) => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    const activeBuffer = buffers[activeBufferIndex];
+
+                    if (activeBuffer.isSno) {
+                        alert(
+                            "Secure notes can only be saved to the encrypted local vault, not to a file.",
+                        );
+                        return;
+                    }
+
+                    try {
+                        const options = {
+                            types: [
+                                {
+                                    description: "Text Files",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
+                        };
+                        if (suggestedName) {
+                            options.suggestedName = suggestedName;
+                        }
+                        const newFileHandle =
+                            await window.showSaveFilePicker(options);
+                        fileHandles.set(activeBuffer.id, newFileHandle);
+                        activeBuffer.fileName = newFileHandle.name;
+                        const writable = await newFileHandle.createWritable();
+                        await writable.write(activeBuffer.content);
+                        await writable.close();
+                        renderActiveBuffer();
+                        saveState();
+                    } catch (err) {
+                        if (err.name !== "AbortError")
+                            console.error("Error saving file as:", err);
+                    }
+                };
+
+                const saveAsHtml = () => {
+                    hideMenu();
+                    if (!isMarkdownView || activeBufferIndex === -1) return;
+
+                    const htmlContent = markdownPreview.innerHTML;
+                    const fullHtml = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Document</title><style>body{font-family:sans-serif;max-width:800px;margin:2rem auto;padding:0 1rem;line-height:1.6;}img{max-width:100%;height:auto;}pre{white-space:pre-wrap;word-wrap:break-word;}</style></head><body>${htmlContent}</body></html>`;
+
+                    const blob = new Blob([fullHtml], { type: "text/html" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const baseName = activeBuffer.fileName.includes(".")
+                        ? activeBuffer.fileName
+                              .split(".")
+                              .slice(0, -1)
+                              .join(".")
+                        : activeBuffer.fileName;
+                    a.download = `${baseName}.html`;
+                    a.href = url;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                };
+
+                const saveAsPdf = () => {
+                    hideMenu();
+                    if (!isMarkdownView) return;
+                    window.print();
+                };
+
+                const closeFile = () => {
+                    hideMenu();
+                    if (buffers.length <= 0 || activeBufferIndex < 0) return;
+
+                    const bufferToClose = buffers[activeBufferIndex];
+                    if (bufferToClose.isSno) {
+                        sno_lockVault();
+                    }
+
+                    fileHandles.delete(bufferToClose.id);
+                    buffers.splice(activeBufferIndex, 1);
+
+                    if (buffers.length === 0) {
+                        createNewBuffer();
+                    } else {
+                        if (activeBufferIndex >= buffers.length) {
+                            activeBufferIndex = buffers.length - 1;
+                        }
+                        renderActiveBuffer();
+                    }
+                    saveState();
+                };
+
+                const nextFile = () => {
+                    hideMenu();
+                    saveCurrentBufferState();
+                    if (buffers.length > 1) {
+                        activeBufferIndex =
+                            (activeBufferIndex + 1) % buffers.length;
+                        renderActiveBuffer();
+                        saveState();
+                    }
+                };
+                const prevFile = () => {
+                    hideMenu();
+                    saveCurrentBufferState();
+                    if (buffers.length > 1) {
+                        activeBufferIndex =
+                            (activeBufferIndex - 1 + buffers.length) %
+                            buffers.length;
+                        renderActiveBuffer();
+                        saveState();
+                    }
+                };
+
+                const generateCalendarText = (year, month) => {
+                    const monthNames = [
+                        "January",
+                        "February",
+                        "March",
+                        "April",
+                        "May",
+                        "June",
+                        "July",
+                        "August",
+                        "September",
+                        "October",
+                        "November",
+                        "December",
+                    ];
+
+                    let content = `Current date: ${getCurrentDateTimeString()}\n\n`;
+                    content += `## ${monthNames[month]} ${year}\n`;
+                    content += `(p)revious month | (n)ext month\n\n`;
+
+                    const firstDay = new Date(year, month, 1).getDay(); // 0=Sun
+                    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+                    content += "Su Mo Tu We Th Fr Sa\n";
+
+                    let calendarLine = "";
+                    for (let i = 0; i < firstDay; i++) {
+                        calendarLine += "   "; // 3 spaces for alignment
+                    }
+
+                    for (let i = 1; i <= daysInMonth; i++) {
+                        calendarLine += String(i).padStart(2, " ") + " ";
+                        if ((firstDay + i) % 7 === 0 || i === daysInMonth) {
+                            content += calendarLine.trimEnd() + "\n";
+                            calendarLine = "";
+                        }
+                    }
+                    return content;
+                };
+
+                const createNewJournalBuffer = () => {
+                    hideMenu();
+                    const now = new Date();
+                    const year = now.getFullYear();
+                    const month = now.getMonth(); // 0-indexed
+                    const mm = String(month + 1).padStart(2, "0");
+                    const fileName = `Calendar-${year}-${mm}.txt`;
+
+                    const content = generateCalendarText(year, month);
+
+                    createNewBuffer(content, fileName, null, {
+                        isCalendar: true,
+                        calendarYear: year,
+                        calendarMonth: month,
+                    });
+                };
+
+                const createNewCalculatorBuffer = () => {
+                    hideMenu();
+                    const content = `# Basic Calculator\n\nType a math problem and press Enter.\nExample: 5 * (10 + 2) / 3\n\n---\n\n`;
+                    const fileName = "Calculator";
+                    createNewBuffer(content, fileName, null, {
+                        isCalculator: true,
+                    });
+                };
+
+                const openLink = () => {
+                    hideMenu();
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const fullText = editor.value;
+                    const urlRegex = /https?:\/\/[^\s]+/; // Finds the first URL
+                    const urlRegexGlobal = /https?:\/\/[^\s]+/g; // Finds all URLs
+
+                    let textToScan = "";
+                    let urlsToOpen = [];
+
+                    // Case 1: User has selected/highlighted text
+                    if (start !== end) {
+                        textToScan = fullText.substring(start, end);
+                        urlsToOpen = textToScan.match(urlRegexGlobal);
+                    }
+                    // Case 2: No selection, just a cursor on a line
+                    else {
+                        // Find the boundaries of the current line
+                        const lineStart =
+                            fullText.lastIndexOf("\n", start - 1) + 1;
+                        let lineEnd = fullText.indexOf("\n", start);
+                        if (lineEnd === -1) {
+                            lineEnd = fullText.length;
+                        }
+                        textToScan = fullText.substring(lineStart, lineEnd);
+
+                        // Find the first URL on that line
+                        const singleUrlMatch = textToScan.match(urlRegex);
+                        if (singleUrlMatch) {
+                            urlsToOpen = [singleUrlMatch[0]];
+                        }
+                    }
+
+                    if (urlsToOpen && urlsToOpen.length > 0) {
+                        if (urlsToOpen.length > 1) {
+                            alert(
+                                `Found ${urlsToOpen.length} links. Your browser's pop-up blocker may prevent some from opening.`,
+                            );
+                        }
+                        urlsToOpen.forEach((url) => {
+                            try {
+                                new URL(url);
+                                window.open(
+                                    url,
+                                    "_blank",
+                                    "noopener,noreferrer",
+                                );
+                            } catch (e) {
+                                console.warn(`Skipping invalid URL: ${url}`);
+                            }
+                        });
+                    } else {
+                        alert(
+                            "No valid URL found in the current selection or on the current line.",
+                        );
+                    }
+                };
+
+                const emailFile = () => {
+                    hideMenu();
+                    if (activeBufferIndex === -1) return;
+                    const activeBuffer = buffers[activeBufferIndex];
+                    const subject = activeBuffer.fileName || "My Note";
+                    let body = activeBuffer.content;
+
+                    // Replace newlines with CRLF for better mail client compatibility
+                    body = body.replace(/\n/g, "\r\n");
+
+                    const mailtoLink = `mailto:?subject=${encodeURIComponent(
+                        subject,
+                    )}&body=${encodeURIComponent(body)}`;
+                    window.location.href = mailtoLink;
+                };
+
+                const showSnoView = () => {
+                    hideMenu();
+                    const snoBufferIndex = buffers.findIndex((b) => b.isSno);
+                    if (snoBufferIndex !== -1) {
+                        activeBufferIndex = snoBufferIndex;
+                        renderActiveBuffer();
+                    } else {
+                        if (!sno_isLocalStorageAvailable()) {
+                            alert(
+                                "This feature requires local storage to function. Please enable it in your browser settings.",
+                            );
+                            return;
+                        }
+                        editContainer.style.display = "none";
+                        snoContainer.classList.remove("hidden");
+                        document.getElementById("masterPassword").focus();
+                    }
+                };
+
+                // --- Help Modal Logic ---
+                const showHelpModal = () => {
+                    hideMenu();
+                    helpModal.classList.add("active");
+                };
+                const hideHelpModal = () => {
+                    helpModal.classList.remove("active");
+                };
+
+                // --- ======================= ---
+                // --- TEXT EXPANDER CODE ---
+                // --- ======================= ---
+
+                const textExpanderModal = document.getElementById(
+                    "text-expander-modal",
+                );
+                const expansionsList =
+                    document.getElementById("expansions-list");
+                const shortcutInput = document.getElementById(
+                    "expansion-shortcut-input",
+                );
+                const valueInput = document.getElementById(
+                    "expansion-value-input",
+                );
+                const addExpansionBtn =
+                    document.getElementById("add-expansion-btn");
+                const importBtn = document.getElementById(
+                    "import-expansions-btn",
+                );
+                const exportBtn = document.getElementById(
+                    "export-expansions-btn",
+                );
+                const importFileInput = document.getElementById(
+                    "import-expansions-input",
+                );
+                const dateFormatInput =
+                    document.getElementById("date-format-input");
+                const saveDateFormatBtn = document.getElementById(
+                    "save-date-format-btn",
+                );
+
+                const EXPANSIONS_STORAGE_KEY = "editTextExpansions";
+                const DATE_FORMAT_STORAGE_KEY = "editTextDateFormat";
+                const DEFAULT_DATE_FORMAT = "YYYY-MM-DD";
+                let textExpansions = {};
+
+                const loadTextExpansions = () => {
+                    const stored = localStorage.getItem(EXPANSIONS_STORAGE_KEY);
+                    if (stored) {
+                        try {
+                            textExpansions = JSON.parse(stored);
+                        } catch (e) {
+                            console.error("Could not parse text expansions", e);
+                            textExpansions = {};
+                        }
+                    }
+                    renderExpansionsList();
+                };
+
+                const saveTextExpansions = () => {
+                    localStorage.setItem(
+                        EXPANSIONS_STORAGE_KEY,
+                        JSON.stringify(textExpansions),
+                    );
+                };
+
+                const renderExpansionsList = () => {
+                    expansionsList.innerHTML = "";
+                    if (Object.keys(textExpansions).length === 0) {
+                        expansionsList.innerHTML = `<div class="expansion-item" style="color: #888888;">No custom shortcuts defined.</div>`;
+                        return;
+                    }
+
+                    const sortedKeys = Object.keys(textExpansions).sort();
+
+                    for (const shortcut of sortedKeys) {
+                        const value = textExpansions[shortcut];
+                        const item = document.createElement("div");
+                        item.className = "expansion-item";
+                        item.innerHTML = `
+                            <span class="expansion-item-shortcut">${sno_escapeHtml(shortcut)}</span>
+                            <span class="expansion-item-value">${sno_escapeHtml(value)}</span>
+                            <div class="expansion-item-actions">
+                                <button class="btn btn-small" data-shortcut="${shortcut}">Edit</button>
+                                <button class="btn btn-small btn-danger" data-shortcut="${shortcut}">Del</button>
+                            </div>
+                        `;
+                        expansionsList.appendChild(item);
+                    }
+                };
+
+                const showTextExpanderModal = () => {
+                    hideMenu();
+                    renderExpansionsList();
+                    dateFormatInput.value =
+                        localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
+                        DEFAULT_DATE_FORMAT;
+                    textExpanderModal.classList.add("active");
+                };
+
+                const hideTextExpanderModal = () => {
+                    textExpanderModal.classList.remove("active");
+                    shortcutInput.value = "";
+                    valueInput.value = "";
+                };
+
+                const addOrUpdateExpansion = () => {
+                    const shortcut = shortcutInput.value.trim();
+                    const value = valueInput.value;
+
+                    if (!shortcut.startsWith(".") || shortcut.length < 2) {
+                        alert(
+                            "Shortcut must start with '.' and be at least 2 characters long.",
+                        );
+                        return;
+                    }
+                    if (shortcut === ".d") {
+                        alert(
+                            "'.d' is a reserved shortcut for the current date and cannot be modified.",
+                        );
+                        return;
+                    }
+                    if (!value) {
+                        alert("Expansion value cannot be empty.");
+                        return;
+                    }
+
+                    textExpansions[shortcut] = value;
+                    saveTextExpansions();
+                    renderExpansionsList();
+                    shortcutInput.value = "";
+                    valueInput.value = "";
+                    shortcutInput.focus();
+                };
+
+                expansionsList.addEventListener("click", (e) => {
+                    const shortcut = e.target.dataset.shortcut;
+                    if (!shortcut) return;
+
+                    if (e.target.textContent === "Edit") {
+                        shortcutInput.value = shortcut;
+                        valueInput.value = textExpansions[shortcut];
+                        valueInput.focus();
+                    } else if (e.target.textContent === "Del") {
+                        if (
+                            confirm(
+                                `Are you sure you want to delete the shortcut "${shortcut}"?`,
+                            )
+                        ) {
+                            delete textExpansions[shortcut];
+                            saveTextExpansions();
+                            renderExpansionsList();
+                        }
+                    }
+                });
+
+                const handleTextExpansion = (shortcut, event) => {
+                    let expansion = null;
+                    if (shortcut === ".d") {
+                        const format =
+                            localStorage.getItem(DATE_FORMAT_STORAGE_KEY) ||
+                            DEFAULT_DATE_FORMAT;
+                        const d = new Date();
+                        const year = d.getFullYear();
+                        const month = d.getMonth(); // 0-indexed
+                        const day = d.getDate();
+                        const monthNames = [
+                            "Jan",
+                            "Feb",
+                            "Mar",
+                            "Apr",
+                            "May",
+                            "Jun",
+                            "Jul",
+                            "Aug",
+                            "Sep",
+                            "Oct",
+                            "Nov",
+                            "Dec",
+                        ];
+
+                        expansion = format
+                            .replace(/YYYY/g, year)
+                            .replace(/YY/g, String(year).slice(-2))
+                            .replace(/MMM/g, monthNames[month])
+                            .replace(/MM/g, String(month + 1).padStart(2, "0"))
+                            .replace(/DD/g, String(day).padStart(2, "0"));
+                    } else if (textExpansions[shortcut]) {
+                        expansion = textExpansions[shortcut];
+                    }
+
+                    if (expansion !== null) {
+                        event.preventDefault();
+                        const startPos =
+                            editor.selectionStart - shortcut.length;
+                        const endPos = editor.selectionStart;
+
+                        // Replace the shortcut with the expansion
+                        editor.setSelectionRange(startPos, endPos);
+                        document.execCommand("insertText", false, expansion);
+
+                        return true; // Indicate that an expansion happened
+                    }
+                    return false;
+                };
+
+                const exportExpansions = () => {
+                    const dataStr =
+                        "data:text/json;charset=utf-8," +
+                        encodeURIComponent(
+                            JSON.stringify(textExpansions, null, 2),
+                        );
+                    const downloadAnchorNode = document.createElement("a");
+                    downloadAnchorNode.setAttribute("href", dataStr);
+                    downloadAnchorNode.setAttribute(
+                        "download",
+                        "edit-expansions.txt",
+                    );
+                    document.body.appendChild(downloadAnchorNode);
+                    downloadAnchorNode.click();
+                    downloadAnchorNode.remove();
+                };
+
+                const importExpansions = (event) => {
+                    const file = event.target.files[0];
+                    if (!file) return;
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const imported = JSON.parse(e.target.result);
+                            if (
+                                typeof imported !== "object" ||
+                                imported === null
+                            ) {
+                                throw new Error("Invalid format");
+                            }
+                            // Simple merge: imported keys overwrite existing ones
+                            textExpansions = { ...textExpansions, ...imported };
+                            saveTextExpansions();
+                            renderExpansionsList();
+                            alert("Shortcuts imported successfully!");
+                        } catch (err) {
+                            alert(
+                                "Error importing file. Please make sure it's a valid JSON file.",
+                            );
+                            console.error("Import error:", err);
+                        } finally {
+                            // Reset file input to allow importing the same file again
+                            importFileInput.value = "";
+                        }
+                    };
+                    reader.readAsText(file);
+                };
+
+                const saveDateFormat = () => {
+                    const newFormat = dateFormatInput.value.trim();
+                    // Basic validation to ensure only allowed characters are used
+                    if (!/^[YMD\/-]+$/.test(newFormat) && newFormat !== "") {
+                        alert(
+                            "Invalid characters in date format. Only use Y, M, D, -, and /.",
+                        );
+                        return;
+                    }
+                    localStorage.setItem(DATE_FORMAT_STORAGE_KEY, newFormat);
+                    alert("Date format saved!");
+                };
+
+                // --- Helper functions for markdown shortcuts ---
+                const applyMarkdownFormatting = (prefix, suffix = prefix) => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const selectedText = editor.value.substring(start, end);
+                    const textToInsert = prefix + selectedText + suffix;
+                    document.execCommand("insertText", false, textToInsert);
+
+                    if (start === end) {
+                        // No selection, place cursor in the middle
+                        editor.selectionStart = editor.selectionEnd =
+                            start + prefix.length;
+                    } else {
+                        // Text was selected, re-select it without the markers
+                        editor.selectionStart = start + prefix.length;
+                        editor.selectionEnd = end + prefix.length;
+                    }
+                };
+
+                const applyLinkFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const selectedText = editor.value.substring(start, end);
+
+                    if (start === end) {
+                        document.execCommand("insertText", false, "[]()");
+                        editor.selectionStart = editor.selectionEnd = start + 1; // Cursor in []
+                    } else {
+                        document.execCommand(
+                            "insertText",
+                            false,
+                            `[${selectedText}]()`,
+                        );
+                        editor.selectionStart = editor.selectionEnd =
+                            start + selectedText.length + 3; // Cursor in ()
+                    }
+                };
+
+                const applyImageFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    document.execCommand("insertText", false, "![alt text]()");
+                    editor.selectionStart = editor.selectionEnd = start + 14; // Cursor in ()
+                };
+
+                const applyHeadingFormatting = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    let lineEnd = val.indexOf("\n", start);
+                    if (lineEnd === -1) lineEnd = val.length;
+
+                    const line = val.substring(lineStart, lineEnd);
+                    const match = line.match(/^(#*)\s*(.*)/);
+
+                    if (match) {
+                        let hashes = match[1];
+                        const content = match[2];
+
+                        hashes = hashes.length >= 6 ? "" : hashes + "#";
+
+                        const newLine = hashes
+                            ? `${hashes} ${content}`
+                            : content;
+
+                        editor.setSelectionRange(lineStart, lineEnd);
+                        document.execCommand("insertText", false, newLine);
+
+                        const newCursorPos =
+                            lineStart +
+                            (hashes ? hashes.length + 1 : 0) +
+                            content.length;
+                        editor.selectionStart = editor.selectionEnd = Math.min(
+                            newCursorPos,
+                            lineStart + newLine.length,
+                        );
+                    }
+                };
+
+                const toggleLinePrefix = (prefix) => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const end = editor.selectionEnd;
+                    const val = editor.value;
+
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    let lineEnd = val.indexOf("\n", end);
+                    if (lineEnd === -1) lineEnd = val.length;
+
+                    const selectedLinesText = val.substring(lineStart, lineEnd);
+                    const lines = selectedLinesText.split("\n");
+                    const allPrefixed = lines.every((line) =>
+                        line.trim().startsWith(prefix.trim()),
+                    );
+
+                    let newLinesText = "";
+                    if (allPrefixed) {
+                        newLinesText = lines
+                            .map((line) => line.replace(prefix, ""))
+                            .join("\n");
+                    } else {
+                        newLinesText = lines
+                            .map((line) => `${prefix}${line}`)
+                            .join("\n");
+                    }
+
+                    editor.setSelectionRange(lineStart, lineEnd);
+                    document.execCommand("insertText", false, newLinesText);
+                    const newEndPos = lineStart + newLinesText.length;
+                    editor.setSelectionRange(newEndPos, newEndPos);
+                };
+
+                const insertTodoItem = () => {
+                    if (document.activeElement !== editor) return;
+                    const start = editor.selectionStart;
+                    const val = editor.value;
+                    const lineStart = val.lastIndexOf("\n", start - 1) + 1;
+                    const prefix = "- [ ] ";
+
+                    editor.setSelectionRange(lineStart, lineStart);
+                    document.execCommand("insertText", false, prefix);
+
+                    const newCursorPos = lineStart + prefix.length;
+                    editor.setSelectionRange(newCursorPos, newCursorPos);
+                };
+
+                // --- PWA Install Logic ---
+                let deferredPrompt;
+                const pwaInstallLink =
+                    document.getElementById("pwa-install-link");
+
+                window.addEventListener("beforeinstallprompt", (e) => {
+                    e.preventDefault();
+                    deferredPrompt = e;
+                    if (pwaInstallLink) {
+                        pwaInstallLink.style.display = "block";
+                    }
+                });
+
+                if (pwaInstallLink) {
+                    pwaInstallLink.addEventListener("click", async (e) => {
+                        e.preventDefault();
+                        if (deferredPrompt) {
+                            deferredPrompt.prompt();
+                            const { outcome } = await deferredPrompt.userChoice;
+                            console.log(
+                                `User response to the install prompt: ${outcome}`,
+                            );
+                            deferredPrompt = null;
+                            pwaInstallLink.style.display = "none";
+                        }
+                    });
+                }
+
+                // --- MENU & SHORTCUT LISTENERS ---
+                document
+                    .getElementById("menu-new")
+                    .addEventListener("click", newFile);
+                document
+                    .getElementById("menu-open")
+                    .addEventListener("click", openFile);
+                document
+                    .getElementById("menu-save")
+                    .addEventListener("click", saveFile);
+                document
+                    .getElementById("menu-save-as")
+                    .addEventListener("click", saveFileAs);
+                saveHtmlBtn.addEventListener("click", saveAsHtml);
+                savePdfBtn.addEventListener("click", saveAsPdf);
+                document
+                    .getElementById("menu-close-file")
+                    .addEventListener("click", closeFile);
+                document
+                    .getElementById("menu-next-file")
+                    .addEventListener("click", nextFile);
+                document
+                    .getElementById("menu-prev-file")
+                    .addEventListener("click", prevFile);
+                document
+                    .getElementById("menu-sno")
+                    .addEventListener("click", showSnoView);
+                document
+                    .getElementById("menu-help")
+                    .addEventListener("click", showHelpModal);
+                document
+                    .getElementById("close-help-modal")
+                    .addEventListener("click", hideHelpModal);
+                helpModal.addEventListener("click", (e) => {
+                    if (e.target === e.currentTarget) hideHelpModal();
+                });
+                document
+                    .getElementById("menu-text-expander")
+                    .addEventListener("click", showTextExpanderModal);
+                document
+                    .getElementById("close-expander-modal")
+                    .addEventListener("click", hideTextExpanderModal);
+                textExpanderModal.addEventListener("click", (e) => {
+                    if (e.target === e.currentTarget) hideTextExpanderModal();
+                });
+                addExpansionBtn.addEventListener("click", addOrUpdateExpansion);
+                exportBtn.addEventListener("click", exportExpansions);
+                importBtn.addEventListener("click", () =>
+                    importFileInput.click(),
+                );
+                importFileInput.addEventListener("change", importExpansions);
+                saveDateFormatBtn.addEventListener("click", saveDateFormat);
+
+                document.addEventListener("keydown", (e) => {
+                    if (isMarkdownView || isCsvView) {
+                        if (e.key === "Escape") {
+                            if (isMarkdownView) toggleMarkdownPreview();
+                            if (isCsvView) toggleCsvGrid();
+                        }
+                        return;
+                    }
+
+                    if (
+                        findBar.style.display === "flex" &&
+                        e.target === findInput
+                    )
+                        return;
+                    if (snoContainer.classList.contains("hidden") === false) {
+                        if (e.key === "Escape") {
+                            snoContainer.classList.add("hidden");
+                            editContainer.style.display = "block";
+                        }
+                        return;
+                    }
+                    if (textExpanderModal.classList.contains("active")) {
+                        if (e.key === "Escape") hideTextExpanderModal();
+                        if (
+                            e.key === "Enter" &&
+                            (e.target === shortcutInput ||
+                                e.target === valueInput)
+                        ) {
+                            addOrUpdateExpansion();
+                        }
+                        return;
+                    }
+                    if (helpModal.classList.contains("active")) {
+                        if (e.key === "Escape") hideHelpModal();
+                        return;
+                    }
+
+                    if (e.ctrlKey || e.metaKey) {
+                        // Shortcuts that are NOT Shift-sensitive
+                        switch (e.key.toLowerCase()) {
+                            case "n":
+                                e.preventDefault();
+                                newFile();
+                                break;
+                            case "o":
+                                e.preventDefault();
+                                openFile();
+                                break;
+                            case "s":
+                                e.preventDefault();
+                                saveFile();
+                                break;
+                            case "u":
+                                e.preventDefault();
+                                openLink();
+                                break;
+                            case "f":
+                                e.preventDefault();
+                                showFindBar();
+                                break;
+                            case "b":
+                                e.preventDefault();
+                                applyMarkdownFormatting("**");
+                                break;
+                            case "i":
+                                e.preventDefault();
+                                applyMarkdownFormatting("*");
+                                break;
+                            case "k":
+                                e.preventDefault();
+                                applyLinkFormatting();
+                                break;
+                            case "h":
+                                e.preventDefault();
+                                applyHeadingFormatting();
+                                break;
+                            case "e":
+                                e.preventDefault();
+                                applyMarkdownFormatting("`");
+                                break;
+                            case "t":
+                                e.preventDefault();
+                                const tableTemplate =
+                                    "| Header 1 | Header 2 |\n|:---------|:---------|\n| Cell 1   | Cell 2   |\n";
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    tableTemplate,
+                                );
+                                break;
+                            case "-":
+                                e.preventDefault();
+                                document.execCommand(
+                                    "insertText",
+                                    false,
+                                    "\n\n---\n\n",
+                                );
+                                break;
+                            case "w":
+                                e.preventDefault();
+                                closeFile();
+                                break;
+                            case "arrowright":
+                                e.preventDefault();
+                                nextFile();
+                                break;
+                            case "arrowleft":
+                                e.preventDefault();
+                                prevFile();
+                                break;
+                            case "=":
+                                e.preventDefault();
+                                showSnoView();
+                                break;
+                            case "j": // Journal/Calendar
+                                e.preventDefault();
+                                createNewJournalBuffer();
+                                break;
+                            case "m": // Math / Calculator
+                                e.preventDefault();
+                                createNewCalculatorBuffer();
+                                break;
+                        }
+
+                        // Shortcuts that ARE Shift-sensitive
+                        if (e.shiftKey) {
+                            switch (e.key.toLowerCase()) {
+                                case "s":
+                                    e.preventDefault();
+                                    applyMarkdownFormatting("~~");
+                                    break;
+                                case "i":
+                                    e.preventDefault();
+                                    applyImageFormatting();
+                                    break;
+                                case ">":
+                                    e.preventDefault();
+                                    toggleLinePrefix("> ");
+                                    break;
+                                case "c":
+                                    e.preventDefault();
+                                    insertTodoItem();
+                                    break;
+                                case "e":
+                                    e.preventDefault();
+                                    emailFile();
+                                    break;
+                            }
+                        }
+                    }
+                    if (e.key === "Escape") {
+                        hideFindBar();
+                    }
+                });
+
+                body.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    body.classList.add("dragover");
+                });
+                body.addEventListener("dragleave", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    body.classList.remove("dragover");
+                });
+                body.addEventListener("drop", (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    body.classList.remove("dragover");
+
+                    if (e.dataTransfer.files.length > 0) {
+                        for (const file of e.dataTransfer.files) {
+                            if (
+                                file &&
+                                (file.type.startsWith("text/") ||
+                                    file.type === "" ||
+                                    file.name.match(
+                                        /\.(txt|md|js|html|css|json|xml|csv)$/,
+                                    ))
+                            ) {
+                                const reader = new FileReader();
+                                reader.onload = (re) => {
+                                    createNewBuffer(
+                                        re.target.result,
+                                        file.name,
+                                    );
+                                };
+                                reader.readAsText(file);
+                            }
+                        }
+                    }
+                });
+
+                window.addEventListener("beforeunload", () => {
+                    saveCurrentBufferState();
+                    if (masterKey && currentPasswordHash) {
+                        sno_saveSnoBuffer();
+                    }
+                });
+
+                // --- INITIALIZATION ---
+                loadState();
+                loadTextExpansions();
+            });
+
+            // --- SERVICE WORKER REGISTRATION ---
+            if ("serviceWorker" in navigator) {
+                window.addEventListener("load", () => {
+                    navigator.serviceWorker
+                        .register("/sw.js")
+                        .then((reg) =>
+                            console.log(
+                                "SW registration successful:",
+                                reg.scope,
+                            ),
+                        )
+                        .catch((err) =>
+                            console.log("SW registration failed:", err),
+                        );
+                });
+            }
+            // --- THEME TOGGLE (Light/Dark) ---
+            const THEME_KEY = "editThemeMode";
+            const applyTheme = (mode) => {
+                if (mode === "light") {
+                    document.body.classList.add("light-mode");
+                } else {
+                    document.body.classList.remove("light-mode");
+                }
+                localStorage.setItem(THEME_KEY, mode);
+            };
+
+            // Load theme from localStorage on start
+            const savedTheme = localStorage.getItem(THEME_KEY) || "dark";
+            applyTheme(savedTheme);
+
+            // Keyboard shortcut: Ctrl + L
+            document.addEventListener("keydown", (e) => {
+                if (e.ctrlKey && e.key.toLowerCase() === "l") {
+                    e.preventDefault();
+                    const newMode = document.body.classList.contains(
+                        "light-mode",
+                    )
+                        ? "dark"
+                        : "light";
+                    applyTheme(newMode);
+                }
+            });
+        </script>
+    </body>
+</html>
