@@ -517,7 +517,7 @@
 
         <div class="editor-container">
             <div class="empty-state" id="emptyState">
-                <h2>No files open</h2>
+                <h2>Welcome to EDITR.</h2>
                 <p>
                     Press <span class="kbd">Ctrl+N</span> or
                     <span class="kbd">Cmd+N</span> to create a new file
@@ -1020,16 +1020,18 @@
                     e.preventDefault();
                     document.body.classList.remove("drag-over");
 
-                    const files = Array.from(e.dataTransfer.files).filter(
+                    const droppedFiles = Array.from(
+                        e.dataTransfer.files,
+                    ).filter(
                         (f) =>
                             f.type === "text/plain" || f.name.endsWith(".txt"),
                     );
 
-                    for (const file of files) {
+                    for (const file of droppedFiles) {
                         if (!(await checkFileSize(file))) continue;
 
                         // Check for duplicate
-                        const existingIndex = window.files.findIndex(
+                        const existingIndex = files.findIndex(
                             (f) => f.name === file.name,
                         );
                         if (existingIndex !== -1) {
@@ -1041,15 +1043,15 @@
                         const textFile = new TextFile(file.name, content, null);
                         textFile.savedContent = content;
 
-                        window.files.push(textFile);
-                        activeFileIndex = window.files.length - 1;
+                        files.push(textFile);
+                        activeFileIndex = files.length - 1;
                         updateUI();
                         scrollToTab(activeFileIndex);
                         stateDirty = true;
                         saveState();
                     }
 
-                    if (files.length > 0) editor.focus();
+                    if (droppedFiles.length > 0) editor.focus();
                 });
             }
 
