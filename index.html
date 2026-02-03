@@ -75,6 +75,13 @@
                 font-size: 13px;
                 font-family: "JetBrains Mono", "Courier New", monospace;
                 transition: all 0.15s ease;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            button svg {
+                display: block;
             }
 
             button:hover {
@@ -251,6 +258,24 @@
                 position: relative;
             }
 
+            body.drag-over .editor-container::before {
+                content: "Drop files here to open";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(74, 158, 255, 0.1);
+                border: 2px dashed var(--accent);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 18px;
+                color: var(--accent);
+                pointer-events: none;
+                z-index: 10;
+            }
+
             .editor {
                 width: 100%;
                 height: 100%;
@@ -388,13 +413,91 @@
         <header>
             <div class="logo">EDITR</div>
             <div class="actions">
-                <button id="newBtn" title="New (Ctrl/Cmd+N)">New</button>
-                <button id="openBtn" title="Open (Ctrl/Cmd+O)">Open</button>
-                <button id="saveBtn" class="primary" title="Save (Ctrl/Cmd+S)">
-                    Save
+                <button id="newBtn" title="New (Ctrl/Cmd+N)">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                    >
+                        <line x1="8" y1="3" x2="8" y2="13" />
+                        <line x1="3" y1="8" x2="13" y2="8" />
+                    </svg>
+                </button>
+                <button id="openBtn" title="Open (Ctrl/Cmd+O)">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M2 4.5 L2 13 C2 13.5 2.5 14 3 14 L13 14 C13.5 14 14 13.5 14 13 L14 5.5 C14 5 13.5 4.5 13 4.5 L7.5 4.5 L6 2.5 L3 2.5 C2.5 2.5 2 3 2 3.5 Z"
+                        />
+                    </svg>
+                </button>
+                <button id="saveBtn" title="Save (Ctrl/Cmd+S)">
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M13 6 L13 3 C13 2.5 12.5 2 12 2 L4 2 C3.5 2 3 2.5 3 3 L3 6"
+                        />
+                        <polyline points="8,5 8,14" />
+                        <polyline points="5,11 8,14 11,11" />
+                    </svg>
                 </button>
                 <button id="saveAsBtn" title="Save As (Ctrl/Cmd+Shift+S)">
-                    Save As
+                    <svg
+                        width="16"
+                        height="16"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="1.5"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <path
+                            d="M11 5.5 L11 3 C11 2.5 10.5 2 10 2 L4 2 C3.5 2 3 2.5 3 3 L3 5.5"
+                        />
+                        <polyline points="7,5 7,12" />
+                        <polyline points="5,10 7,12 9,10" />
+                        <circle
+                            cx="12.5"
+                            cy="12.5"
+                            r="2.5"
+                            fill="var(--bg-secondary)"
+                        />
+                        <line
+                            x1="12.5"
+                            y1="11.5"
+                            x2="12.5"
+                            y2="13.5"
+                            stroke-width="1.2"
+                        />
+                        <line
+                            x1="11.5"
+                            y1="12.5"
+                            x2="13.5"
+                            y2="12.5"
+                            stroke-width="1.2"
+                        />
+                    </svg>
                 </button>
                 <button id="helpBtn" title="Help (Ctrl/Cmd+/)">?</button>
             </div>
@@ -499,6 +602,36 @@
                 </div>
             </div>
 
+            <div
+                style="
+                    margin-top: 24px;
+                    padding-top: 16px;
+                    border-top: 1px solid var(--border);
+                    font-size: 12px;
+                    color: var(--text-secondary);
+                    line-height: 1.6;
+                "
+            >
+                <div>
+                    Editr Full Version (<a
+                        href="https://www.editr.cc/editr"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="color: var(--accent); text-decoration: none"
+                        >www.editr.cc/editr</a
+                    >)
+                </div>
+                <div>
+                    Editr made by Barney Matthews (<a
+                        href="https://www.barney.me"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style="color: var(--accent); text-decoration: none"
+                        >www.barney.me</a
+                    >)
+                </div>
+            </div>
+
             <button
                 onclick="toggleShortcuts()"
                 style="margin-top: 16px; width: 100%"
@@ -535,6 +668,7 @@
 
             // Drag-and-drop state
             let draggedTabIndex = null;
+            let draggedBlobUrl = null; // track blob URL for proper cleanup
 
             // ---------------------------------------------------------------------------
             // Utilities
@@ -567,10 +701,12 @@
                 constructor(name = null, content = "", handle = null) {
                     this.id = nextFileId++;
                     this.name = name || `New-${this.id}.txt`;
+                    this.originalName = this.name; // track original name for rename detection
                     this.content = content; // source of truth ONLY when this file is NOT active
                     this.savedContent = content;
                     this.handle = handle;
                     this._dirty = false; // true once the user has typed since last save
+                    this.nameChanged = false; // true if user renamed via double-click
                 }
 
                 // When this file IS the active file the textarea is the source of truth.
@@ -810,8 +946,29 @@
                         closeFile(parseInt(closeEl.dataset.close));
                         return;
                     }
+
+                    // Don't switch tabs if clicking on tab-name (allow double-click to work)
+                    if (e.target.classList.contains("tab-name")) {
+                        return;
+                    }
+
                     const tabEl = e.target.closest(".tab[data-index]");
                     if (tabEl) switchToFile(parseInt(tabEl.dataset.index));
+                });
+
+                // Tab double-click to rename
+                tabs.addEventListener("dblclick", (e) => {
+                    // Check if we double-clicked on the tab name or anywhere in the tab
+                    const tabNameEl = e.target.closest(".tab-name");
+                    const tabEl = e.target.closest(".tab[data-index]");
+
+                    if (!tabEl) return;
+
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    const index = parseInt(tabEl.dataset.index);
+                    renameFile(index);
                 });
 
                 tabNavLeft.addEventListener("click", () => scrollTabs(-200));
@@ -840,6 +997,60 @@
                 });
 
                 window.addEventListener("resize", updateTabNavButtons);
+
+                // Drag-and-drop to open files
+                document.body.addEventListener("dragover", (e) => {
+                    e.preventDefault();
+
+                    // Only show drop zone for external files, not tab reordering
+                    if (e.dataTransfer.types.includes("Files")) {
+                        e.dataTransfer.dropEffect = "copy";
+                        document.body.classList.add("drag-over");
+                    }
+                });
+
+                document.body.addEventListener("dragleave", (e) => {
+                    // Only remove if we're leaving the body entirely
+                    if (e.target === document.body) {
+                        document.body.classList.remove("drag-over");
+                    }
+                });
+
+                document.body.addEventListener("drop", async (e) => {
+                    e.preventDefault();
+                    document.body.classList.remove("drag-over");
+
+                    const files = Array.from(e.dataTransfer.files).filter(
+                        (f) =>
+                            f.type === "text/plain" || f.name.endsWith(".txt"),
+                    );
+
+                    for (const file of files) {
+                        if (!(await checkFileSize(file))) continue;
+
+                        // Check for duplicate
+                        const existingIndex = window.files.findIndex(
+                            (f) => f.name === file.name,
+                        );
+                        if (existingIndex !== -1) {
+                            switchToFile(existingIndex);
+                            continue;
+                        }
+
+                        const content = await file.text();
+                        const textFile = new TextFile(file.name, content, null);
+                        textFile.savedContent = content;
+
+                        window.files.push(textFile);
+                        activeFileIndex = window.files.length - 1;
+                        updateUI();
+                        scrollToTab(activeFileIndex);
+                        stateDirty = true;
+                        saveState();
+                    }
+
+                    if (files.length > 0) editor.focus();
+                });
             }
 
             // ---------------------------------------------------------------------------
@@ -957,7 +1168,9 @@
                 try {
                     if (typeof window.showSaveFilePicker === "function") {
                         let handle = file.handle;
-                        if (!handle) {
+
+                        // If the name was changed via double-click, force Save As behavior
+                        if (file.nameChanged || !handle) {
                             handle = await window.showSaveFilePicker({
                                 suggestedName: file.name,
                                 types: [
@@ -968,11 +1181,14 @@
                                 ],
                             });
                             file.handle = handle;
+                            file.nameChanged = false; // reset flag after prompting
                         }
+
                         const writable = await handle.createWritable();
                         await writable.write(file.content);
                         await writable.close();
                         file.name = handle.name;
+                        file.originalName = file.name; // update original name after successful save
                     } else {
                         const blob = new Blob([file.content], {
                             type: "text/plain",
@@ -985,6 +1201,8 @@
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
+                        file.nameChanged = false; // reset flag
+                        file.originalName = file.name; // update original name
                     }
 
                     file.savedContent = file.content;
@@ -1021,6 +1239,8 @@
                         await writable.close();
                         file.handle = handle;
                         file.name = handle.name;
+                        file.originalName = file.name; // update original name
+                        file.nameChanged = false; // reset flag
                     } else {
                         const blob = new Blob([file.content], {
                             type: "text/plain",
@@ -1033,6 +1253,8 @@
                         a.click();
                         document.body.removeChild(a);
                         URL.revokeObjectURL(url);
+                        file.originalName = file.name; // update original name
+                        file.nameChanged = false; // reset flag
                     }
 
                     file.savedContent = file.content;
@@ -1071,6 +1293,25 @@
                 } else if (activeFileIndex > index) {
                     activeFileIndex--;
                 }
+
+                updateUI();
+                stateDirty = true;
+                saveState();
+            }
+
+            function renameFile(index) {
+                const file = files[index];
+                const newName = prompt("Rename file:", file.name);
+
+                if (!newName || newName === file.name) return;
+
+                // Ensure it has .txt extension
+                const finalName = newName.endsWith(".txt")
+                    ? newName
+                    : newName + ".txt";
+
+                file.name = finalName;
+                file.nameChanged = true; // flag so next Save will use Save As behavior
 
                 updateUI();
                 stateDirty = true;
@@ -1133,7 +1374,7 @@
                 <button class="tab ${index === activeFileIndex ? "active" : ""} ${file.isModified ? "modified" : ""}"
                         draggable="true"
                         data-index="${index}">
-                    <span class="tab-name">${escapeHtml(file.displayName)}</span>
+                    <span class="tab-name" draggable="false">${escapeHtml(file.displayName)}</span>
                     <span class="tab-close" data-close="${index}">×</span>
                 </button>
             `,
@@ -1151,10 +1392,34 @@
 
             // Drag handlers
             function handleDragStart(e) {
+                // Don't allow dragging if the user is clicking on the tab name
+                // (so they can double-click to rename)
+                if (e.target.classList.contains("tab-name")) {
+                    e.preventDefault();
+                    return;
+                }
+
                 draggedTabIndex = parseInt(e.currentTarget.dataset.index);
                 e.currentTarget.classList.add("dragging");
-                e.dataTransfer.effectAllowed = "move";
+
+                const file = files[draggedTabIndex];
+                file.syncFromEditor();
+
+                // Allow both reordering within tabs AND dragging out to desktop
+                e.dataTransfer.effectAllowed = "copyMove";
                 e.dataTransfer.setData("text/html", e.currentTarget.innerHTML);
+
+                // Enable drag-out to save: set downloadURL to allow saving to desktop
+                // Format: MIME:filename:dataURL
+                const blob = new Blob([file.content], { type: "text/plain" });
+                draggedBlobUrl = URL.createObjectURL(blob);
+                e.dataTransfer.setData(
+                    "DownloadURL",
+                    `text/plain:${file.name}:${draggedBlobUrl}`,
+                );
+
+                // Don't revoke immediately - browser needs time to read it for the download
+                // Will clean up in handleDragEnd
             }
             function handleDragEnd(e) {
                 e.currentTarget.classList.remove("dragging");
@@ -1162,6 +1427,14 @@
                     t.classList.remove("drag-over"),
                 );
                 draggedTabIndex = null;
+
+                // Clean up blob URL after a delay to ensure browser has finished with it
+                if (draggedBlobUrl) {
+                    setTimeout(() => {
+                        URL.revokeObjectURL(draggedBlobUrl);
+                        draggedBlobUrl = null;
+                    }, 1000); // 1 second should be plenty for the download to start
+                }
             }
             function handleDragOver(e) {
                 e.preventDefault();
