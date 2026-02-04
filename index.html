@@ -4,12 +4,13 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>EDITR</title>
+
+        <meta name="theme-color" content="#1a1a1a" />
         <link
             rel="icon"
             href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="16" height="16" fill="%23808080"/><text x="50%" y="55%" font-family="sans-serif" font-size="12" font-weight="bold" fill="white" text-anchor="middle" dominant-baseline="middle">e</text></svg>'
         />
-        <link rel="manifest" href="manifest.json" />
-        <meta name="theme-color" content="#1a1a1a" />
+
         <style>
             @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap");
 
@@ -32,76 +33,62 @@
             }
 
             body {
-                font-family: "JetBrains Mono", "Courier New", monospace;
+                font-family: "JetBrains Mono", monospace;
                 background: var(--bg-primary);
                 color: var(--text-primary);
                 height: 100vh;
-                overflow: hidden;
                 display: flex;
                 flex-direction: column;
+                overflow: hidden;
             }
 
             /* Header */
             header {
                 background: var(--bg-secondary);
                 border-bottom: 1px solid var(--border);
-                padding: 12px 16px;
+                padding: 10px 14px;
                 display: flex;
                 align-items: center;
-                gap: 12px;
-                flex-shrink: 0;
+                gap: 10px;
             }
 
             .logo {
                 font-weight: 500;
                 font-size: 14px;
-                color: var(--text-primary);
+                cursor: pointer;
                 letter-spacing: 0.5px;
             }
 
             .actions {
-                display: flex;
-                gap: 8px;
                 margin-left: auto;
+                display: flex;
+                gap: 6px;
             }
 
-            button {
-                background: transparent;
-                border: 1px solid var(--border);
-                color: var(--text-primary);
-                padding: 6px 14px;
-                border-radius: 4px;
-                cursor: pointer;
-                font-size: 13px;
-                font-family: "JetBrains Mono", "Courier New", monospace;
-                transition: all 0.15s ease;
-                display: inline-flex;
+            .icon-btn {
+                width: 34px;
+                height: 34px;
+                display: flex;
                 align-items: center;
                 justify-content: center;
+                border: 1px solid var(--border);
+                border-radius: 4px;
+                background: transparent;
+                cursor: pointer;
+                color: var(--text-primary);
             }
 
-            button svg {
-                display: block;
-            }
-
-            button:hover {
+            .icon-btn:hover {
                 background: var(--bg-hover);
                 border-color: var(--accent-dim);
             }
 
-            button:active {
-                transform: translateY(1px);
-            }
-
-            button.primary {
-                background: var(--accent);
-                border-color: var(--accent);
-                color: #fff;
-            }
-
-            button.primary:hover {
-                background: var(--accent-dim);
-                border-color: var(--accent-dim);
+            .icon-btn svg {
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 1.6;
             }
 
             /* Tabs */
@@ -109,88 +96,23 @@
                 background: var(--bg-secondary);
                 border-bottom: 1px solid var(--border);
                 display: flex;
-                align-items: center;
-                flex-shrink: 0;
-                position: relative;
-            }
-
-            .tabs-container {
-                overflow-x: auto;
-                overflow-y: hidden;
-                white-space: nowrap;
-                flex: 1;
-                scrollbar-width: thin;
-                scrollbar-color: var(--border) transparent;
-                scroll-behavior: smooth;
-            }
-
-            .tabs-container::-webkit-scrollbar {
-                height: 6px;
-            }
-
-            .tabs-container::-webkit-scrollbar-track {
-                background: transparent;
-            }
-
-            .tabs-container::-webkit-scrollbar-thumb {
-                background: var(--border);
-                border-radius: 3px;
             }
 
             .tabs {
-                display: inline-flex;
-                min-width: 100%;
-            }
-
-            .tab-nav-btn {
-                background: var(--bg-secondary);
-                border: none;
-                border-left: 1px solid var(--border);
-                color: var(--text-secondary);
-                padding: 10px 12px;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.15s ease;
-                flex-shrink: 0;
-            }
-
-            .tab-nav-btn:hover {
-                background: var(--bg-hover);
-                color: var(--text-primary);
-            }
-
-            .tab-nav-btn:disabled {
-                opacity: 0.3;
-                cursor: not-allowed;
-            }
-
-            .tab-nav-btn:disabled:hover {
-                background: var(--bg-secondary);
-                color: var(--text-secondary);
+                display: flex;
+                overflow-x: auto;
+                flex: 1;
             }
 
             .tab {
-                background: transparent;
-                border: none;
-                border-right: 1px solid var(--border);
-                color: var(--text-secondary);
                 padding: 10px 16px;
+                border-right: 1px solid var(--border);
                 cursor: pointer;
-                font-size: 13px;
-                font-family: "JetBrains Mono", "Courier New", monospace;
+                color: var(--text-secondary);
                 display: flex;
-                align-items: center;
                 gap: 8px;
-                transition: all 0.15s ease;
-                position: relative;
-                max-width: 200px;
-                min-width: 120px;
-                user-select: none;
-            }
-
-            .tab:hover {
-                background: var(--bg-hover);
-                color: var(--text-primary);
+                align-items: center;
+                white-space: nowrap;
             }
 
             .tab.active {
@@ -198,101 +120,34 @@
                 color: var(--text-primary);
             }
 
-            .tab.active::after {
-                content: "";
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                height: 2px;
-                background: var(--accent);
-            }
-
-            .tab.dragging {
-                opacity: 0.5;
-                cursor: grabbing;
-            }
-
-            .tab.drag-over {
-                border-left: 2px solid var(--accent);
-            }
-
             .tab-name {
-                flex: 1;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                text-align: left;
+                user-select: none;
             }
 
             .tab-close {
                 opacity: 0;
-                background: none;
-                border: none;
-                color: var(--text-secondary);
-                padding: 2px 4px;
                 cursor: pointer;
-                font-size: 16px;
-                line-height: 1;
-                transition: opacity 0.15s ease;
             }
 
-            .tab:hover .tab-close,
-            .tab.active .tab-close {
+            .tab:hover .tab-close {
                 opacity: 1;
-            }
-
-            .tab-close:hover {
-                color: var(--text-primary);
-            }
-
-            .tab.modified .tab-name::after {
-                content: "•";
-                margin-left: 4px;
-                color: var(--accent);
             }
 
             /* Editor */
             .editor-container {
                 flex: 1;
-                overflow: hidden;
-                position: relative;
-            }
-
-            body.drag-over .editor-container::before {
-                content: "Drop files here to open";
-                position: absolute;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(74, 158, 255, 0.1);
-                border: 2px dashed var(--accent);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-                color: var(--accent);
-                pointer-events: none;
-                z-index: 10;
             }
 
             .editor {
                 width: 100%;
                 height: 100%;
                 background: var(--bg-primary);
-                color: var(--text-primary);
                 border: none;
+                color: var(--text-primary);
                 padding: 32px;
-                font-family: "JetBrains Mono", "Courier New", monospace;
-                font-size: 14px;
-                line-height: 1.6;
+                font-family: inherit;
                 resize: none;
                 outline: none;
-            }
-
-            .editor::placeholder {
-                color: var(--text-secondary);
-                font-style: italic;
             }
 
             /* Status bar */
@@ -302,1319 +157,430 @@
                 padding: 6px 16px;
                 display: flex;
                 justify-content: space-between;
-                align-items: center;
                 font-size: 11px;
                 color: var(--text-secondary);
-                flex-shrink: 0;
             }
 
-            .status-left,
-            .status-right {
-                display: flex;
-                gap: 16px;
-            }
-
-            /* Shortcuts help */
-            .shortcuts {
-                position: fixed;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: var(--bg-secondary);
-                border: 1px solid var(--border);
-                border-radius: 8px;
-                padding: 24px;
-                max-width: 500px;
-                width: 90%;
-                max-height: 80vh;
-                overflow-y: auto;
-                z-index: 1000;
-                display: none;
-            }
-
-            .shortcuts.visible {
-                display: block;
-            }
-
-            .shortcuts h2 {
-                font-size: 16px;
-                margin-bottom: 16px;
-                color: var(--text-primary);
-            }
-
-            .shortcut-group {
-                margin-bottom: 20px;
-            }
-
-            .shortcut-group h3 {
-                font-size: 12px;
-                color: var(--text-secondary);
-                margin-bottom: 8px;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-            }
-
-            .shortcut-item {
-                display: flex;
-                justify-content: space-between;
-                padding: 6px 0;
-                font-size: 13px;
-            }
-
-            .shortcut-keys {
-                color: var(--accent);
-            }
-
+            /* Overlay */
             .overlay {
                 position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
+                inset: 0;
                 background: rgba(0, 0, 0, 0.7);
-                z-index: 999;
                 display: none;
+                z-index: 999;
             }
-
             .overlay.visible {
                 display: block;
             }
 
-            /* Empty state */
-            .empty-state {
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                text-align: center;
-                color: var(--text-secondary);
+            /* Secret modal */
+            .secret-modal {
+                position: fixed;
+                top: 10%;
+                left: 10%;
+                width: 80%;
+                height: 80%;
+                background: var(--bg-secondary);
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 24px;
+                display: none;
+                flex-direction: column;
+                gap: 12px;
+                z-index: 1000;
             }
 
-            .empty-state h2 {
-                font-family: "JetBrains Mono", "Courier New", monospace;
-                font-size: 18px;
-                margin-bottom: 12px;
+            .secret-modal input,
+            .secret-modal textarea {
+                background: var(--bg-primary);
+                border: 1px solid var(--border);
+                color: var(--text-primary);
+                font-family: inherit;
+                padding: 8px;
             }
 
-            .empty-state p {
-                font-size: 14px;
-                margin-bottom: 8px;
+            .secret-modal textarea {
+                flex: 1;
+                resize: none;
             }
 
-            .kbd {
-                background: var(--bg-hover);
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-size: 12px;
+            .secret-actions {
+                display: flex;
+                justify-content: flex-end;
+                gap: 8px;
             }
         </style>
     </head>
+
     <body>
         <header>
-            <div class="logo">EDITR</div>
+            <div class="logo" id="secretNotesBtn">EDITR</div>
+
             <div class="actions">
-                <button id="newBtn" title="New (Ctrl/Cmd+N)">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="2"
-                        stroke-linecap="round"
-                    >
+                <button class="icon-btn" id="newBtn" title="New (⌘N / Ctrl+N)">
+                    <svg viewBox="0 0 16 16">
                         <line x1="8" y1="3" x2="8" y2="13" />
                         <line x1="3" y1="8" x2="13" y2="8" />
                     </svg>
                 </button>
-                <button id="openBtn" title="Open (Ctrl/Cmd+O)">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M2 4.5 L2 13 C2 13.5 2.5 14 3 14 L13 14 C13.5 14 14 13.5 14 13 L14 5.5 C14 5 13.5 4.5 13 4.5 L7.5 4.5 L6 2.5 L3 2.5 C2.5 2.5 2 3 2 3.5 Z"
-                        />
+
+                <button
+                    class="icon-btn"
+                    id="openBtn"
+                    title="Open (⌘O / Ctrl+O)"
+                >
+                    <svg viewBox="0 0 16 16">
+                        <path d="M2 4.5h4l2 2h6v7H2z" />
                     </svg>
                 </button>
-                <button id="saveBtn" title="Save (Ctrl/Cmd+S)">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M13 6 L13 3 C13 2.5 12.5 2 12 2 L4 2 C3.5 2 3 2.5 3 3 L3 6"
-                        />
-                        <polyline points="8,5 8,14" />
-                        <polyline points="5,11 8,14 11,11" />
+
+                <button
+                    class="icon-btn"
+                    id="saveBtn"
+                    title="Save (⌘S / Ctrl+S)"
+                >
+                    <svg viewBox="0 0 16 16">
+                        <path d="M3 2h10v12H3z" />
+                        <polyline points="5,2 5,6 11,6 11,2" />
                     </svg>
                 </button>
-                <button id="saveAsBtn" title="Save As (Ctrl/Cmd+Shift+S)">
-                    <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 16 16"
-                        fill="none"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                    >
-                        <path
-                            d="M11 5.5 L11 3 C11 2.5 10.5 2 10 2 L4 2 C3.5 2 3 2.5 3 3 L3 5.5"
-                        />
-                        <polyline points="7,5 7,12" />
-                        <polyline points="5,10 7,12 9,10" />
-                        <circle
-                            cx="12.5"
-                            cy="12.5"
-                            r="2.5"
-                            fill="var(--bg-secondary)"
-                        />
-                        <line
-                            x1="12.5"
-                            y1="11.5"
-                            x2="12.5"
-                            y2="13.5"
-                            stroke-width="1.2"
-                        />
-                        <line
-                            x1="11.5"
-                            y1="12.5"
-                            x2="13.5"
-                            y2="12.5"
-                            stroke-width="1.2"
-                        />
+
+                <button
+                    class="icon-btn"
+                    id="saveAsBtn"
+                    title="Save As (⌘⇧S / Ctrl+Shift+S)"
+                >
+                    <svg viewBox="0 0 16 16">
+                        <path d="M3 2h7l3 3v9H3z" />
+                        <line x1="8" y1="7" x2="8" y2="12" />
+                        <line x1="6" y1="10" x2="10" y2="10" />
                     </svg>
                 </button>
-                <button id="helpBtn" title="Help (Ctrl/Cmd+/)">?</button>
             </div>
         </header>
 
         <div class="tabs-wrapper">
-            <button class="tab-nav-btn" id="tabNavLeft" title="Scroll left">
-                ‹
-            </button>
-            <div class="tabs-container" id="tabsContainer">
-                <div class="tabs" id="tabs"></div>
-            </div>
-            <button class="tab-nav-btn" id="tabNavRight" title="Scroll right">
-                ›
-            </button>
+            <div class="tabs" id="tabs"></div>
         </div>
 
         <div class="editor-container">
-            <div class="empty-state" id="emptyState">
-                <h2>Welcome to EDITR.</h2>
-                <p>
-                    Press <span class="kbd">Ctrl+N</span> or
-                    <span class="kbd">Cmd+N</span> to create a new file
-                </p>
-                <p>
-                    Press <span class="kbd">Ctrl+O</span> or
-                    <span class="kbd">Cmd+O</span> to open an existing file
-                </p>
-            </div>
             <textarea
-                class="editor"
                 id="editor"
+                class="editor"
                 placeholder="Start typing..."
-                style="display: none"
             ></textarea>
         </div>
 
         <div class="status-bar">
-            <div class="status-left">
-                <span id="fileStatus">No file</span>
-                <span id="lineCol">Ln 1, Col 1</span>
-            </div>
-            <div class="status-right">
-                <span id="charCount">0 characters</span>
-                <span id="wordCount">0 words</span>
-            </div>
+            <span id="fileStatus">No file</span>
+            <span id="charCount">0 characters</span>
         </div>
 
-        <div class="overlay" id="overlay"></div>
-        <div class="shortcuts" id="shortcuts">
-            <h2>Keyboard Shortcuts</h2>
+        <!-- Secret Notes -->
+        <div class="overlay" id="secretOverlay"></div>
 
-            <div class="shortcut-group">
-                <h3>File Operations</h3>
-                <div class="shortcut-item">
-                    <span>New file</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + N</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Open file</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + O</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Save file</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + S</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Save As</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + Shift + S</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Close current tab</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + W</span>
-                </div>
+        <div class="secret-modal" id="secretModal">
+            <h2>Protected Note</h2>
+            <input type="password" id="secretPassword" placeholder="Password" />
+            <textarea
+                id="secretEditor"
+                placeholder="Encrypted note..."
+            ></textarea>
+            <div class="secret-actions">
+                <button id="closeSecret">Close</button>
+                <button id="saveSecret">Save</button>
             </div>
-
-            <div class="shortcut-group">
-                <h3>Navigation</h3>
-                <div class="shortcut-item">
-                    <span>Next tab</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + Tab</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Previous tab</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + Shift + Tab</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Switch to tab 1-9</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + 1-9</span>
-                </div>
-            </div>
-
-            <div class="shortcut-group">
-                <h3>Other</h3>
-                <div class="shortcut-item">
-                    <span>Show this help</span>
-                    <span class="shortcut-keys">Ctrl/Cmd + /</span>
-                </div>
-                <div class="shortcut-item">
-                    <span>Close this help</span>
-                    <span class="shortcut-keys">Esc</span>
-                </div>
-            </div>
-
-            <div
-                style="
-                    margin-top: 24px;
-                    padding-top: 16px;
-                    border-top: 1px solid var(--border);
-                    font-size: 12px;
-                    color: var(--text-secondary);
-                    line-height: 1.6;
-                "
-            >
-                <div>
-                    Editr Full Version (<a
-                        href="https://www.editr.cc/editr.html"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style="color: var(--accent); text-decoration: none"
-                        >www.editr.cc/editr.html</a
-                    >)
-                </div>
-                <div>
-                    Editr made by Barney Matthews (<a
-                        href="https://www.barney.me/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style="color: var(--accent); text-decoration: none"
-                        >www.barney.me/</a
-                    >)
-                </div>
-            </div>
-
-            <button
-                onclick="toggleShortcuts()"
-                style="margin-top: 16px; width: 100%"
-            >
-                Close
-            </button>
         </div>
 
         <script>
-            // ---------------------------------------------------------------------------
-            // App state
-            // ---------------------------------------------------------------------------
-            let files = [];
-            let activeFileIndex = -1;
-            let nextFileId = 1;
-            let stateDirty = false; // global: has anything changed since last saveState?
-            let lastCursorPos = -1; // short-circuit: skip line scan if pos unchanged
+            /* ====================================================
+   PLATFORM SHORTCUTS
+==================================================== */
+            const isMac = navigator.platform.toUpperCase().includes("MAC");
+            const modKey = isMac ? "metaKey" : "ctrlKey";
 
-            // ---------------------------------------------------------------------------
-            // DOM elements
-            // ---------------------------------------------------------------------------
+            document.addEventListener("keydown", (e) => {
+                if (!e[modKey]) return;
+                if (e.key === "n") {
+                    e.preventDefault();
+                    newFile();
+                }
+                if (e.key === "o") {
+                    e.preventDefault();
+                    openFile();
+                }
+                if (e.key === "s" && !e.shiftKey) {
+                    e.preventDefault();
+                    saveFile();
+                }
+                if (e.key === "s" && e.shiftKey) {
+                    e.preventDefault();
+                    saveFileAs();
+                }
+            });
+
+            /* ====================================================
+   FILE SYSTEM EDITOR
+==================================================== */
+            let files = [],
+                active = -1;
             const editor = document.getElementById("editor");
             const tabs = document.getElementById("tabs");
-            const tabsContainer = document.getElementById("tabsContainer");
-            const tabNavLeft = document.getElementById("tabNavLeft");
-            const tabNavRight = document.getElementById("tabNavRight");
-            const emptyState = document.getElementById("emptyState");
-            const overlay = document.getElementById("overlay");
-            const shortcuts = document.getElementById("shortcuts");
             const fileStatus = document.getElementById("fileStatus");
-            const lineCol = document.getElementById("lineCol");
             const charCount = document.getElementById("charCount");
-            const wordCount = document.getElementById("wordCount");
 
-            // Drag-and-drop state
-            let draggedTabIndex = null;
-            let draggedBlobUrl = null; // track blob URL for proper cleanup
-
-            // ---------------------------------------------------------------------------
-            // Utilities
-            // ---------------------------------------------------------------------------
-            function escapeHtml(str) {
-                const div = document.createElement("div");
-                div.appendChild(document.createTextNode(str));
-                return div.innerHTML;
-            }
-
-            function debounce(fn, ms) {
-                let timer;
-                return function (...args) {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => fn.apply(this, args), ms);
-                };
-            }
-
-            // ---------------------------------------------------------------------------
-            // Size constants
-            // ---------------------------------------------------------------------------
-            const SIZE_WARN = 10 * 1024 * 1024; // 10 MB  — warn on open
-            const SIZE_HARD = 50 * 1024 * 1024; // 50 MB  — hard reject on open
-            const SIZE_PERSIST = 2 * 1024 * 1024; //  2 MB  — max content persisted to localStorage
-
-            // ---------------------------------------------------------------------------
-            // TextFile class
-            // ---------------------------------------------------------------------------
-            class TextFile {
-                constructor(name = null, content = "", handle = null) {
-                    this.id = nextFileId++;
-                    this.name = name || `New-${this.id}.txt`;
-                    this.originalName = this.name; // track original name for rename detection
-                    this.content = content; // source of truth ONLY when this file is NOT active
-                    this.savedContent = content;
-                    this.handle = handle;
-                    this._dirty = false; // true once the user has typed since last save
-                    this.nameChanged = false; // true if user renamed via double-click
-                }
-
-                // When this file IS the active file the textarea is the source of truth.
-                // Call syncFromEditor() before reading .content for any purpose other than display.
-                syncFromEditor() {
-                    if (
-                        activeFileIndex !== -1 &&
-                        files[activeFileIndex] === this
-                    ) {
-                        this.content = editor.value;
-                    }
-                }
-
-                get isModified() {
-                    // Once dirty we know it's modified without a potentially-50 MB string compare.
-                    // Only do the full compare when _dirty is false (e.g. right after a restore).
-                    if (this._dirty) return true;
-                    return this.content !== this.savedContent;
-                }
-
-                get displayName() {
-                    return this.name;
-                }
-            }
-
-            // ---------------------------------------------------------------------------
-            // Word-count: O(n) single-pass, O(1) extra space — no split, no trim copy
-            // ---------------------------------------------------------------------------
-            function countWords(text) {
-                let count = 0;
-                let inWord = false;
-                for (let i = 0, len = text.length; i < len; i++) {
-                    const ch = text.charCodeAt(i);
-                    // whitespace: space(32) tab(9) newline(10) CR(13) nbsp(160) + a few others
-                    const isWS = ch <= 32 || ch === 160;
-                    if (isWS) {
-                        inWord = false;
-                    } else if (!inWord) {
-                        count++;
-                        inWord = true;
-                    }
-                }
-                return count;
-            }
-
-            const updateWordCount = debounce(() => {
-                if (activeFileIndex === -1) {
-                    wordCount.textContent = "0 words";
-                    return;
-                }
-                const words = countWords(editor.value);
-                wordCount.textContent = `${words} word${words !== 1 ? "s" : ""}`;
-            }, 300);
-
-            // ---------------------------------------------------------------------------
-            // Cursor position — debounced, short-circuited on unchanged pos
-            // ---------------------------------------------------------------------------
-            const updateCursorPosition = debounce(() => {
-                const pos = editor.selectionStart;
-
-                // Column: walk backwards to previous newline — O(line-length), always cheap.
-                const text = editor.value;
-                let col = 1;
-                for (let i = pos - 1; i >= 0; i--) {
-                    if (text.charCodeAt(i) === 10) break;
-                    col++;
-                }
-
-                // Line: only re-scan when pos actually changed
-                let line;
-                if (pos === lastCursorPos) {
-                    // pos unchanged — reuse previous line display (already rendered)
-                    // just update col in case of a selection-only move that didn't change pos
-                    // Actually selectionStart didn't change so nothing changed at all — bail.
-                    return;
-                }
-                lastCursorPos = pos;
-
-                line = 1;
-                for (let i = 0; i < pos; i++) {
-                    if (text.charCodeAt(i) === 10) line++;
-                }
-
-                lineCol.textContent = `Ln ${line}, Col ${col}`;
-            }, 16); // ~60 fps max
-
-            // ---------------------------------------------------------------------------
-            // localStorage persistence
-            // ---------------------------------------------------------------------------
-            function saveState() {
-                if (!stateDirty) return; // nothing changed — skip the work entirely
-                stateDirty = false;
-
-                // Sync the active editor into its file object before serialising
-                if (activeFileIndex !== -1) {
-                    files[activeFileIndex].syncFromEditor();
-                }
-
-                // Build snapshots.  Files whose content exceeds SIZE_PERSIST are skipped
-                // because localStorage (~5 MB total) can't hold them anyway.
-                const fileSnapshots = files.map((f) => ({
-                    id: f.id,
-                    name: f.name,
-                    content: f.content.length <= SIZE_PERSIST ? f.content : "",
-                    savedContent:
-                        f.savedContent.length <= SIZE_PERSIST
-                            ? f.savedContent
-                            : "",
-                    hasHandle: !!f.handle,
-                    contentStripped: f.content.length > SIZE_PERSIST, // flag so loadState knows
-                }));
-
-                const state = {
-                    files: fileSnapshots,
-                    activeFileIndex: activeFileIndex,
-                    nextFileId: nextFileId,
-                };
-
-                try {
-                    localStorage.setItem(
-                        "notepad-state",
-                        JSON.stringify(state),
-                    );
-                } catch (err) {
-                    if (err.name !== "QuotaExceededError") {
-                        console.error("Error saving state:", err);
-                        return;
-                    }
-
-                    // Quota exceeded — strip the largest handle-backed files first
-                    const candidates = fileSnapshots
-                        .map((snap, i) => ({ snap, i }))
-                        .filter(
-                            ({ snap }) =>
-                                snap.hasHandle && snap.content.length > 0,
-                        )
-                        .sort(
-                            (a, b) =>
-                                b.snap.content.length - a.snap.content.length,
-                        );
-
-                    for (const { snap } of candidates) {
-                        snap.content = "";
-                        snap.savedContent = "";
-                        snap.contentStripped = true;
-                        try {
-                            localStorage.setItem(
-                                "notepad-state",
-                                JSON.stringify(state),
-                            );
-                            return;
-                        } catch (_) {
-                            /* keep stripping */
-                        }
-                    }
-
-                    if (!saveState._quotaWarned) {
-                        saveState._quotaWarned = true;
-                        alert(
-                            "Storage is full — session state could not be saved.\nYour open files are still intact; just make sure to save them before closing the tab.",
-                        );
-                    }
-                }
-            }
-
-            function loadState() {
-                try {
-                    const saved = localStorage.getItem("notepad-state");
-                    if (!saved) return;
-
-                    const state = JSON.parse(saved);
-                    if (!state.files || !Array.isArray(state.files)) {
-                        console.warn("Invalid state structure, skipping load");
-                        return;
-                    }
-
-                    files = state.files.map((f) => {
-                        const stripped =
-                            f.contentStripped ||
-                            (f.hasHandle && f.content === "");
-                        const content = stripped
-                            ? "[This file's content could not be saved due to storage limits. Re-open it with Open.]"
-                            : f.content;
-                        const file = new TextFile(f.name, content, null);
-                        file.id = f.id;
-                        file.savedContent = stripped ? content : f.savedContent;
-                        file._dirty = stripped
-                            ? false
-                            : f.content !== f.savedContent;
-                        return file;
-                    });
-
-                    activeFileIndex = state.activeFileIndex;
-                    nextFileId = state.nextFileId;
-                } catch (err) {
-                    console.error("Error loading state, starting fresh:", err);
-                    localStorage.removeItem("notepad-state");
-                }
-            }
-
-            // ---------------------------------------------------------------------------
-            // Init & event wiring
-            // ---------------------------------------------------------------------------
-            function init() {
-                setupEventListeners();
-                loadState();
-                updateUI();
-                registerServiceWorker();
-
-                // Auto-save: only actually runs work when stateDirty is true
-                setInterval(saveState, 2000);
-            }
-
-            function setupEventListeners() {
-                document
-                    .getElementById("newBtn")
-                    .addEventListener("click", createNewFile);
-                document
-                    .getElementById("openBtn")
-                    .addEventListener("click", openFile);
-                document
-                    .getElementById("saveBtn")
-                    .addEventListener("click", saveFile);
-                document
-                    .getElementById("saveAsBtn")
-                    .addEventListener("click", saveFileAs);
-                document
-                    .getElementById("helpBtn")
-                    .addEventListener("click", toggleShortcuts);
-                overlay.addEventListener("click", toggleShortcuts);
-
-                // Tab delegation
-                tabs.addEventListener("click", (e) => {
-                    const closeEl = e.target.closest("[data-close]");
-                    if (closeEl) {
-                        e.stopPropagation();
-                        closeFile(parseInt(closeEl.dataset.close));
-                        return;
-                    }
-
-                    // Don't switch tabs if clicking on tab-name (allow double-click to work)
-                    if (e.target.classList.contains("tab-name")) {
-                        return;
-                    }
-
-                    const tabEl = e.target.closest(".tab[data-index]");
-                    if (tabEl) switchToFile(parseInt(tabEl.dataset.index));
-                });
-
-                // Tab double-click to rename
-                tabs.addEventListener("dblclick", (e) => {
-                    // Check if we double-clicked on the tab name or anywhere in the tab
-                    const tabNameEl = e.target.closest(".tab-name");
-                    const tabEl = e.target.closest(".tab[data-index]");
-
-                    if (!tabEl) return;
-
-                    e.preventDefault();
-                    e.stopPropagation();
-
-                    const index = parseInt(tabEl.dataset.index);
-                    renameFile(index);
-                });
-
-                tabNavLeft.addEventListener("click", () => scrollTabs(-200));
-                tabNavRight.addEventListener("click", () => scrollTabs(200));
-                tabsContainer.addEventListener("scroll", updateTabNavButtons);
-
-                // Editor — input no longer copies the whole string
-                editor.addEventListener("input", handleEditorInput);
-                editor.addEventListener("keydown", updateCursorPosition);
-                editor.addEventListener("click", updateCursorPosition);
-                editor.addEventListener(
-                    "selectionchange",
-                    updateCursorPosition,
-                );
-
-                document.addEventListener("keydown", handleKeyboardShortcuts);
-
-                window.addEventListener("beforeunload", (e) => {
-                    stateDirty = true; // force a real save on unload
-                    saveState();
-                    const hasUnsaved = files.some((f) => f.isModified);
-                    if (hasUnsaved) {
-                        e.preventDefault();
-                        e.returnValue = "";
-                    }
-                });
-
-                window.addEventListener("resize", updateTabNavButtons);
-
-                // Drag-and-drop to open files
-                document.body.addEventListener("dragover", (e) => {
-                    e.preventDefault();
-
-                    // Only show drop zone for external files, not tab reordering
-                    if (e.dataTransfer.types.includes("Files")) {
-                        e.dataTransfer.dropEffect = "copy";
-                        document.body.classList.add("drag-over");
-                    }
-                });
-
-                document.body.addEventListener("dragleave", (e) => {
-                    // Only remove if we're leaving the body entirely
-                    if (e.target === document.body) {
-                        document.body.classList.remove("drag-over");
-                    }
-                });
-
-                document.body.addEventListener("drop", async (e) => {
-                    e.preventDefault();
-                    document.body.classList.remove("drag-over");
-
-                    const droppedFiles = Array.from(
-                        e.dataTransfer.files,
-                    ).filter(
-                        (f) =>
-                            f.type === "text/plain" || f.name.endsWith(".txt"),
-                    );
-
-                    for (const file of droppedFiles) {
-                        if (!(await checkFileSize(file))) continue;
-
-                        // Check for duplicate
-                        const existingIndex = files.findIndex(
-                            (f) => f.name === file.name,
-                        );
-                        if (existingIndex !== -1) {
-                            switchToFile(existingIndex);
-                            continue;
-                        }
-
-                        const content = await file.text();
-                        const textFile = new TextFile(file.name, content, null);
-                        textFile.savedContent = content;
-
-                        files.push(textFile);
-                        activeFileIndex = files.length - 1;
-                        updateUI();
-                        scrollToTab(activeFileIndex);
-                        stateDirty = true;
-                        saveState();
-                    }
-
-                    if (droppedFiles.length > 0) editor.focus();
-                });
-            }
-
-            // ---------------------------------------------------------------------------
-            // File operations
-            // ---------------------------------------------------------------------------
-            async function createNewFile() {
-                const file = new TextFile();
-                files.push(file);
-                activeFileIndex = files.length - 1;
-                updateUI();
-                scrollToTab(activeFileIndex);
-                editor.focus();
-                stateDirty = true;
-                saveState();
-            }
-
-            async function openFile() {
-                if (typeof window.showOpenFilePicker === "function") {
-                    try {
-                        const [fileHandle] = await window.showOpenFilePicker({
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                            ],
-                            multiple: false,
-                        });
-
-                        const existingIndex = files.findIndex(
-                            (f) => f.name === fileHandle.name,
-                        );
-                        if (existingIndex !== -1) {
-                            switchToFile(existingIndex);
-                            return;
-                        }
-
-                        const file = await fileHandle.getFile();
-                        if (!(await checkFileSize(file))) return;
-
-                        const content = await file.text();
-                        const textFile = new TextFile(
-                            file.name,
-                            content,
-                            fileHandle,
-                        );
-                        textFile.savedContent = content;
-
-                        files.push(textFile);
-                        activeFileIndex = files.length - 1;
-                        updateUI();
-                        scrollToTab(activeFileIndex);
-                        editor.focus();
-                        stateDirty = true;
-                        saveState();
-                    } catch (err) {
-                        if (err.name !== "AbortError")
-                            console.error("Error opening file:", err);
-                    }
-                } else {
-                    // Fallback: <input type="file">
-                    const input = document.createElement("input");
-                    input.type = "file";
-                    input.accept = ".txt";
-                    input.addEventListener("change", async () => {
-                        const file = input.files[0];
-                        if (!file) return;
-                        if (!(await checkFileSize(file))) return;
-
-                        const existingIndex = files.findIndex(
-                            (f) => f.name === file.name,
-                        );
-                        if (existingIndex !== -1) {
-                            switchToFile(existingIndex);
-                            return;
-                        }
-
-                        const content = await file.text();
-                        const textFile = new TextFile(file.name, content, null);
-                        textFile.savedContent = content;
-
-                        files.push(textFile);
-                        activeFileIndex = files.length - 1;
-                        updateUI();
-                        scrollToTab(activeFileIndex);
-                        editor.focus();
-                        stateDirty = true;
-                        saveState();
-                    });
-                    input.click();
-                }
-            }
-
-            // Returns true if the file is OK to open; false if rejected/cancelled.
-            async function checkFileSize(file) {
-                if (file.size > SIZE_HARD) {
-                    alert(
-                        `"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB — too large.\nThis app supports files up to ${SIZE_HARD / 1024 / 1024} MB.`,
-                    );
-                    return false;
-                }
-                if (file.size > SIZE_WARN) {
-                    return confirm(
-                        `"${file.name}" is ${(file.size / 1024 / 1024).toFixed(1)} MB.\nNote: files this large will not be saved across refreshes. Continue?`,
-                    );
-                }
-                return true;
-            }
-
-            async function saveFile() {
-                if (activeFileIndex === -1) return;
-                const file = files[activeFileIndex];
-                file.syncFromEditor();
-
-                try {
-                    if (typeof window.showSaveFilePicker === "function") {
-                        let handle = file.handle;
-
-                        // If the name was changed via double-click, force Save As behavior
-                        if (file.nameChanged || !handle) {
-                            handle = await window.showSaveFilePicker({
-                                suggestedName: file.name,
-                                types: [
-                                    {
-                                        description: "Text Files",
-                                        accept: { "text/plain": [".txt"] },
-                                    },
-                                ],
-                            });
-                            file.handle = handle;
-                            file.nameChanged = false; // reset flag after prompting
-                        }
-
-                        const writable = await handle.createWritable();
-                        await writable.write(file.content);
-                        await writable.close();
-                        file.name = handle.name;
-                        file.originalName = file.name; // update original name after successful save
-                    } else {
-                        const blob = new Blob([file.content], {
-                            type: "text/plain",
-                        });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = file.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        file.nameChanged = false; // reset flag
-                        file.originalName = file.name; // update original name
-                    }
-
-                    file.savedContent = file.content;
-                    file._dirty = false;
-                    updateUI();
-                    stateDirty = true;
-                    saveState();
-                } catch (err) {
-                    if (err.name !== "AbortError") {
-                        console.error("Error saving file:", err);
-                        alert("Failed to save file. Please try again.");
-                    }
-                }
-            }
-
-            async function saveFileAs() {
-                if (activeFileIndex === -1) return;
-                const file = files[activeFileIndex];
-                file.syncFromEditor();
-
-                try {
-                    if (typeof window.showSaveFilePicker === "function") {
-                        const handle = await window.showSaveFilePicker({
-                            suggestedName: file.name,
-                            types: [
-                                {
-                                    description: "Text Files",
-                                    accept: { "text/plain": [".txt"] },
-                                },
-                            ],
-                        });
-                        const writable = await handle.createWritable();
-                        await writable.write(file.content);
-                        await writable.close();
-                        file.handle = handle;
-                        file.name = handle.name;
-                        file.originalName = file.name; // update original name
-                        file.nameChanged = false; // reset flag
-                    } else {
-                        const blob = new Blob([file.content], {
-                            type: "text/plain",
-                        });
-                        const url = URL.createObjectURL(blob);
-                        const a = document.createElement("a");
-                        a.href = url;
-                        a.download = file.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                        URL.revokeObjectURL(url);
-                        file.originalName = file.name; // update original name
-                        file.nameChanged = false; // reset flag
-                    }
-
-                    file.savedContent = file.content;
-                    file._dirty = false;
-                    updateUI();
-                    stateDirty = true;
-                    saveState();
-                } catch (err) {
-                    if (err.name !== "AbortError") {
-                        console.error("Error saving file:", err);
-                        alert("Failed to save file. Please try again.");
-                    }
-                }
-            }
-
-            function closeFile(index) {
-                // Sync before checking isModified in case this is the active file
-                if (index === activeFileIndex) files[index].syncFromEditor();
-
-                if (files[index].isModified) {
-                    if (
-                        !confirm(
-                            `${files[index].name} has unsaved changes. Close anyway?`,
-                        )
-                    )
-                        return;
-                }
-
-                files.splice(index, 1);
-
-                if (activeFileIndex === index) {
-                    activeFileIndex = Math.min(
-                        activeFileIndex,
-                        files.length - 1,
-                    );
-                } else if (activeFileIndex > index) {
-                    activeFileIndex--;
-                }
-
-                updateUI();
-                stateDirty = true;
-                saveState();
-            }
-
-            function renameFile(index) {
-                const file = files[index];
-                const newName = prompt("Rename file:", file.name);
-
-                if (!newName || newName === file.name) return;
-
-                // Ensure it has .txt extension
-                const finalName = newName.endsWith(".txt")
-                    ? newName
-                    : newName + ".txt";
-
-                file.name = finalName;
-                file.nameChanged = true; // flag so next Save will use Save As behavior
-
-                updateUI();
-                stateDirty = true;
-                saveState();
-            }
-
-            function switchToFile(index) {
-                if (activeFileIndex !== -1) {
-                    // Sync the current file from the textarea before we leave it
-                    files[activeFileIndex].syncFromEditor();
-                }
-                activeFileIndex = index;
-                lastCursorPos = -1; // reset so line is re-scanned on the new file
-                updateUI();
-                scrollToTab(index);
-                editor.focus();
-            }
-
-            // ---------------------------------------------------------------------------
-            // UI updates
-            // ---------------------------------------------------------------------------
-            function updateUI() {
-                updateTabs();
-                updateEditor();
-                updateStatusBar();
-                updateTabNavButtons();
-            }
-
-            function scrollTabs(amount) {
-                tabsContainer.scrollBy({ left: amount, behavior: "smooth" });
-            }
-
-            function updateTabNavButtons() {
-                const { scrollLeft, scrollWidth, clientWidth } = tabsContainer;
-                tabNavLeft.disabled = scrollLeft <= 0;
-                tabNavRight.disabled =
-                    scrollLeft + clientWidth >= scrollWidth - 1;
-            }
-
-            function scrollToTab(index) {
-                const tabElements = tabs.querySelectorAll(".tab");
-                if (tabElements[index]) {
-                    tabElements[index].scrollIntoView({
-                        behavior: "smooth",
-                        block: "nearest",
-                        inline: "center",
-                    });
-                }
-            }
-
-            function updateTabs() {
-                if (files.length === 0) {
-                    tabs.innerHTML = "";
-                    return;
-                }
-
+            function render() {
                 tabs.innerHTML = files
                     .map(
-                        (file, index) => `
-                <button class="tab ${index === activeFileIndex ? "active" : ""} ${file.isModified ? "modified" : ""}"
-                        draggable="true"
-                        data-index="${index}">
-                    <span class="tab-name" draggable="false">${escapeHtml(file.displayName)}</span>
-                    <span class="tab-close" data-close="${index}">×</span>
-                </button>
-            `,
+                        (f, i) => `
+<div class="tab ${i === active ? "active" : ""}" data-index="${i}">
+<span class="tab-name">${f.name}${f.dirty ? " •" : ""}</span>
+<span class="tab-close">×</span>
+</div>`,
                     )
                     .join("");
 
-                tabs.querySelectorAll(".tab").forEach((tab) => {
-                    tab.addEventListener("dragstart", handleDragStart);
-                    tab.addEventListener("dragend", handleDragEnd);
-                    tab.addEventListener("dragover", handleDragOver);
-                    tab.addEventListener("drop", handleDrop);
-                    tab.addEventListener("dragleave", handleDragLeave);
-                });
-            }
-
-            // Drag handlers
-            function handleDragStart(e) {
-                // Don't allow dragging if the user is clicking on the tab name
-                // (so they can double-click to rename)
-                if (e.target.classList.contains("tab-name")) {
-                    e.preventDefault();
-                    return;
-                }
-
-                draggedTabIndex = parseInt(e.currentTarget.dataset.index);
-                e.currentTarget.classList.add("dragging");
-
-                const file = files[draggedTabIndex];
-                file.syncFromEditor();
-
-                // Allow both reordering within tabs AND dragging out to desktop
-                e.dataTransfer.effectAllowed = "copyMove";
-                e.dataTransfer.setData("text/html", e.currentTarget.innerHTML);
-
-                // Enable drag-out to save: set downloadURL to allow saving to desktop
-                // Format: MIME:filename:dataURL
-                const blob = new Blob([file.content], { type: "text/plain" });
-                draggedBlobUrl = URL.createObjectURL(blob);
-                e.dataTransfer.setData(
-                    "DownloadURL",
-                    `text/plain:${file.name}:${draggedBlobUrl}`,
-                );
-
-                // Don't revoke immediately - browser needs time to read it for the download
-                // Will clean up in handleDragEnd
-            }
-            function handleDragEnd(e) {
-                e.currentTarget.classList.remove("dragging");
-                tabs.querySelectorAll(".tab").forEach((t) =>
-                    t.classList.remove("drag-over"),
-                );
-                draggedTabIndex = null;
-
-                // Clean up blob URL after a delay to ensure browser has finished with it
-                if (draggedBlobUrl) {
-                    setTimeout(() => {
-                        URL.revokeObjectURL(draggedBlobUrl);
-                        draggedBlobUrl = null;
-                    }, 1000); // 1 second should be plenty for the download to start
-                }
-            }
-            function handleDragOver(e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "move";
-                const targetIndex = parseInt(e.currentTarget.dataset.index);
-                if (targetIndex !== draggedTabIndex)
-                    e.currentTarget.classList.add("drag-over");
-                return false;
-            }
-            function handleDragLeave(e) {
-                e.currentTarget.classList.remove("drag-over");
-            }
-            function handleDrop(e) {
-                e.stopPropagation();
-                e.currentTarget.classList.remove("drag-over");
-                const targetIndex = parseInt(e.currentTarget.dataset.index);
-
-                if (
-                    draggedTabIndex !== null &&
-                    draggedTabIndex !== targetIndex &&
-                    draggedTabIndex >= 0 &&
-                    draggedTabIndex < files.length &&
-                    targetIndex >= 0 &&
-                    targetIndex < files.length
-                ) {
-                    const draggedFile = files.splice(draggedTabIndex, 1)[0];
-                    files.splice(targetIndex, 0, draggedFile);
-
-                    if (activeFileIndex === draggedTabIndex)
-                        activeFileIndex = targetIndex;
-                    else if (
-                        draggedTabIndex < activeFileIndex &&
-                        targetIndex >= activeFileIndex
-                    )
-                        activeFileIndex--;
-                    else if (
-                        draggedTabIndex > activeFileIndex &&
-                        targetIndex <= activeFileIndex
-                    )
-                        activeFileIndex++;
-
-                    updateUI();
-                    stateDirty = true;
-                    saveState();
-                }
-                return false;
-            }
-
-            function updateEditor() {
-                if (activeFileIndex === -1) {
-                    editor.style.display = "none";
-                    emptyState.style.display = "block";
-                    return;
-                }
-                editor.style.display = "block";
-                emptyState.style.display = "none";
-                editor.value = files[activeFileIndex].content;
-                lastCursorPos = -1;
-                updateCursorPosition();
-            }
-
-            function updateStatusBar() {
-                if (activeFileIndex === -1) {
+                if (active >= 0) {
+                    editor.value = files[active].content;
+                    fileStatus.textContent = files[active].name;
+                } else {
+                    editor.value = "";
                     fileStatus.textContent = "No file";
-                    charCount.textContent = "0 characters";
-                    wordCount.textContent = "0 words";
-                    document.title = "New";
-                    return;
                 }
-                const file = files[activeFileIndex];
-                fileStatus.textContent = file.isModified
-                    ? `${file.name} • Modified`
-                    : file.name;
-                document.title = file.isModified ? `● ${file.name}` : file.name;
-
-                // charCount reads .length — that's O(1) on a JS string, always cheap
-                charCount.textContent = `${editor.value.length} characters`;
-
-                // word count: debounced, O(n) single-pass
-                updateWordCount();
+                charCount.textContent = editor.value.length + " characters";
             }
 
-            // ---------------------------------------------------------------------------
-            // Input handler — lightweight, no string copy
-            // ---------------------------------------------------------------------------
-            function handleEditorInput() {
-                if (activeFileIndex === -1) return;
-                const file = files[activeFileIndex];
+            function newFile() {
+                files.push({
+                    name: `New-${files.length + 1}.txt`,
+                    content: "",
+                    handle: null,
+                    dirty: false,
+                });
+                active = files.length - 1;
+                render();
+            }
 
-                // Mark dirty — the next isModified check will short-circuit to true
-                // without comparing two potentially-50 MB strings.
-                file._dirty = true;
+            async function openFile() {
+                const [handle] = await showOpenFilePicker({
+                    types: [{ accept: { "text/plain": [".txt"] } }],
+                });
+                const file = await handle.getFile();
+                files.push({
+                    name: file.name,
+                    content: await file.text(),
+                    handle,
+                    dirty: false,
+                });
+                active = files.length - 1;
+                render();
+            }
 
-                // Toggle the modified dot on the active tab only
-                const activeTab = tabs.querySelector(
-                    '.tab[data-index="' + activeFileIndex + '"]',
+            async function saveFile() {
+                if (active < 0) return;
+                const f = files[active];
+                f.content = editor.value;
+                if (!f.handle) return saveFileAs();
+                const w = await f.handle.createWritable();
+                await w.write(f.content);
+                await w.close();
+                f.dirty = false;
+                render();
+            }
+
+            async function saveFileAs() {
+                if (active < 0) return;
+                const f = files[active];
+                f.content = editor.value;
+                const handle = await showSaveFilePicker({
+                    suggestedName: f.name,
+                });
+                const w = await handle.createWritable();
+                await w.write(f.content);
+                await w.close();
+                f.handle = handle;
+                f.name = handle.name;
+                f.dirty = false;
+                render();
+            }
+
+            editor.oninput = () => {
+                if (active >= 0) {
+                    files[active].content = editor.value;
+                    files[active].dirty = true;
+                }
+                charCount.textContent = editor.value.length + " characters";
+            };
+
+            newBtn.onclick = newFile;
+            openBtn.onclick = openFile;
+            saveBtn.onclick = saveFile;
+            saveAsBtn.onclick = saveFileAs;
+
+            /* ====================================================
+   TAB CLICK + DOUBLE-CLICK RENAME (FIXED)
+==================================================== */
+            tabs.addEventListener("click", (e) => {
+                if (e.target.classList.contains("tab-name")) return;
+
+                const close = e.target.closest(".tab-close");
+                if (close) {
+                    closeFile(+close.parentElement.dataset.index);
+                    return;
+                }
+
+                const tab = e.target.closest(".tab");
+                if (tab) switchFile(+tab.dataset.index);
+            });
+
+            tabs.addEventListener("dblclick", (e) => {
+                const nameEl = e.target.closest(".tab-name");
+                if (!nameEl) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const tab = nameEl.closest(".tab");
+                const index = +tab.dataset.index;
+                const file = files[index];
+
+                const input = document.createElement("input");
+                input.value = file.name;
+                input.style.font = "inherit";
+                input.style.width = "100%";
+                input.style.background = "transparent";
+                input.style.border = "1px solid var(--border)";
+                input.style.color = "inherit";
+
+                nameEl.replaceWith(input);
+                input.focus();
+                input.select();
+
+                function commit() {
+                    let val = input.value.trim();
+                    if (!val) return render();
+                    if (!val.endsWith(".txt")) val += ".txt";
+                    file.name = val;
+                    file.dirty = true;
+                    render();
+                }
+
+                input.addEventListener("keydown", (ev) => {
+                    if (ev.key === "Enter") commit();
+                    if (ev.key === "Escape") render();
+                });
+                input.addEventListener("blur", commit);
+            });
+
+            function closeFile(i) {
+                files.splice(i, 1);
+                active = Math.min(active, files.length - 1);
+                render();
+            }
+
+            function switchFile(i) {
+                if (active >= 0) files[active].content = editor.value;
+                active = i;
+                render();
+            }
+
+            /* ====================================================
+   PROTECTED NOTES
+==================================================== */
+            const secretBtn = document.getElementById("secretNotesBtn");
+            const secretModal = document.getElementById("secretModal");
+            const secretOverlay = document.getElementById("secretOverlay");
+            const secretPassword = document.getElementById("secretPassword");
+            const secretEditor = document.getElementById("secretEditor");
+
+            secretBtn.onclick = () => {
+                secretPassword.value = "";
+                secretEditor.value = "";
+                secretModal.style.display = "flex";
+                secretOverlay.classList.add("visible");
+                secretPassword.focus();
+            };
+
+            closeSecret.onclick = () => {
+                secretModal.style.display = "none";
+                secretOverlay.classList.remove("visible");
+            };
+            secretOverlay.onclick = closeSecret.onclick;
+
+            async function deriveKey(pw, salt) {
+                const enc = new TextEncoder();
+                const base = await crypto.subtle.importKey(
+                    "raw",
+                    enc.encode(pw),
+                    "PBKDF2",
+                    false,
+                    ["deriveKey"],
                 );
-                if (activeTab) activeTab.classList.add("modified");
-
-                // Status bar updates (charCount is O(1), wordCount is debounced)
-                updateStatusBar();
-
-                // Flag that state needs persisting (actual work deferred to the 2s interval)
-                stateDirty = true;
+                return crypto.subtle.deriveKey(
+                    {
+                        name: "PBKDF2",
+                        salt,
+                        iterations: 100000,
+                        hash: "SHA-256",
+                    },
+                    base,
+                    { name: "AES-GCM", length: 256 },
+                    false,
+                    ["encrypt", "decrypt"],
+                );
             }
 
-            // ---------------------------------------------------------------------------
-            // Keyboard shortcuts
-            // ---------------------------------------------------------------------------
-            function handleKeyboardShortcuts(e) {
-                if (e.key === "Escape") {
-                    if (shortcuts.classList.contains("visible")) {
-                        e.preventDefault();
-                        toggleShortcuts();
-                    }
-                    return;
+            async function encrypt(text, pw) {
+                const enc = new TextEncoder();
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await deriveKey(pw, salt);
+                const data = await crypto.subtle.encrypt(
+                    { name: "AES-GCM", iv },
+                    key,
+                    enc.encode(text),
+                );
+                return {
+                    salt: [...salt],
+                    iv: [...iv],
+                    data: [...new Uint8Array(data)],
+                };
+            }
+
+            async function decrypt(o, pw) {
+                const key = await deriveKey(pw, new Uint8Array(o.salt));
+                const p = await crypto.subtle.decrypt(
+                    { name: "AES-GCM", iv: new Uint8Array(o.iv) },
+                    key,
+                    new Uint8Array(o.data),
+                );
+                return new TextDecoder().decode(p);
+            }
+
+            secretPassword.onchange = async () => {
+                const pw = secretPassword.value;
+                const stored = localStorage.getItem("secret-" + pw);
+                if (!stored) return;
+                try {
+                    secretEditor.value = await decrypt(JSON.parse(stored), pw);
+                } catch {
+                    alert("Wrong password");
+                    secretEditor.value = "";
                 }
+            };
 
-                const isMac =
-                    navigator.platform.toUpperCase().indexOf("MAC") >= 0;
-                const modifier = isMac ? e.metaKey : e.ctrlKey;
-
-                if (modifier && e.key === "n") {
-                    e.preventDefault();
-                    createNewFile();
-                } else if (modifier && e.key === "o") {
-                    e.preventDefault();
-                    openFile();
-                } else if (modifier && e.shiftKey && e.key === "S") {
-                    e.preventDefault();
-                    saveFileAs();
-                } else if (modifier && e.key === "s") {
-                    e.preventDefault();
-                    saveFile();
-                } else if (modifier && e.key === "w") {
-                    e.preventDefault();
-                    if (activeFileIndex !== -1) closeFile(activeFileIndex);
-                } else if (modifier && e.key === "/") {
-                    e.preventDefault();
-                    toggleShortcuts();
-                } else if (modifier && e.key === "Tab") {
-                    e.preventDefault();
-                    if (files.length > 0) {
-                        const dir = e.shiftKey ? -1 : 1;
-                        switchToFile(
-                            (activeFileIndex + dir + files.length) %
-                                files.length,
-                        );
-                    }
-                } else if (modifier && e.key >= "1" && e.key <= "9") {
-                    e.preventDefault();
-                    const idx = parseInt(e.key) - 1;
-                    if (idx < files.length) switchToFile(idx);
-                }
-            }
-
-            function toggleShortcuts() {
-                shortcuts.classList.toggle("visible");
-                overlay.classList.toggle("visible");
-            }
-
-            // ---------------------------------------------------------------------------
-            // Service Worker
-            // ---------------------------------------------------------------------------
-            async function registerServiceWorker() {
-                if ("serviceWorker" in navigator) {
-                    try {
-                        await navigator.serviceWorker.register("sw.js");
-                    } catch (err) {
-                        console.log("Service Worker registration failed:", err);
-                    }
-                }
-            }
-
-            // ---------------------------------------------------------------------------
-            // Start
-            // ---------------------------------------------------------------------------
-            init();
+            saveSecret.onclick = async () => {
+                if (!secretPassword.value) return alert("Password required");
+                const enc = await encrypt(
+                    secretEditor.value,
+                    secretPassword.value,
+                );
+                localStorage.setItem(
+                    "secret-" + secretPassword.value,
+                    JSON.stringify(enc),
+                );
+                alert("Saved");
+            };
         </script>
     </body>
 </html>
