@@ -333,14 +333,15 @@
 
         <div class="overlay" id="secretOverlay"></div>
         <div class="secret-modal" id="secretModal">
-            <h3>Secure Notes</h3>
-            <input id="secretPassword" type="password" placeholder="Password" />
-            <textarea
-                id="secretEditor"
-                placeholder="Your secure notes"
-            ></textarea>
+            <h3>Protected Notes</h3>
+            <input
+                id="secretPassword"
+                type="password"
+                placeholder="Password"
+            />
+            <textarea id="secretEditor" placeholder="Your secret notes"></textarea>
             <div class="secret-actions">
-                <button class="icon-btn" id="saveSecret">OK</button>
+                <button class="icon-btn" id="saveSecret">Save</button>
                 <button class="icon-btn" id="closeSecret">Close</button>
             </div>
         </div>
@@ -365,32 +366,29 @@
 ==================================================== */
             function updateScrollArrows() {
                 const container = tabs;
-                const hasOverflow =
-                    container.scrollWidth > container.clientWidth;
+                const hasOverflow = container.scrollWidth > container.clientWidth;
                 const isAtStart = container.scrollLeft <= 0;
-                const isAtEnd =
-                    container.scrollLeft + container.clientWidth >=
-                    container.scrollWidth - 1;
+                const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
 
                 if (hasOverflow) {
-                    scrollLeft.classList.toggle("visible", !isAtStart);
-                    scrollRight.classList.toggle("visible", !isAtEnd);
+                    scrollLeft.classList.toggle('visible', !isAtStart);
+                    scrollRight.classList.toggle('visible', !isAtEnd);
                 } else {
-                    scrollLeft.classList.remove("visible");
-                    scrollRight.classList.remove("visible");
+                    scrollLeft.classList.remove('visible');
+                    scrollRight.classList.remove('visible');
                 }
             }
 
             scrollLeft.onclick = () => {
-                tabs.scrollBy({ left: -200, behavior: "smooth" });
+                tabs.scrollBy({ left: -200, behavior: 'smooth' });
             };
 
             scrollRight.onclick = () => {
-                tabs.scrollBy({ left: 200, behavior: "smooth" });
+                tabs.scrollBy({ left: 200, behavior: 'smooth' });
             };
 
-            tabs.addEventListener("scroll", updateScrollArrows);
-            window.addEventListener("resize", updateScrollArrows);
+            tabs.addEventListener('scroll', updateScrollArrows);
+            window.addEventListener('resize', updateScrollArrows);
 
             /* ====================================================
    KEYBOARD SHORTCUTS
@@ -410,6 +408,10 @@
                 if (mod && e.key === "s") {
                     e.preventDefault();
                     e.shiftKey ? saveFileAs() : saveFile();
+                }
+                if (mod && e.key === "r") {
+                    e.preventDefault();
+                    renameActiveFile();
                 }
             };
 
@@ -434,7 +436,7 @@
                     editor.value = "";
                     fileStatus.textContent = "No file";
                 }
-
+                
                 // Update scroll arrows after render
                 setTimeout(updateScrollArrows, 0);
             }
@@ -527,6 +529,7 @@ New File       ⌘N / Ctrl+N
 Open File      ⌘O / Ctrl+O
 Save File      ⌘S / Ctrl+S
 Save As        ⌘⇧S / Ctrl+Shift+S
+Rename File    ⌘R / Ctrl+R
 
 TAB MANAGEMENT
 • Click tab to switch between files
@@ -535,7 +538,7 @@ TAB MANAGEMENT
 • Use scroll arrows (◀ ▶) when tabs overflow
 
 SECURE NOTES
-Click "EDITR" logo to access password-protected notes.
+Click "EDITR" logo to access password protected notes.
 Your notes are encrypted and stored locally in your browser.
 
 FILE OPERATIONS
@@ -547,7 +550,7 @@ FILE OPERATIONS
 TIPS
 • Files are not automatically saved - use ⌘S / Ctrl+S frequently
 • The • dot next to filename indicates unsaved changes
-• Secure notes are encrypted with AES-GCM encryption
+• Protected notes are encrypted with AES-GCM encryption
 • All data is stored locally - nothing is sent to servers
 
 CREDITS
@@ -590,7 +593,7 @@ Close this tab to return to editing.`;
 
             tabs.addEventListener("dblclick", (e) => {
                 clearTimeout(clickTimer); // Cancel single click
-
+                
                 const nameEl = e.target.closest(".tab-name");
                 if (!nameEl) return;
 
@@ -639,6 +642,48 @@ Close this tab to return to editing.`;
                 if (active >= 0) files[active].content = editor.value;
                 active = i;
                 render();
+            }
+
+            function renameActiveFile() {
+                if (active < 0) return; // No active file
+                
+                // Wait for render to complete, then find the active tab
+                setTimeout(() => {
+                    const activeTab = document.querySelector('.tab.active');
+                    if (!activeTab) return;
+                    
+                    const nameEl = activeTab.querySelector('.tab-name');
+                    if (!nameEl) return;
+                    
+                    const file = files[active];
+                    
+                    const input = document.createElement("input");
+                    input.value = file.name;
+                    input.style.font = "inherit";
+                    input.style.width = "100%";
+                    input.style.background = "transparent";
+                    input.style.border = "1px solid var(--border)";
+                    input.style.color = "inherit";
+                    
+                    nameEl.replaceWith(input);
+                    input.focus();
+                    input.select();
+                    
+                    function commit() {
+                        let val = input.value.trim();
+                        if (!val) return render();
+                        if (!val.endsWith(".txt")) val += ".txt";
+                        file.name = val;
+                        file.dirty = true;
+                        render();
+                    }
+                    
+                    input.addEventListener("keydown", (ev) => {
+                        if (ev.key === "Enter") commit();
+                        if (ev.key === "Escape") render();
+                    });
+                    input.addEventListener("blur", commit);
+                }, 0);
             }
 
             /* ====================================================
