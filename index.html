@@ -333,15 +333,14 @@
 
         <div class="overlay" id="secretOverlay"></div>
         <div class="secret-modal" id="secretModal">
-            <h3>Protected Notes</h3>
-            <input
-                id="secretPassword"
-                type="password"
-                placeholder="Password"
-            />
-            <textarea id="secretEditor" placeholder="Your secret notes"></textarea>
+            <h3>Secure Notes</h3>
+            <input id="secretPassword" type="password" placeholder="Password" />
+            <textarea
+                id="secretEditor"
+                placeholder="Your secure notes"
+            ></textarea>
             <div class="secret-actions">
-                <button class="icon-btn" id="saveSecret">Save</button>
+                <button class="icon-btn" id="saveSecret">OK</button>
                 <button class="icon-btn" id="closeSecret">Close</button>
             </div>
         </div>
@@ -366,29 +365,32 @@
 ==================================================== */
             function updateScrollArrows() {
                 const container = tabs;
-                const hasOverflow = container.scrollWidth > container.clientWidth;
+                const hasOverflow =
+                    container.scrollWidth > container.clientWidth;
                 const isAtStart = container.scrollLeft <= 0;
-                const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+                const isAtEnd =
+                    container.scrollLeft + container.clientWidth >=
+                    container.scrollWidth - 1;
 
                 if (hasOverflow) {
-                    scrollLeft.classList.toggle('visible', !isAtStart);
-                    scrollRight.classList.toggle('visible', !isAtEnd);
+                    scrollLeft.classList.toggle("visible", !isAtStart);
+                    scrollRight.classList.toggle("visible", !isAtEnd);
                 } else {
-                    scrollLeft.classList.remove('visible');
-                    scrollRight.classList.remove('visible');
+                    scrollLeft.classList.remove("visible");
+                    scrollRight.classList.remove("visible");
                 }
             }
 
             scrollLeft.onclick = () => {
-                tabs.scrollBy({ left: -200, behavior: 'smooth' });
+                tabs.scrollBy({ left: -200, behavior: "smooth" });
             };
 
             scrollRight.onclick = () => {
-                tabs.scrollBy({ left: 200, behavior: 'smooth' });
+                tabs.scrollBy({ left: 200, behavior: "smooth" });
             };
 
-            tabs.addEventListener('scroll', updateScrollArrows);
-            window.addEventListener('resize', updateScrollArrows);
+            tabs.addEventListener("scroll", updateScrollArrows);
+            window.addEventListener("resize", updateScrollArrows);
 
             /* ====================================================
    KEYBOARD SHORTCUTS
@@ -432,7 +434,7 @@
                     editor.value = "";
                     fileStatus.textContent = "No file";
                 }
-                
+
                 // Update scroll arrows after render
                 setTimeout(updateScrollArrows, 0);
             }
@@ -515,7 +517,7 @@ EDITR is a simple, powerful text editor that runs entirely in your browser.
 FEATURES
 • Multiple file tabs with tab management
 • Local file system integration (open/save files)
-• Protected notes with encryption
+• Secure notes with encryption
 • Keyboard shortcuts for common actions
 • Auto-save indicators (• dot shows unsaved changes)
 • Smooth tab scrolling with arrow navigation
@@ -532,7 +534,7 @@ TAB MANAGEMENT
 • Click × to close a tab
 • Use scroll arrows (◀ ▶) when tabs overflow
 
-PROTECTED NOTES
+SECURE NOTES
 Click "EDITR" logo to access password-protected notes.
 Your notes are encrypted and stored locally in your browser.
 
@@ -545,7 +547,7 @@ FILE OPERATIONS
 TIPS
 • Files are not automatically saved - use ⌘S / Ctrl+S frequently
 • The • dot next to filename indicates unsaved changes
-• Protected notes are encrypted with AES-GCM encryption
+• Secure notes are encrypted with AES-GCM encryption
 • All data is stored locally - nothing is sent to servers
 
 CREDITS
@@ -588,7 +590,7 @@ Close this tab to return to editing.`;
 
             tabs.addEventListener("dblclick", (e) => {
                 clearTimeout(clickTimer); // Cancel single click
-                
+
                 const nameEl = e.target.closest(".tab-name");
                 if (!nameEl) return;
 
