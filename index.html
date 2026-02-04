@@ -96,12 +96,60 @@
                 background: var(--bg-secondary);
                 border-bottom: 1px solid var(--border);
                 display: flex;
+                position: relative;
+            }
+
+            .scroll-arrow {
+                width: 32px;
+                height: 100%;
+                background: var(--bg-secondary);
+                border: none;
+                border-right: 1px solid var(--border);
+                cursor: pointer;
+                color: var(--text-primary);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+                z-index: 10;
+            }
+
+            .scroll-arrow.right {
+                border-right: none;
+                border-left: 1px solid var(--border);
+            }
+
+            .scroll-arrow:hover {
+                background: var(--bg-hover);
+            }
+
+            .scroll-arrow.visible {
+                display: flex;
+            }
+
+            .scroll-arrow svg {
+                width: 16px;
+                height: 16px;
+                stroke: currentColor;
+                fill: none;
+                stroke-width: 2;
+            }
+
+            .tabs-container {
+                flex: 1;
+                overflow: hidden;
+                position: relative;
             }
 
             .tabs {
                 display: flex;
                 overflow-x: auto;
-                flex: 1;
+                scroll-behavior: smooth;
+                scrollbar-width: none;
+            }
+
+            .tabs::-webkit-scrollbar {
+                display: none;
             }
 
             .tab {
@@ -241,7 +289,7 @@
                 >
                     <svg viewBox="0 0 16 16">
                         <path d="M3 2h10v12H3z" />
-                        <polyline points="5,2 5,6 11,6 11,2" />
+                        <path d="M5 2v4h6V2" />
                     </svg>
                 </button>
 
@@ -251,24 +299,31 @@
                     title="Save As (⌘⇧S / Ctrl+Shift+S)"
                 >
                     <svg viewBox="0 0 16 16">
-                        <path d="M3 2h7l3 3v9H3z" />
-                        <line x1="8" y1="7" x2="8" y2="12" />
-                        <line x1="6" y1="10" x2="10" y2="10" />
+                        <path d="M8 10l4-4M8 10l-4-4M8 10V3" />
+                        <path d="M3 13h10" />
                     </svg>
                 </button>
             </div>
         </header>
 
         <div class="tabs-wrapper">
-            <div class="tabs" id="tabs"></div>
+            <button class="scroll-arrow left" id="scrollLeft">
+                <svg viewBox="0 0 16 16">
+                    <polyline points="10,3 5,8 10,13" />
+                </svg>
+            </button>
+            <div class="tabs-container">
+                <div class="tabs" id="tabs"></div>
+            </div>
+            <button class="scroll-arrow right" id="scrollRight">
+                <svg viewBox="0 0 16 16">
+                    <polyline points="6,3 11,8 6,13" />
+                </svg>
+            </button>
         </div>
 
         <div class="editor-container">
-            <textarea
-                id="editor"
-                class="editor"
-                placeholder="Start typing..."
-            ></textarea>
+            <textarea class="editor" id="editor"></textarea>
         </div>
 
         <div class="status-bar">
@@ -276,67 +331,97 @@
             <span id="charCount">0 characters</span>
         </div>
 
-        <!-- Secret Notes -->
         <div class="overlay" id="secretOverlay"></div>
-
         <div class="secret-modal" id="secretModal">
-            <h2>Protected Note</h2>
-            <input type="password" id="secretPassword" placeholder="Password" />
-            <textarea
-                id="secretEditor"
-                placeholder="Encrypted note..."
-            ></textarea>
+            <h3>Protected Notes</h3>
+            <input
+                id="secretPassword"
+                type="password"
+                placeholder="Password"
+            />
+            <textarea id="secretEditor" placeholder="Your secret notes"></textarea>
             <div class="secret-actions">
-                <button id="closeSecret">Close</button>
-                <button id="saveSecret">Save</button>
+                <button class="icon-btn" id="saveSecret">Save</button>
+                <button class="icon-btn" id="closeSecret">Close</button>
             </div>
         </div>
 
         <script>
-            /* ====================================================
-   PLATFORM SHORTCUTS
-==================================================== */
-            const isMac = navigator.platform.toUpperCase().includes("MAC");
-            const modKey = isMac ? "metaKey" : "ctrlKey";
+            const tabs = document.getElementById("tabs");
+            const editor = document.getElementById("editor");
+            const newBtn = document.getElementById("newBtn");
+            const openBtn = document.getElementById("openBtn");
+            const saveBtn = document.getElementById("saveBtn");
+            const saveAsBtn = document.getElementById("saveAsBtn");
+            const fileStatus = document.getElementById("fileStatus");
+            const charCount = document.getElementById("charCount");
+            const scrollLeft = document.getElementById("scrollLeft");
+            const scrollRight = document.getElementById("scrollRight");
 
-            document.addEventListener("keydown", (e) => {
-                if (!e[modKey]) return;
-                if (e.key === "n") {
+            let files = [];
+            let active = -1;
+
+            /* ====================================================
+   SCROLL ARROWS
+==================================================== */
+            function updateScrollArrows() {
+                const container = tabs;
+                const hasOverflow = container.scrollWidth > container.clientWidth;
+                const isAtStart = container.scrollLeft <= 0;
+                const isAtEnd = container.scrollLeft + container.clientWidth >= container.scrollWidth - 1;
+
+                if (hasOverflow) {
+                    scrollLeft.classList.toggle('visible', !isAtStart);
+                    scrollRight.classList.toggle('visible', !isAtEnd);
+                } else {
+                    scrollLeft.classList.remove('visible');
+                    scrollRight.classList.remove('visible');
+                }
+            }
+
+            scrollLeft.onclick = () => {
+                tabs.scrollBy({ left: -200, behavior: 'smooth' });
+            };
+
+            scrollRight.onclick = () => {
+                tabs.scrollBy({ left: 200, behavior: 'smooth' });
+            };
+
+            tabs.addEventListener('scroll', updateScrollArrows);
+            window.addEventListener('resize', updateScrollArrows);
+
+            /* ====================================================
+   KEYBOARD SHORTCUTS
+==================================================== */
+            window.onkeydown = (e) => {
+                const isMac = /Mac/.test(navigator.platform);
+                const mod = isMac ? e.metaKey : e.ctrlKey;
+
+                if (mod && e.key === "n") {
                     e.preventDefault();
                     newFile();
                 }
-                if (e.key === "o") {
+                if (mod && e.key === "o") {
                     e.preventDefault();
                     openFile();
                 }
-                if (e.key === "s" && !e.shiftKey) {
+                if (mod && e.key === "s") {
                     e.preventDefault();
-                    saveFile();
+                    e.shiftKey ? saveFileAs() : saveFile();
                 }
-                if (e.key === "s" && e.shiftKey) {
-                    e.preventDefault();
-                    saveFileAs();
-                }
-            });
+            };
 
             /* ====================================================
-   FILE SYSTEM EDITOR
+   RENDER
 ==================================================== */
-            let files = [],
-                active = -1;
-            const editor = document.getElementById("editor");
-            const tabs = document.getElementById("tabs");
-            const fileStatus = document.getElementById("fileStatus");
-            const charCount = document.getElementById("charCount");
-
             function render() {
                 tabs.innerHTML = files
                     .map(
-                        (f, i) => `
-<div class="tab ${i === active ? "active" : ""}" data-index="${i}">
-<span class="tab-name">${f.name}${f.dirty ? " •" : ""}</span>
-<span class="tab-close">×</span>
-</div>`,
+                        (f, i) =>
+                            `<div class="tab ${i === active ? "active" : ""}" data-index="${i}">
+              <span class="tab-name">${f.name}${f.dirty ? " •" : ""}</span>
+              <span class="tab-close">×</span>
+            </div>`,
                     )
                     .join("");
 
@@ -348,6 +433,9 @@
                     fileStatus.textContent = "No file";
                 }
                 charCount.textContent = editor.value.length + " characters";
+                
+                // Update scroll arrows after render
+                setTimeout(updateScrollArrows, 0);
             }
 
             function newFile() {
@@ -421,8 +509,6 @@
    TAB CLICK + DOUBLE-CLICK RENAME (FIXED)
 ==================================================== */
             tabs.addEventListener("click", (e) => {
-                if (e.target.classList.contains("tab-name")) return;
-
                 const close = e.target.closest(".tab-close");
                 if (close) {
                     closeFile(+close.parentElement.dataset.index);
