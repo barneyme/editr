@@ -568,6 +568,7 @@ Close this tab to return to editing.`;
             /* ====================================================
    TAB CLICK + DOUBLE-CLICK RENAME (FIXED)
 ==================================================== */
+            let clickTimer = null;
             tabs.addEventListener("click", (e) => {
                 const close = e.target.closest(".tab-close");
                 if (close) {
@@ -576,10 +577,18 @@ Close this tab to return to editing.`;
                 }
 
                 const tab = e.target.closest(".tab");
-                if (tab) switchFile(+tab.dataset.index);
+                if (tab) {
+                    // Delay click to allow double-click to fire
+                    clearTimeout(clickTimer);
+                    clickTimer = setTimeout(() => {
+                        switchFile(+tab.dataset.index);
+                    }, 200);
+                }
             });
 
             tabs.addEventListener("dblclick", (e) => {
+                clearTimeout(clickTimer); // Cancel single click
+                
                 const nameEl = e.target.closest(".tab-name");
                 if (!nameEl) return;
 
