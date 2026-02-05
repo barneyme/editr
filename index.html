@@ -278,6 +278,29 @@
                 display: block;
             }
 
+            /* Drag and drop overlay */
+            .drop-overlay {
+                position: fixed;
+                inset: 0;
+                background: rgba(74, 158, 255, 0.1);
+                border: 3px dashed var(--accent);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 1001;
+                pointer-events: none;
+            }
+
+            .drop-overlay.visible {
+                display: flex;
+            }
+
+            .drop-overlay-text {
+                font-size: 24px;
+                color: var(--accent);
+                font-weight: 500;
+            }
+
             /* Secret modal */
             .secret-modal {
                 position: fixed;
@@ -405,11 +428,12 @@
                 <button
                     id="toolsBtn"
                     class="icon-btn"
-                    aria-label="Tools"
-                    title="Tools (Ctrl+T)"
+                    aria-label="Terminal"
+                    title="Terminal (Ctrl+T)"
                 >
                     <svg viewBox="0 0 24 24">
-                        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                        <polyline points="4 17 10 11 4 5" />
+                        <line x1="12" y1="19" x2="20" y2="19" />
                     </svg>
                 </button>
                 <button
@@ -452,7 +476,7 @@
             ></textarea>
             
             <div class="tools-container" id="toolsContainer">
-                <div class="tools-output" id="toolsOutput">TOOLS v1.0
+                <div class="tools-output" id="toolsOutput">TERMINAL v1.0
 Available commands:
   bc [expression]       - Calculator (e.g., bc 1 + 1, bc 10 * 10)
   cal                   - Current month calendar
@@ -461,6 +485,12 @@ Available commands:
   date                  - Current date in ISO format
   time                  - Current time in 24-hour format
   timer [minutes]       - Countdown timer (e.g., timer 5)
+  uptime                - How long the page has been open
+  whoami                - Browser and system info
+  echo [text]           - Echo back text
+  rand [min] [max]      - Random number (e.g., rand 1 100)
+  coin                  - Flip a coin
+  dice [sides]          - Roll dice (e.g., dice 6, default 6)
   clear                 - Clear output
   help                  - Show this help
 
@@ -487,6 +517,11 @@ Type a command and press Enter to run it.
         <!-- Hidden file input for Firefox fallback -->
         <input type="file" id="fileInput" accept=".txt" style="display: none;" />
 
+        <!-- Drag and drop overlay -->
+        <div class="drop-overlay" id="dropOverlay">
+            <div class="drop-overlay-text">Drop .txt files here</div>
+        </div>
+
         <div class="overlay" id="secretOverlay"></div>
         <div class="secret-modal" id="secretModal">
             <label>Password:</label>
@@ -510,6 +545,8 @@ Type a command and press Enter to run it.
             let files = [];
             let active = -1;
             let activeTimers = [];
+            const pageLoadTime = Date.now();
+            let autoSaveInterval = null;
 
             const editor = document.getElementById("editor");
             const tabs = document.getElementById("tabs");
@@ -521,6 +558,7 @@ Type a command and press Enter to run it.
             const toolsContainer = document.getElementById("toolsContainer");
             const toolsOutput = document.getElementById("toolsOutput");
             const toolsInput = document.getElementById("toolsInput");
+            const dropOverlay = document.getElementById("dropOverlay");
 
             /* ====================================================
    TOOLS FUNCTIONALITY
@@ -531,16 +569,16 @@ Type a command and press Enter to run it.
             document.getElementById("toolsBtn").onclick = openTools;
 
             function openTools() {
-                // Check if Tools.txt already exists
-                const existingIndex = files.findIndex(f => f.name === "Tools.txt");
+                // Check if Terminal.txt already exists
+                const existingIndex = files.findIndex(f => f.name === "Terminal.txt");
                 
                 if (existingIndex !== -1) {
-                    // Switch to existing tools tab
+                    // Switch to existing terminal tab
                     switchFile(existingIndex);
                 } else {
-                    // Create new tools tab
+                    // Create new terminal tab
                     files.push({
-                        name: "Tools.txt",
+                        name: "Terminal.txt",
                         content: "",
                         handle: null,
                         dirty: false,
@@ -548,6 +586,7 @@ Type a command and press Enter to run it.
                     });
                     active = files.length - 1;
                     render();
+                    saveSession();
                 }
             }
 
@@ -596,6 +635,50 @@ Type a command and press Enter to run it.
                                 result = `Timer started for ${minutes} minute(s)`;
                             }
                             break;
+                        case "uptime":
+                            const uptimeMs = Date.now() - pageLoadTime;
+                            const uptimeSeconds = Math.floor(uptimeMs / 1000);
+                            const hours = Math.floor(uptimeSeconds / 3600);
+                            const minutes2 = Math.floor((uptimeSeconds % 3600) / 60);
+                            const seconds = uptimeSeconds % 60;
+                            if (hours > 0) {
+                                result = `up ${hours}h ${minutes2}m ${seconds}s`;
+                            } else if (minutes2 > 0) {
+                                result = `up ${minutes2}m ${seconds}s`;
+                            } else {
+                                result = `up ${seconds}s`;
+                            }
+                            break;
+                        case "whoami":
+                            result = `User Agent: ${navigator.userAgent}
+Platform: ${navigator.platform}
+Language: ${navigator.language}
+Online: ${navigator.onLine ? 'Yes' : 'No'}
+Screen: ${screen.width}x${screen.height}`;
+                            break;
+                        case "echo":
+                            result = args.join(" ");
+                            break;
+                        case "rand":
+                            const min = parseInt(args[0]) || 0;
+                            const max = parseInt(args[1]) || 100;
+                            if (min >= max) {
+                                result = '<span class="error">Error: min must be less than max (e.g., rand 1 100)</span>';
+                            } else {
+                                result = Math.floor(Math.random() * (max - min + 1)) + min;
+                            }
+                            break;
+                        case "coin":
+                            result = Math.random() < 0.5 ? "Heads" : "Tails";
+                            break;
+                        case "dice":
+                            const sides = parseInt(args[0]) || 6;
+                            if (sides < 2) {
+                                result = '<span class="error">Error: dice must have at least 2 sides</span>';
+                            } else {
+                                result = Math.floor(Math.random() * sides) + 1;
+                            }
+                            break;
                         case "clear":
                             toolsOutput.innerHTML = "";
                             return;
@@ -608,6 +691,12 @@ Type a command and press Enter to run it.
   date                  - Current date in ISO format
   time                  - Current time in 24-hour format
   timer [minutes]       - Countdown timer (e.g., timer 5)
+  uptime                - How long the page has been open
+  whoami                - Browser and system info
+  echo [text]           - Echo back text
+  rand [min] [max]      - Random number (e.g., rand 1 100)
+  coin                  - Flip a coin
+  dice [sides]          - Roll dice (e.g., dice 6, default 6)
   clear                 - Clear output
   help                  - Show this help`;
                             break;
@@ -826,12 +915,14 @@ Type a command and press Enter to run it.
 
             document.querySelector(".tabs").addEventListener("scroll", updateScrollButtons);
 
-            editor.oninput = () => {
-                if (active >= 0) {
-                    files[active].dirty = true;
-                    render();
-                }
-            };
+editor.oninput = () => {
+    if (active >= 0) {
+        // Update the file content FIRST
+        files[active].content = editor.value; 
+        files[active].dirty = true;
+        render();
+    }
+};
 
             editor.onkeyup = editor.onclick = () => {
                 const pos = editor.selectionStart;
@@ -846,6 +937,7 @@ Type a command and press Enter to run it.
                 files.push({ name: fullName, content: "", handle: null, dirty: false });
                 active = files.length - 1;
                 render();
+                saveSession();
             }
 
             async function openFile() {
@@ -865,6 +957,7 @@ Type a command and press Enter to run it.
                         });
                         active = files.length - 1;
                         render();
+                        saveSession();
                     } catch (err) {
                         if (err.name !== "AbortError") alert("Failed to open file");
                     }
@@ -885,6 +978,7 @@ Type a command and press Enter to run it.
                             });
                             active = files.length - 1;
                             render();
+                            saveSession();
                         } catch (err) {
                             alert("Failed to open file");
                         }
@@ -901,7 +995,7 @@ Type a command and press Enter to run it.
                 const file = files[active];
                 
                 if (file.isTools) {
-                    alert("Tools tab cannot be saved");
+                    alert("Terminal tab cannot be saved");
                     return;
                 }
 
@@ -927,7 +1021,7 @@ Type a command and press Enter to run it.
                 const file = files[active];
                 
                 if (file.isTools) {
-                    alert("Tools tab cannot be saved");
+                    alert("Terminal tab cannot be saved");
                     return;
                 }
 
@@ -996,7 +1090,7 @@ Save File      ⌘S / Ctrl+S
 Save As        ⌘⇧S / Ctrl+Shift+S
 Rename File    ⌘R / Ctrl+R
 Protected Notes ⌘P / Ctrl+P
-Tools          ⌘T / Ctrl+T
+Terminal       ⌘T / Ctrl+T
 Help           ⌘H / Ctrl+H
 
 TAB MANAGEMENT:
@@ -1015,7 +1109,7 @@ FILE OPERATIONS:
 • Save: Saves current file (prompts for location if new).
 • Save As: Saves file with a new name/location.
 
-TOOLS:
+TERMINAL:
 • bc [expression] - Calculator (e.g., bc 1 + 1)
 • cal - Current month calendar
 • cal [month] - Calendar for specific month
@@ -1023,11 +1117,19 @@ TOOLS:
 • date - Current date in ISO format
 • time - Current time in 24-hour format
 • timer [minutes] - Countdown timer
+• uptime - How long page has been open
+• whoami - Browser and system info
+• echo [text] - Echo back text
+• rand [min] [max] - Random number
+• coin - Flip a coin
+• dice [sides] - Roll dice
 • clear - Clear terminal output
 • help - Show available commands
 
 TIPS:
-• Files are not automatically saved - use ⌘S / Ctrl+S frequently.
+• Files auto-save to browser storage every 10 seconds.
+• Your tabs are remembered when you return to the page.
+• Drag and drop .txt files to open them.
 • The • dot next to filename indicates unsaved changes.
 • Protected notes are encrypted with AES-GCM encryption.
 • All data is stored locally - nothing is sent to servers.
@@ -1050,6 +1152,7 @@ Close this tab to return to editing.`;
                     });
                     active = files.length - 1;
                     render();
+                    saveSession();
                 }
             }
 
@@ -1129,7 +1232,7 @@ Close this tab to return to editing.`;
                 const index = +tab.dataset.index;
                 const file = files[index];
                 
-                if (file.isTools) return; // Can't rename tools tab
+                if (file.isTools) return; // Can't rename terminal tab
 
                 const input = document.createElement("input");
                 input.value = file.name;
@@ -1160,7 +1263,7 @@ Close this tab to return to editing.`;
             });
 
             function closeFile(i) {
-                // Clear any active timers if closing tools tab
+                // Clear any active timers if closing terminal tab
                 if (files[i].isTools) {
                     activeTimers.forEach(timerId => clearInterval(timerId));
                     activeTimers = [];
@@ -1169,6 +1272,7 @@ Close this tab to return to editing.`;
                 files.splice(i, 1);
                 active = Math.min(active, files.length - 1);
                 render();
+                saveSession();
             }
 
             function switchFile(i) {
@@ -1177,11 +1281,12 @@ Close this tab to return to editing.`;
                 }
                 active = i;
                 render();
+                saveSession();
             }
 
             function renameActiveFile() {
                 if (active < 0) return;
-                if (files[active].isTools) return; // Can't rename tools tab
+                if (files[active].isTools) return; // Can't rename terminal tab
 
                 setTimeout(() => {
                     const activeTab = document.querySelector(".tab.active");
@@ -1318,8 +1423,142 @@ Close this tab to return to editing.`;
                 alert("Saved");
             };
 
-            // Initialize
-            render();
+            /* ====================================================
+   DRAG AND DROP
+==================================================== */
+            let dragCounter = 0;
+
+            document.addEventListener("dragenter", (e) => {
+                e.preventDefault();
+                dragCounter++;
+                dropOverlay.classList.add("visible");
+            });
+
+            document.addEventListener("dragleave", (e) => {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter === 0) {
+                    dropOverlay.classList.remove("visible");
+                }
+            });
+
+            document.addEventListener("dragover", (e) => {
+                e.preventDefault();
+            });
+
+            document.addEventListener("drop", async (e) => {
+                e.preventDefault();
+                dragCounter = 0;
+                dropOverlay.classList.remove("visible");
+
+                const files_dropped = Array.from(e.dataTransfer.files);
+                
+                for (const file of files_dropped) {
+                    // Only accept .txt files
+                    if (!file.name.endsWith(".txt")) {
+                        alert(`Skipping ${file.name} - only .txt files are supported`);
+                        continue;
+                    }
+
+                    try {
+                        const content = await file.text();
+                        files.push({
+                            name: file.name,
+                            content,
+                            handle: null,
+                            dirty: false,
+                        });
+                    } catch (err) {
+                        alert(`Failed to read ${file.name}`);
+                    }
+                }
+
+                if (files_dropped.length > 0) {
+                    active = files.length - 1;
+                    render();
+                    saveSession();
+                }
+            });
+
+            /* ====================================================
+   AUTO-SAVE AND SESSION RESTORE
+==================================================== */
+            function saveSession() {
+                // Save current editor content to active file
+                if (active >= 0 && files[active] && !files[active].isTools) {
+                    files[active].content = editor.value;
+                }
+
+                // Prepare data for storage (exclude file handles and isTools flag)
+                const sessionData = {
+                    files: files.map(f => ({
+                        name: f.name,
+                        content: f.content,
+                        dirty: f.dirty,
+                        isTools: f.isTools || false
+                    })),
+                    active: active
+                };
+
+                try {
+                    localStorage.setItem("editr-session", JSON.stringify(sessionData));
+                } catch (err) {
+                    console.error("Failed to save session:", err);
+                }
+            }
+
+            function restoreSession() {
+                try {
+                    const stored = localStorage.getItem("editr-session");
+                    if (!stored) return false;
+
+                    const sessionData = JSON.parse(stored);
+                    
+                    if (sessionData.files && sessionData.files.length > 0) {
+                        files = sessionData.files.map(f => ({
+                            name: f.name,
+                            content: f.content,
+                            handle: null,
+                            dirty: f.dirty || false,
+                            isTools: f.isTools || false
+                        }));
+                        active = sessionData.active >= 0 ? sessionData.active : 0;
+                        render();
+                        return true;
+                    }
+                } catch (err) {
+                    console.error("Failed to restore session:", err);
+                }
+                return false;
+            }
+
+            // Auto-save every 10 seconds
+            autoSaveInterval = setInterval(() => {
+                if (files.length > 0) {
+                    saveSession();
+                }
+            }, 10000);
+
+            // Save session when editor content changes
+            editor.addEventListener("input", () => {
+                // Debounced save will happen every 10 seconds via interval
+                if (active >= 0 && files[active]) {
+                    files[active].dirty = true;
+                }
+            });
+
+            // Save session before page unload
+            window.addEventListener("beforeunload", () => {
+                saveSession();
+            });
+
+            /* ====================================================
+   INITIALIZATION
+==================================================== */
+            // Try to restore previous session, otherwise start fresh
+            if (!restoreSession()) {
+                render();
+            }
         </script>
     </body>
 </html>
