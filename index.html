@@ -59,6 +59,10 @@
                 letter-spacing: 0.5px;
             }
 
+            .logo:hover {
+                color: var(--accent);
+            }
+
             .actions {
                 margin-left: auto;
                 display: flex;
@@ -198,6 +202,59 @@
                 outline: none;
             }
 
+            /* Tools Terminal */
+            .tools-container {
+                width: 100%;
+                height: 100%;
+                background: var(--bg-primary);
+                padding: 32px;
+                display: none;
+                flex-direction: column;
+                gap: 8px;
+            }
+
+            .tools-container.active {
+                display: flex;
+            }
+
+            .tools-output {
+                flex: 1;
+                overflow-y: auto;
+                color: var(--text-primary);
+                line-height: 1.6;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                min-height: 0;
+            }
+
+            .tools-output .prompt {
+                color: var(--accent);
+            }
+
+            .tools-output .error {
+                color: #ff6b6b;
+            }
+
+            .tools-input-wrapper {
+                display: flex;
+                gap: 8px;
+                align-items: center;
+            }
+
+            .tools-input-wrapper .prompt {
+                color: var(--accent);
+            }
+
+            .tools-input {
+                flex: 1;
+                background: transparent;
+                border: none;
+                color: var(--text-primary);
+                font-family: inherit;
+                font-size: inherit;
+                outline: none;
+            }
+
             /* Status bar */
             .status-bar {
                 background: var(--bg-secondary);
@@ -243,8 +300,9 @@
                 background: var(--bg-primary);
                 border: 1px solid var(--border);
                 color: var(--text-primary);
+                padding: 10px;
                 font-family: inherit;
-                padding: 8px;
+                border-radius: 4px;
             }
 
             .secret-modal textarea {
@@ -252,268 +310,674 @@
                 resize: none;
             }
 
-            .secret-actions {
+            .secret-modal label {
+                font-weight: 500;
+                font-size: 12px;
+                margin-bottom: 4px;
+                color: var(--text-secondary);
+            }
+
+            .secret-modal-buttons {
                 display: flex;
-                justify-content: flex-end;
                 gap: 8px;
+                justify-content: flex-end;
+            }
+
+            .secret-modal button {
+                padding: 8px 16px;
+                border: 1px solid var(--border);
+                background: var(--bg-primary);
+                color: var(--text-primary);
+                cursor: pointer;
+                border-radius: 4px;
+                font-family: inherit;
+            }
+
+            .secret-modal button:hover {
+                background: var(--bg-hover);
             }
         </style>
     </head>
-
     <body>
         <header>
-            <div class="logo" id="secretNotesBtn">EDITR</div>
-
+            <div class="logo" onclick="openSecretNotes()">EDITR</div>
             <div class="actions">
-                <button class="icon-btn" id="newBtn" title="New (⌘N / Ctrl+N)">
-                    <svg viewBox="0 0 16 16">
-                        <line x1="8" y1="3" x2="8" y2="13" />
-                        <line x1="3" y1="8" x2="13" y2="8" />
+                <button
+                    id="newBtn"
+                    class="icon-btn"
+                    aria-label="New file"
+                    title="New file (Ctrl+N)"
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
                     </svg>
                 </button>
-
                 <button
-                    class="icon-btn"
                     id="openBtn"
-                    title="Open (⌘O / Ctrl+O)"
+                    class="icon-btn"
+                    aria-label="Open file"
+                    title="Open file (Ctrl+O)"
                 >
-                    <svg viewBox="0 0 16 16">
-                        <path d="M2 4.5h4l2 2h6v7H2z" />
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                        />
                     </svg>
                 </button>
-
                 <button
-                    class="icon-btn"
                     id="saveBtn"
-                    title="Save (⌘S / Ctrl+S)"
+                    class="icon-btn"
+                    aria-label="Save file"
+                    title="Save file (Ctrl+S)"
                 >
-                    <svg viewBox="0 0 16 16">
-                        <path d="M3 2h10v12H3z" />
-                        <path d="M5 2v4h6V2" />
+                    <svg viewBox="0 0 24 24">
+                        <path
+                            d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"
+                        />
+                        <path d="M7 3v5h8" />
+                        <rect x="7" y="13" width="10" height="8" />
                     </svg>
                 </button>
-
                 <button
-                    class="icon-btn"
                     id="saveAsBtn"
-                    title="Save As (⌘⇧S / Ctrl+Shift+S)"
+                    class="icon-btn"
+                    aria-label="Save as"
+                    title="Save As (Ctrl+Shift+S)"
                 >
-                    <svg viewBox="0 0 16 16">
-                        <path d="M8 10l4-4M8 10l-4-4M8 10V3" />
-                        <path d="M3 13h10" />
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <polyline points="14 2 14 8 20 8" />
+                        <line x1="12" y1="18" x2="12" y2="12" />
+                        <line x1="9" y1="15" x2="15" y2="15" />
+                    </svg>
+                </button>
+                <button
+                    id="renameBtn"
+                    class="icon-btn"
+                    aria-label="Rename file"
+                    title="Rename file (Ctrl+R)"
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                    </svg>
+                </button>
+                <button
+                    id="toolsBtn"
+                    class="icon-btn"
+                    aria-label="Tools"
+                    title="Tools (Ctrl+T)"
+                >
+                    <svg viewBox="0 0 24 24">
+                        <path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z" />
+                    </svg>
+                </button>
+                <button
+                    id="helpBtn"
+                    class="icon-btn"
+                    aria-label="Help"
+                    title="Help (Ctrl+H)"
+                >
+                    <svg viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
                     </svg>
                 </button>
             </div>
         </header>
 
         <div class="tabs-wrapper">
-            <button class="scroll-arrow left" id="scrollLeft">
-                <svg viewBox="0 0 16 16">
-                    <polyline points="10,3 5,8 10,13" />
+            <button class="scroll-arrow left" id="scrollLeft" aria-label="Scroll tabs left">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="15 18 9 12 15 6" />
                 </svg>
             </button>
             <div class="tabs-container">
                 <div class="tabs" id="tabs"></div>
             </div>
-            <button class="scroll-arrow right" id="scrollRight">
-                <svg viewBox="0 0 16 16">
-                    <polyline points="6,3 11,8 6,13" />
+            <button class="scroll-arrow right" id="scrollRight" aria-label="Scroll tabs right">
+                <svg viewBox="0 0 24 24">
+                    <polyline points="9 18 15 12 9 6" />
                 </svg>
             </button>
         </div>
 
         <div class="editor-container">
-            <textarea class="editor" id="editor"></textarea>
+            <textarea
+                class="editor"
+                id="editor"
+                placeholder="Start typing..."
+                spellcheck="false"
+            ></textarea>
+            
+            <div class="tools-container" id="toolsContainer">
+                <div class="tools-output" id="toolsOutput">TOOLS v1.0
+Available commands:
+  bc [expression]       - Calculator (e.g., bc 1 + 1, bc 10 * 10)
+  cal                   - Current month calendar
+  cal [month]           - Specific month (e.g., cal 3)
+  cal [year]            - Full year calendar (e.g., cal 2026)
+  date                  - Current date in ISO format
+  time                  - Current time in 24-hour format
+  timer [minutes]       - Countdown timer (e.g., timer 5)
+  clear                 - Clear output
+  help                  - Show this help
+
+Type a command and press Enter to run it.
+</div>
+                <div class="tools-input-wrapper">
+                    <span class="prompt">$</span>
+                    <input
+                        type="text"
+                        class="tools-input"
+                        id="toolsInput"
+                        placeholder="Enter command..."
+                        autocomplete="off"
+                    />
+                </div>
+            </div>
         </div>
 
         <div class="status-bar">
-            <span id="fileStatus">No file</span>
-            <button class="icon-btn" id="helpBtn" title="Help">?</button>
+            <span id="statusLeft">Ready</span>
+            <span id="statusRight">Ln 1, Col 1</span>
         </div>
+
+        <!-- Hidden file input for Firefox fallback -->
+        <input type="file" id="fileInput" accept=".txt" style="display: none;" />
 
         <div class="overlay" id="secretOverlay"></div>
         <div class="secret-modal" id="secretModal">
-            <h3>Protected Notes</h3>
-            <input id="secretPassword" type="password" placeholder="Password" />
+            <label>Password:</label>
+            <input
+                type="password"
+                id="secretPassword"
+                placeholder="Enter password"
+            />
+            <label>Protected Note:</label>
             <textarea
                 id="secretEditor"
-                placeholder="Your secret notes"
+                placeholder="Type your protected note..."
             ></textarea>
-            <div class="secret-actions">
-                <button class="icon-btn" id="saveSecret">Save</button>
-                <button class="icon-btn" id="closeSecret">Close</button>
+            <div class="secret-modal-buttons">
+                <button id="closeSecret">Close</button>
+                <button id="saveSecret">Save</button>
             </div>
         </div>
 
         <script>
-            const tabs = document.getElementById("tabs");
+            let files = [];
+            let active = -1;
+            let activeTimers = [];
+
             const editor = document.getElementById("editor");
-            const newBtn = document.getElementById("newBtn");
-            const openBtn = document.getElementById("openBtn");
-            const saveBtn = document.getElementById("saveBtn");
-            const saveAsBtn = document.getElementById("saveAsBtn");
-            const fileStatus = document.getElementById("fileStatus");
-            const helpBtn = document.getElementById("helpBtn");
+            const tabs = document.getElementById("tabs");
+            const statusLeft = document.getElementById("statusLeft");
+            const statusRight = document.getElementById("statusRight");
             const scrollLeft = document.getElementById("scrollLeft");
             const scrollRight = document.getElementById("scrollRight");
 
-            let files = [];
-            let active = -1;
+            const toolsContainer = document.getElementById("toolsContainer");
+            const toolsOutput = document.getElementById("toolsOutput");
+            const toolsInput = document.getElementById("toolsInput");
 
             /* ====================================================
-   SCROLL ARROWS
+   TOOLS FUNCTIONALITY
 ==================================================== */
-            function updateScrollArrows() {
-                const container = tabs;
-                const hasOverflow =
-                    container.scrollWidth > container.clientWidth;
-                const isAtStart = container.scrollLeft <= 0;
-                const isAtEnd =
-                    container.scrollLeft + container.clientWidth >=
-                    container.scrollWidth - 1;
+            let isToolsActive = false;
+            let commandHistory = [];
 
-                if (hasOverflow) {
-                    scrollLeft.classList.toggle("visible", !isAtStart);
-                    scrollRight.classList.toggle("visible", !isAtEnd);
+            document.getElementById("toolsBtn").onclick = openTools;
+
+            function openTools() {
+                // Check if Tools.txt already exists
+                const existingIndex = files.findIndex(f => f.name === "Tools.txt");
+                
+                if (existingIndex !== -1) {
+                    // Switch to existing tools tab
+                    switchFile(existingIndex);
                 } else {
-                    scrollLeft.classList.remove("visible");
-                    scrollRight.classList.remove("visible");
+                    // Create new tools tab
+                    files.push({
+                        name: "Tools.txt",
+                        content: "",
+                        handle: null,
+                        dirty: false,
+                        isTools: true
+                    });
+                    active = files.length - 1;
+                    render();
                 }
             }
 
-            scrollLeft.onclick = () => {
-                tabs.scrollBy({ left: -200, behavior: "smooth" });
-            };
+            toolsInput.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    const command = toolsInput.value.trim();
+                    if (command) {
+                        executeCommand(command);
+                        commandHistory.push(command);
+                        toolsInput.value = "";
+                    }
+                }
+            });
 
-            scrollRight.onclick = () => {
-                tabs.scrollBy({ left: 200, behavior: "smooth" });
-            };
+            function executeCommand(cmd) {
+                const output = document.createElement("div");
+                output.innerHTML = `<span class="prompt">$ ${cmd}</span>\n`;
+                
+                const parts = cmd.split(" ");
+                const command = parts[0];
+                const args = parts.slice(1);
 
-            tabs.addEventListener("scroll", updateScrollArrows);
-            window.addEventListener("resize", updateScrollArrows);
+                try {
+                    let result = "";
+                    
+                    switch(command) {
+                        case "bc":
+                            result = calculateExpression(args.join(" "));
+                            break;
+                        case "cal":
+                            result = generateCalendar(args[0]);
+                            break;
+                        case "date":
+                            result = new Date().toISOString().split('T')[0];
+                            break;
+                        case "time":
+                            const now = new Date();
+                            result = now.toTimeString().split(' ')[0];
+                            break;
+                        case "timer":
+                            const minutes = parseInt(args[0]);
+                            if (isNaN(minutes) || minutes <= 0) {
+                                result = '<span class="error">Error: Please provide valid minutes (e.g., timer 5)</span>';
+                            } else {
+                                startTimer(minutes);
+                                result = `Timer started for ${minutes} minute(s)`;
+                            }
+                            break;
+                        case "clear":
+                            toolsOutput.innerHTML = "";
+                            return;
+                        case "help":
+                            result = `Available commands:
+  bc [expression]       - Calculator (e.g., bc 1 + 1, bc 10 * 10)
+  cal                   - Current month calendar
+  cal [month]           - Specific month (e.g., cal 3)
+  cal [year]            - Full year calendar (e.g., cal 2026)
+  date                  - Current date in ISO format
+  time                  - Current time in 24-hour format
+  timer [minutes]       - Countdown timer (e.g., timer 5)
+  clear                 - Clear output
+  help                  - Show this help`;
+                            break;
+                        default:
+                            result = `<span class="error">Error: Unknown command '${command}'. Type 'help' for available commands.</span>`;
+                    }
+                    
+                    output.innerHTML += result + "\n";
+                } catch (error) {
+                    output.innerHTML += `<span class="error">Error: ${error.message}</span>\n`;
+                }
+                
+                toolsOutput.appendChild(output);
+                toolsOutput.scrollTop = toolsOutput.scrollHeight;
+            }
+
+            function calculateExpression(expr) {
+                try {
+                    // Basic calculator - supports +, -, *, /, %, ()
+                    // Remove any non-math characters for safety
+                    const sanitized = expr.replace(/[^0-9+\-*/.%() ]/g, '');
+                    if (!sanitized) {
+                        return '<span class="error">Error: Invalid expression</span>';
+                    }
+                    const result = eval(sanitized);
+                    return result.toString();
+                } catch (error) {
+                    return `<span class="error">Error: Invalid expression</span>`;
+                }
+            }
+
+            function generateCalendar(arg) {
+                const now = new Date();
+                let year = now.getFullYear();
+                let month = now.getMonth();
+                
+                if (arg) {
+                    const num = parseInt(arg);
+                    if (num >= 1 && num <= 12) {
+                        // Month specified
+                        month = num - 1;
+                    } else if (num >= 1000 && num <= 9999) {
+                        // Year specified - show full year
+                        return generateYearCalendar(num);
+                    } else {
+                        return '<span class="error">Error: Invalid month (1-12) or year</span>';
+                    }
+                }
+                
+                return generateMonthCalendar(year, month);
+            }
+
+            function generateMonthCalendar(year, month) {
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                                  "July", "August", "September", "October", "November", "December"];
+                
+                const firstDay = new Date(year, month, 1).getDay();
+                const daysInMonth = new Date(year, month + 1, 0).getDate();
+                
+                let cal = `     ${monthNames[month]} ${year}\n`;
+                cal += "Su Mo Tu We Th Fr Sa\n";
+                
+                let dayCount = 1;
+                for (let week = 0; week < 6; week++) {
+                    let weekLine = "";
+                    for (let day = 0; day < 7; day++) {
+                        if ((week === 0 && day < firstDay) || dayCount > daysInMonth) {
+                            weekLine += "   ";
+                        } else {
+                            weekLine += dayCount.toString().padStart(2, " ") + " ";
+                            dayCount++;
+                        }
+                    }
+                    cal += weekLine.trim() + "\n";
+                    if (dayCount > daysInMonth) break;
+                }
+                
+                return cal;
+            }
+
+            function generateYearCalendar(year) {
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                                  "July", "August", "September", "October", "November", "December"];
+                
+                let cal = `                            ${year}\n\n`;
+                
+                for (let i = 0; i < 12; i += 3) {
+                    // Print 3 months side by side
+                    let monthHeaders = "";
+                    let weekHeaders = "";
+                    let monthLines = [[], [], [], [], [], []];
+                    
+                    for (let j = 0; j < 3; j++) {
+                        const m = i + j;
+                        if (m >= 12) break;
+                        
+                        const header = monthNames[m].padEnd(20, " ");
+                        monthHeaders += header + "  ";
+                        weekHeaders += "Su Mo Tu We Th Fr Sa  ";
+                        
+                        const firstDay = new Date(year, m, 1).getDay();
+                        const daysInMonth = new Date(year, m + 1, 0).getDate();
+                        
+                        let dayCount = 1;
+                        for (let week = 0; week < 6; week++) {
+                            let weekLine = "";
+                            for (let day = 0; day < 7; day++) {
+                                if ((week === 0 && day < firstDay) || dayCount > daysInMonth) {
+                                    weekLine += "   ";
+                                } else {
+                                    weekLine += dayCount.toString().padStart(2, " ") + " ";
+                                    dayCount++;
+                                }
+                            }
+                            monthLines[week].push(weekLine);
+                        }
+                    }
+                    
+                    cal += monthHeaders.trim() + "\n";
+                    cal += weekHeaders.trim() + "\n";
+                    
+                    for (let week = 0; week < 6; week++) {
+                        const line = monthLines[week].join("  ").trim();
+                        if (line) cal += line + "\n";
+                    }
+                    cal += "\n";
+                }
+                
+                return cal;
+            }
+
+            function startTimer(minutes) {
+                const endTime = Date.now() + (minutes * 60 * 1000);
+                const timerDiv = document.createElement("div");
+                timerDiv.style.color = "var(--accent)";
+                toolsOutput.appendChild(timerDiv);
+                
+                const timerId = setInterval(() => {
+                    const remaining = endTime - Date.now();
+                    
+                    if (remaining <= 0) {
+                        clearInterval(timerId);
+                        timerDiv.textContent = "⏰ Timer finished!";
+                        // Play a beep or notification if desired
+                        return;
+                    }
+                    
+                    const mins = Math.floor(remaining / 60000);
+                    const secs = Math.floor((remaining % 60000) / 1000);
+                    timerDiv.textContent = `Timer: ${mins}:${secs.toString().padStart(2, '0')} remaining`;
+                }, 1000);
+                
+                activeTimers.push(timerId);
+            }
 
             /* ====================================================
-   KEYBOARD SHORTCUTS
-==================================================== */
-            window.onkeydown = (e) => {
-                const isMac = /Mac/.test(navigator.platform);
-                const mod = isMac ? e.metaKey : e.ctrlKey;
-
-                if (mod && e.key === "n") {
-                    e.preventDefault();
-                    newFile();
-                }
-                if (mod && e.key === "o") {
-                    e.preventDefault();
-                    openFile();
-                }
-                if (mod && e.key === "s") {
-                    e.preventDefault();
-                    e.shiftKey ? saveFileAs() : saveFile();
-                }
-                if (mod && e.key === "r") {
-                    e.preventDefault();
-                    renameActiveFile();
-                }
-            };
-
-            /* ====================================================
-   RENDER
+   FILE OPERATIONS
 ==================================================== */
             function render() {
+                // Don't save editor content here - it's handled in switchFile
+                // This is called when creating new files where active already points to the new file
+
                 tabs.innerHTML = files
                     .map(
-                        (f, i) =>
-                            `<div class="tab ${i === active ? "active" : ""}" data-index="${i}">
-              <span class="tab-name">${f.name}${f.dirty ? " •" : ""}</span>
-              <span class="tab-close">×</span>
-            </div>`,
+                        (f, i) => `
+      <div class="tab ${i === active ? "active" : ""}" data-index="${i}">
+        <span class="tab-name">${f.name}${f.dirty ? " •" : ""}</span>
+        <span class="tab-close">×</span>
+      </div>
+    `,
                     )
                     .join("");
 
-                if (active >= 0) {
-                    editor.value = files[active].content;
-                    fileStatus.textContent = files[active].name;
+                if (active >= 0 && files[active]) {
+                    const file = files[active];
+                    
+                    if (file.isTools) {
+                        // Show tools container
+                        editor.style.display = "none";
+                        toolsContainer.classList.add("active");
+                        toolsInput.focus();
+                    } else {
+                        // Show regular editor
+                        editor.style.display = "block";
+                        toolsContainer.classList.remove("active");
+                        editor.value = file.content;
+                        statusLeft.textContent = file.name;
+                        editor.focus();
+                    }
                 } else {
+                    editor.style.display = "block";
+                    toolsContainer.classList.remove("active");
                     editor.value = "";
-                    fileStatus.textContent = "No file";
+                    statusLeft.textContent = "No file open";
                 }
 
-                // Update scroll arrows after render
-                setTimeout(updateScrollArrows, 0);
+                updateScrollButtons();
             }
 
+            function updateScrollButtons() {
+                const container = document.querySelector(".tabs");
+                const canScrollLeft = container.scrollLeft > 0;
+                const canScrollRight =
+                    container.scrollLeft < container.scrollWidth - container.clientWidth;
+
+                scrollLeft.classList.toggle("visible", canScrollLeft);
+                scrollRight.classList.toggle("visible", canScrollRight);
+            }
+
+            scrollLeft.onclick = () => {
+                document.querySelector(".tabs").scrollBy({ left: -200, behavior: "smooth" });
+            };
+            scrollRight.onclick = () => {
+                document.querySelector(".tabs").scrollBy({ left: 200, behavior: "smooth" });
+            };
+
+            document.querySelector(".tabs").addEventListener("scroll", updateScrollButtons);
+
+            editor.oninput = () => {
+                if (active >= 0) {
+                    files[active].dirty = true;
+                    render();
+                }
+            };
+
+            editor.onkeyup = editor.onclick = () => {
+                const pos = editor.selectionStart;
+                const lines = editor.value.substr(0, pos).split("\n");
+                statusRight.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+            };
+
             function newFile() {
-                files.push({
-                    name: `New-${files.length + 1}.txt`,
-                    content: "",
-                    handle: null,
-                    dirty: false,
-                });
+                const name = prompt("New file name:", "Untitled.txt");
+                if (!name) return;
+                const fullName = name.endsWith(".txt") ? name : name + ".txt";
+                files.push({ name: fullName, content: "", handle: null, dirty: false });
                 active = files.length - 1;
                 render();
             }
 
             async function openFile() {
-                const [handle] = await showOpenFilePicker({
-                    types: [{ accept: { "text/plain": [".txt"] } }],
-                });
-                const file = await handle.getFile();
-                files.push({
-                    name: file.name,
-                    content: await file.text(),
-                    handle,
-                    dirty: false,
-                });
-                active = files.length - 1;
-                render();
+                // Check if File System Access API is available (Chrome, Edge)
+                if (window.showOpenFilePicker) {
+                    try {
+                        const [handle] = await window.showOpenFilePicker({
+                            types: [{ description: "Text", accept: { "text/plain": [".txt"] } }],
+                        });
+                        const file = await handle.getFile();
+                        const content = await file.text();
+                        files.push({
+                            name: file.name,
+                            content,
+                            handle,
+                            dirty: false,
+                        });
+                        active = files.length - 1;
+                        render();
+                    } catch (err) {
+                        if (err.name !== "AbortError") alert("Failed to open file");
+                    }
+                } else {
+                    // Fallback for Firefox and other browsers
+                    const fileInput = document.getElementById("fileInput");
+                    fileInput.onchange = async (e) => {
+                        const file = e.target.files[0];
+                        if (!file) return;
+                        
+                        try {
+                            const content = await file.text();
+                            files.push({
+                                name: file.name,
+                                content,
+                                handle: null, // Firefox doesn't support file handles
+                                dirty: false,
+                            });
+                            active = files.length - 1;
+                            render();
+                        } catch (err) {
+                            alert("Failed to open file");
+                        }
+                        
+                        // Reset the input
+                        fileInput.value = "";
+                    };
+                    fileInput.click();
+                }
             }
 
             async function saveFile() {
                 if (active < 0) return;
-                const f = files[active];
-                f.content = editor.value;
-                if (!f.handle) return saveFileAs();
-                const w = await f.handle.createWritable();
-                await w.write(f.content);
-                await w.close();
-                f.dirty = false;
-                render();
+                const file = files[active];
+                
+                if (file.isTools) {
+                    alert("Tools tab cannot be saved");
+                    return;
+                }
+
+                if (!file.handle) {
+                    await saveFileAs();
+                    return;
+                }
+
+                // File System Access API (Chrome, Edge)
+                try {
+                    const writable = await file.handle.createWritable();
+                    await writable.write(file.content);
+                    await writable.close();
+                    file.dirty = false;
+                    render();
+                } catch (err) {
+                    alert("Failed to save file");
+                }
             }
 
             async function saveFileAs() {
                 if (active < 0) return;
-                const f = files[active];
-                f.content = editor.value;
-                const handle = await showSaveFilePicker({
-                    suggestedName: f.name,
-                });
-                const w = await handle.createWritable();
-                await w.write(f.content);
-                await w.close();
-                f.handle = handle;
-                f.name = handle.name;
-                f.dirty = false;
-                render();
+                const file = files[active];
+                
+                if (file.isTools) {
+                    alert("Tools tab cannot be saved");
+                    return;
+                }
+
+                // Check if File System Access API is available (Chrome, Edge)
+                if (window.showSaveFilePicker) {
+                    try {
+                        const handle = await window.showSaveFilePicker({
+                            suggestedName: file.name,
+                            types: [{ description: "Text", accept: { "text/plain": [".txt"] } }],
+                        });
+                        const writable = await handle.createWritable();
+                        await writable.write(file.content);
+                        await writable.close();
+                        file.handle = handle;
+                        file.name = (await handle.getFile()).name;
+                        file.dirty = false;
+                        render();
+                    } catch (err) {
+                        if (err.name !== "AbortError") alert("Failed to save file");
+                    }
+                } else {
+                    // Fallback for Firefox - download the file
+                    try {
+                        const blob = new Blob([file.content], { type: "text/plain" });
+                        const url = URL.createObjectURL(blob);
+                        const a = document.createElement("a");
+                        a.href = url;
+                        a.download = file.name;
+                        a.click();
+                        URL.revokeObjectURL(url);
+                        file.dirty = false;
+                        render();
+                    } catch (err) {
+                        alert("Failed to save file");
+                    }
+                }
             }
 
-            editor.oninput = () => {
-                if (active >= 0) {
-                    files[active].content = editor.value;
-                    files[active].dirty = true;
-                }
-            };
-
-            newBtn.onclick = newFile;
-            openBtn.onclick = openFile;
-            saveBtn.onclick = saveFile;
-            saveAsBtn.onclick = saveFileAs;
-
             /* ====================================================
-   HELP FUNCTIONALITY
+   HELP
 ==================================================== */
-            helpBtn.onclick = () => {
-                const helpContent = `EDITR - Help & Documentation.
+            function openHelp() {
+                // Check if Help.txt already exists
+                const existingIndex = files.findIndex(f => f.name === "Help.txt");
+                
+                if (existingIndex !== -1) {
+                    // Switch to existing help tab
+                    switchFile(existingIndex);
+                } else {
+                    const helpContent = `EDITR - Help & Documentation.
 
 OVERVIEW:
 EDITR is a simple, powerful text editor that runs entirely in your browser.
@@ -531,6 +995,9 @@ Open File      ⌘O / Ctrl+O
 Save File      ⌘S / Ctrl+S
 Save As        ⌘⇧S / Ctrl+Shift+S
 Rename File    ⌘R / Ctrl+R
+Protected Notes ⌘P / Ctrl+P
+Tools          ⌘T / Ctrl+T
+Help           ⌘H / Ctrl+H
 
 TAB MANAGEMENT:
 • Click tab to switch between files.
@@ -539,7 +1006,7 @@ TAB MANAGEMENT:
 • Use scroll arrows (◀ ▶) when tabs exceed screen width.
 
 SECURE NOTES:
-Click "EDITR" logo to access password protected notes.
+Click the lock icon to access password protected notes.
 Your notes are encrypted and stored locally in your browser.
 
 FILE OPERATIONS:
@@ -547,6 +1014,17 @@ FILE OPERATIONS:
 • Open: Opens .TXT files from your computer.
 • Save: Saves current file (prompts for location if new).
 • Save As: Saves file with a new name/location.
+
+TOOLS:
+• bc [expression] - Calculator (e.g., bc 1 + 1)
+• cal - Current month calendar
+• cal [month] - Calendar for specific month
+• cal [year] - Full year calendar
+• date - Current date in ISO format
+• time - Current time in 24-hour format
+• timer [minutes] - Countdown timer
+• clear - Clear terminal output
+• help - Show available commands
 
 TIPS:
 • Files are not automatically saved - use ⌘S / Ctrl+S frequently.
@@ -564,15 +1042,58 @@ www.barney.me.
 ---
 Close this tab to return to editing.`;
 
-                files.push({
-                    name: "Help.txt",
-                    content: helpContent,
-                    handle: null,
-                    dirty: false,
-                });
-                active = files.length - 1;
-                render();
-            };
+                    files.push({
+                        name: "Help.txt",
+                        content: helpContent,
+                        handle: null,
+                        dirty: false,
+                    });
+                    active = files.length - 1;
+                    render();
+                }
+            }
+
+            document.getElementById("newBtn").onclick = newFile;
+            document.getElementById("openBtn").onclick = openFile;
+            document.getElementById("saveBtn").onclick = saveFile;
+            document.getElementById("saveAsBtn").onclick = saveFileAs;
+            document.getElementById("renameBtn").onclick = renameActiveFile;
+            document.getElementById("helpBtn").onclick = openHelp;
+
+            document.addEventListener("keydown", (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === "n") {
+                    e.preventDefault();
+                    newFile();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+                    e.preventDefault();
+                    if (e.shiftKey) {
+                        saveFileAs();
+                    } else {
+                        saveFile();
+                    }
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "o") {
+                    e.preventDefault();
+                    openFile();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "r") {
+                    e.preventDefault();
+                    renameActiveFile();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "p") {
+                    e.preventDefault();
+                    openSecretNotes();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "h") {
+                    e.preventDefault();
+                    openHelp();
+                }
+                if ((e.ctrlKey || e.metaKey) && e.key === "t") {
+                    e.preventDefault();
+                    openTools();
+                }
+            });
 
             /* ====================================================
    TAB CLICK + DOUBLE-CLICK RENAME (FIXED)
@@ -607,6 +1128,8 @@ Close this tab to return to editing.`;
                 const tab = nameEl.closest(".tab");
                 const index = +tab.dataset.index;
                 const file = files[index];
+                
+                if (file.isTools) return; // Can't rename tools tab
 
                 const input = document.createElement("input");
                 input.value = file.name;
@@ -637,21 +1160,29 @@ Close this tab to return to editing.`;
             });
 
             function closeFile(i) {
+                // Clear any active timers if closing tools tab
+                if (files[i].isTools) {
+                    activeTimers.forEach(timerId => clearInterval(timerId));
+                    activeTimers = [];
+                }
+                
                 files.splice(i, 1);
                 active = Math.min(active, files.length - 1);
                 render();
             }
 
             function switchFile(i) {
-                if (active >= 0) files[active].content = editor.value;
+                if (active >= 0 && !files[active].isTools) {
+                    files[active].content = editor.value;
+                }
                 active = i;
                 render();
             }
 
             function renameActiveFile() {
-                if (active < 0) return; // No active file
+                if (active < 0) return;
+                if (files[active].isTools) return; // Can't rename tools tab
 
-                // Wait for render to complete, then find the active tab
                 setTimeout(() => {
                     const activeTab = document.querySelector(".tab.active");
                     if (!activeTab) return;
@@ -693,19 +1224,18 @@ Close this tab to return to editing.`;
             /* ====================================================
    PROTECTED NOTES
 ==================================================== */
-            const secretBtn = document.getElementById("secretNotesBtn");
             const secretModal = document.getElementById("secretModal");
             const secretOverlay = document.getElementById("secretOverlay");
             const secretPassword = document.getElementById("secretPassword");
             const secretEditor = document.getElementById("secretEditor");
 
-            secretBtn.onclick = () => {
+            function openSecretNotes() {
                 secretPassword.value = "";
                 secretEditor.value = "";
                 secretModal.style.display = "flex";
                 secretOverlay.classList.add("visible");
                 secretPassword.focus();
-            };
+            }
 
             closeSecret.onclick = () => {
                 secretModal.style.display = "none";
@@ -787,6 +1317,9 @@ Close this tab to return to editing.`;
                 );
                 alert("Saved");
             };
+
+            // Initialize
+            render();
         </script>
     </body>
 </html>
