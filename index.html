@@ -491,7 +491,7 @@
 
             <div class="tools-container" id="toolsContainer">
                 <div class="tools-output" id="toolsOutput">
-                    TERMINAL v1.1 Available commands: bc [expression] Calculator
+                    TERMINAL v1.2 Available commands: bc [expression] Calculator
                     (e.g., bc 1 + 1, bc 10 * 10) cal Current month calendar cal
                     [month] Specific month (e.g., cal 3) cal [year] Full year
                     calendar (e.g., cal 2026) date Current date in ISO format
@@ -500,8 +500,9 @@
                     documentation uptime How long the page has been open whoami
                     Browser and system info echo [text] Echo back text bj Play a
                     game of blackjack g [query] Google search (e.g., g weather
-                    today) coin Flip a coin clear Clear output help Show this
-                    help Type a command and press Enter to run it.
+                    today) coin Flip a coin vi [filename] Open/create file nano
+                    [filename] Open/create file clear Clear output help Show
+                    this help Type a command and press Enter to run it.
                 </div>
                 <div class="tools-input-wrapper">
                     <span class="prompt">$</span>
@@ -780,6 +781,28 @@ Screen: ${screen.width}x${screen.height}`;
                         case "coin":
                             result = Math.random() < 0.5 ? "Heads" : "Tails";
                             break;
+                        case "vi":
+                        case "nano":
+                            const filename = args[0] || "untitled.txt";
+                            const existingFileIndex = files.findIndex(
+                                (f) => f.name === filename,
+                            );
+                            if (existingFileIndex !== -1) {
+                                switchFile(existingFileIndex);
+                                result = `Switched to ${filename}`;
+                            } else {
+                                files.push({
+                                    name: filename,
+                                    content: "",
+                                    handle: null,
+                                    dirty: false,
+                                });
+                                active = files.length - 1;
+                                render();
+                                saveSession();
+                                result = `Opened new file: ${filename}`;
+                            }
+                            break;
                         case "clear":
                             toolsOutput.innerHTML = "";
                             return;
@@ -800,6 +823,8 @@ Screen: ${screen.width}x${screen.height}`;
   bj                    Play a game of blackjack
   g [query]             Google search (e.g., g weather today)
   coin                  Flip a coin
+  vi [filename]         Open/create file (default: untitled.txt)
+  nano [filename]       Open/create file (default: untitled.txt)
   clear                 Clear output
   help                  Show this help`;
                             break;
