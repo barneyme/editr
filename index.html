@@ -372,7 +372,9 @@
                     title="New file (Ctrl+N)"
                 >
                     <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <path
+                            d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                        />
                         <polyline points="14 2 14 8 20 8" />
                     </svg>
                 </button>
@@ -409,7 +411,9 @@
                     title="Save As (Ctrl+Shift+S)"
                 >
                     <svg viewBox="0 0 24 24">
-                        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z" />
+                        <path
+                            d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"
+                        />
                         <polyline points="14 2 14 8 20 8" />
                         <line x1="12" y1="18" x2="12" y2="12" />
                         <line x1="9" y1="15" x2="15" y2="15" />
@@ -422,7 +426,9 @@
                     title="Rename file (Ctrl+R)"
                 >
                     <svg viewBox="0 0 24 24">
-                        <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                        <path
+                            d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"
+                        />
                     </svg>
                 </button>
                 <button
@@ -452,7 +458,11 @@
         </header>
 
         <div class="tabs-wrapper">
-            <button class="scroll-arrow left" id="scrollLeft" aria-label="Scroll tabs left">
+            <button
+                class="scroll-arrow left"
+                id="scrollLeft"
+                aria-label="Scroll tabs left"
+            >
                 <svg viewBox="0 0 24 24">
                     <polyline points="15 18 9 12 15 6" />
                 </svg>
@@ -460,7 +470,11 @@
             <div class="tabs-container">
                 <div class="tabs" id="tabs"></div>
             </div>
-            <button class="scroll-arrow right" id="scrollRight" aria-label="Scroll tabs right">
+            <button
+                class="scroll-arrow right"
+                id="scrollRight"
+                aria-label="Scroll tabs right"
+            >
                 <svg viewBox="0 0 24 24">
                     <polyline points="9 18 15 12 9 6" />
                 </svg>
@@ -474,29 +488,21 @@
                 placeholder="Start typing..."
                 spellcheck="false"
             ></textarea>
-            
-            <div class="tools-container" id="toolsContainer">
-                <div class="tools-output" id="toolsOutput">TERMINAL v1.1
-Available commands:
-  bc [expression]       - Calculator (e.g., bc 1 + 1, bc 10 * 10)
-  cal                   - Current month calendar
-  cal [month]           - Specific month (e.g., cal 3)
-  cal [year]            - Full year calendar (e.g., cal 2026)
-  date                  - Current date in ISO format
-  time                  - Current time in 24-hour format
-  timer [minutes]       - Countdown timer (e.g., timer 5)
-  tt                    - Open Two Talk documentation
-  uptime                - How long the page has been open
-  whoami                - Browser and system info
-  echo [text]           - Echo back text
-  rand [min] [max]      - Random number (e.g., rand 1 100)
-  coin                  - Flip a coin
-  dice [sides]          - Roll dice (e.g., dice 6, default 6)
-  clear                 - Clear output
-  help                  - Show this help
 
-Type a command and press Enter to run it.
-</div>
+            <div class="tools-container" id="toolsContainer">
+                <div class="tools-output" id="toolsOutput">
+                    TERMINAL v1.1 Available commands: bc [expression] Calculator
+                    (e.g., bc 1 + 1, bc 10 * 10) cal Current month calendar cal
+                    [month] Specific month (e.g., cal 3) cal [year] Full year
+                    calendar (e.g., cal 2026) date Current date in ISO format
+                    time Current time in 24-hour format timer [minutes]
+                    Countdown timer (e.g., timer 5) tt Open Two Talk
+                    documentation uptime How long the page has been open whoami
+                    Browser and system info echo [text] Echo back text bj Play a
+                    game of blackjack g [query] Google search (e.g., g weather
+                    today) coin Flip a coin clear Clear output help Show this
+                    help Type a command and press Enter to run it.
+                </div>
                 <div class="tools-input-wrapper">
                     <span class="prompt">$</span>
                     <input
@@ -515,7 +521,7 @@ Type a command and press Enter to run it.
             <span id="statusRight">Ln 1, Col 1</span>
         </div>
 
-        <input type="file" id="fileInput" accept=".txt" style="display: none;" />
+        <input type="file" id="fileInput" accept=".txt" style="display: none" />
 
         <div class="drop-overlay" id="dropOverlay">
             <div class="drop-overlay-text">Drop .txt files here</div>
@@ -547,6 +553,9 @@ Type a command and press Enter to run it.
             const pageLoadTime = Date.now();
             let autoSaveInterval = null;
 
+            // Blackjack game state
+            let blackjackGame = null;
+
             const editor = document.getElementById("editor");
             const tabs = document.getElementById("tabs");
             const statusLeft = document.getElementById("statusLeft");
@@ -569,8 +578,10 @@ Type a command and press Enter to run it.
 
             function openTools() {
                 // Check if Terminal.txt already exists
-                const existingIndex = files.findIndex(f => f.name === "Terminal.txt");
-                
+                const existingIndex = files.findIndex(
+                    (f) => f.name === "Terminal.txt",
+                );
+
                 if (existingIndex !== -1) {
                     // Switch to existing terminal tab
                     switchFile(existingIndex);
@@ -581,7 +592,7 @@ Type a command and press Enter to run it.
                         content: "",
                         handle: null,
                         dirty: false,
-                        isTools: true
+                        isTools: true,
                     });
                     active = files.length - 1;
                     render();
@@ -603,15 +614,15 @@ Type a command and press Enter to run it.
             function executeCommand(cmd) {
                 const output = document.createElement("div");
                 output.innerHTML = `<span class="prompt">$ ${cmd}</span>\n`;
-                
+
                 const parts = cmd.split(" ");
                 const command = parts[0];
                 const args = parts.slice(1);
 
                 try {
                     let result = "";
-                    
-                    switch(command) {
+
+                    switch (command) {
                         case "bc":
                             result = calculateExpression(args.join(" "));
                             break;
@@ -619,23 +630,26 @@ Type a command and press Enter to run it.
                             result = generateCalendar(args[0]);
                             break;
                         case "date":
-                            result = new Date().toISOString().split('T')[0];
+                            result = new Date().toISOString().split("T")[0];
                             break;
                         case "time":
                             const now = new Date();
-                            result = now.toTimeString().split(' ')[0];
+                            result = now.toTimeString().split(" ")[0];
                             break;
                         case "timer":
                             const minutes = parseInt(args[0]);
                             if (isNaN(minutes) || minutes <= 0) {
-                                result = '<span class="error">Error: Please provide valid minutes (e.g., timer 5)</span>';
+                                result =
+                                    '<span class="error">Error: Please provide valid minutes (e.g., timer 5)</span>';
                             } else {
                                 startTimer(minutes);
                                 result = `Timer started for ${minutes} minute(s)`;
                             }
                             break;
                         case "tt":
-                            const existingIndex = files.findIndex(f => f.name === "twotalk.txt");
+                            const existingIndex = files.findIndex(
+                                (f) => f.name === "twotalk.txt",
+                            );
                             if (existingIndex !== -1) {
                                 switchFile(existingIndex);
                                 result = "Switched to twotalk.txt";
@@ -683,19 +697,22 @@ Source: https://twotalk.org`;
                                     name: "twotalk.txt",
                                     content: ttContent,
                                     handle: null,
-                                    dirty: false
+                                    dirty: false,
                                 });
                                 active = files.length - 1;
                                 render();
                                 saveSession();
-                                result = "Opened Two Talk documentation in new tab.";
+                                result =
+                                    "Opened Two Talk documentation in new tab.";
                             }
                             break;
                         case "uptime":
                             const uptimeMs = Date.now() - pageLoadTime;
                             const uptimeSeconds = Math.floor(uptimeMs / 1000);
                             const hours = Math.floor(uptimeSeconds / 3600);
-                            const minutes2 = Math.floor((uptimeSeconds % 3600) / 60);
+                            const minutes2 = Math.floor(
+                                (uptimeSeconds % 3600) / 60,
+                            );
                             const seconds = uptimeSeconds % 60;
                             if (hours > 0) {
                                 result = `up ${hours}h ${minutes2}m ${seconds}s`;
@@ -709,63 +726,92 @@ Source: https://twotalk.org`;
                             result = `User Agent: ${navigator.userAgent}
 Platform: ${navigator.platform}
 Language: ${navigator.language}
-Online: ${navigator.onLine ? 'Yes' : 'No'}
+Online: ${navigator.onLine ? "Yes" : "No"}
 Screen: ${screen.width}x${screen.height}`;
                             break;
                         case "echo":
                             result = args.join(" ");
                             break;
-                        case "rand":
-                            const min = parseInt(args[0]) || 0;
-                            const max = parseInt(args[1]) || 100;
-                            if (min >= max) {
-                                result = '<span class="error">Error: min must be less than max (e.g., rand 1 100)</span>';
+                        case "bj":
+                            if (!blackjackGame) {
+                                blackjackGame = initBlackjack();
+                                result = blackjackGame.start();
                             } else {
-                                result = Math.floor(Math.random() * (max - min + 1)) + min;
+                                result =
+                                    '<span class="error">A game is already in progress. Type "hit", "stand", or "newgame"</span>';
+                            }
+                            break;
+                        case "g":
+                            if (args.length === 0) {
+                                result =
+                                    '<span class="error">Error: Please provide a search query (e.g., g weather today)</span>';
+                            } else {
+                                const query = args.join(" ");
+                                const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(query)}`;
+                                window.open(searchUrl, "_blank");
+                                result = `Opening Google search for: ${query}`;
+                            }
+                            break;
+                        case "hit":
+                            if (blackjackGame && !blackjackGame.gameOver) {
+                                result = blackjackGame.hit();
+                            } else {
+                                result =
+                                    '<span class="error">No active game. Type "bj" to start</span>';
+                            }
+                            break;
+                        case "stand":
+                            if (blackjackGame && !blackjackGame.gameOver) {
+                                result = blackjackGame.stand();
+                            } else {
+                                result =
+                                    '<span class="error">No active game. Type "bj" to start</span>';
+                            }
+                            break;
+                        case "newgame":
+                            if (blackjackGame) {
+                                blackjackGame = initBlackjack();
+                                result = blackjackGame.start();
+                            } else {
+                                result =
+                                    '<span class="error">No game to reset. Type "bj" to start</span>';
                             }
                             break;
                         case "coin":
                             result = Math.random() < 0.5 ? "Heads" : "Tails";
-                            break;
-                        case "dice":
-                            const sides = parseInt(args[0]) || 6;
-                            if (sides < 2) {
-                                result = '<span class="error">Error: dice must have at least 2 sides</span>';
-                            } else {
-                                result = Math.floor(Math.random() * sides) + 1;
-                            }
                             break;
                         case "clear":
                             toolsOutput.innerHTML = "";
                             return;
                         case "help":
                             result = `Available commands:
-  bc [expression]       - Calculator (e.g., bc 1 + 1, bc 10 * 10)
-  cal                   - Current month calendar
-  cal [month]           - Specific month (e.g., cal 3)
-  cal [year]            - Full year calendar (e.g., cal 2026)
-  date                  - Current date in ISO format
-  time                  - Current time in 24-hour format
-  timer [minutes]       - Countdown timer (e.g., timer 5)
-  tt                    - Open Two Talk documentation
-  uptime                - How long the page has been open
-  whoami                - Browser and system info
-  echo [text]           - Echo back text
-  rand [min] [max]      - Random number (e.g., rand 1 100)
-  coin                  - Flip a coin
-  dice [sides]          - Roll dice (e.g., dice 6, default 6)
-  clear                 - Clear output
-  help                  - Show this help`;
+
+  bc [expression]       Calculator (e.g., bc 1 + 1, bc 10 * 10)
+  cal                   Current month calendar
+  cal [month]           Specific month (e.g., cal 3)
+  cal [year]            Full year calendar (e.g., cal 2026)
+  date                  Current date in ISO format
+  time                  Current time in 24-hour format
+  timer [minutes]       Countdown timer (e.g., timer 5)
+  tt                    Open Two Talk documentation
+  uptime                How long the page has been open
+  whoami                Browser and system info
+  echo [text]           Echo back text
+  bj                    Play a game of blackjack
+  g [query]             Google search (e.g., g weather today)
+  coin                  Flip a coin
+  clear                 Clear output
+  help                  Show this help`;
                             break;
                         default:
                             result = `<span class="error">Error: Unknown command '${command}'. Type 'help' for available commands.</span>`;
                     }
-                    
+
                     output.innerHTML += result + "\n";
                 } catch (error) {
                     output.innerHTML += `<span class="error">Error: ${error.message}</span>\n`;
                 }
-                
+
                 toolsOutput.appendChild(output);
                 toolsOutput.scrollTop = toolsOutput.scrollHeight;
             }
@@ -774,7 +820,7 @@ Screen: ${screen.width}x${screen.height}`;
                 try {
                     // Basic calculator - supports +, -, *, /, %, ()
                     // Remove any non-math characters for safety
-                    const sanitized = expr.replace(/[^0-9+\-*/.%() ]/g, '');
+                    const sanitized = expr.replace(/[^0-9+\-*/.%() ]/g, "");
                     if (!sanitized) {
                         return '<span class="error">Error: Invalid expression</span>';
                     }
@@ -789,7 +835,7 @@ Screen: ${screen.width}x${screen.height}`;
                 const now = new Date();
                 let year = now.getFullYear();
                 let month = now.getMonth();
-                
+
                 if (arg) {
                     const num = parseInt(arg);
                     if (num >= 1 && num <= 12) {
@@ -802,111 +848,317 @@ Screen: ${screen.width}x${screen.height}`;
                         return '<span class="error">Error: Invalid month (1-12) or year</span>';
                     }
                 }
-                
+
                 return generateMonthCalendar(year, month);
             }
 
             function generateMonthCalendar(year, month) {
-                const monthNames = ["January", "February", "March", "April", "May", "June",
-                                  "July", "August", "September", "October", "November", "December"];
-                
+                const monthNames = [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ];
+
                 const firstDay = new Date(year, month, 1).getDay();
                 const daysInMonth = new Date(year, month + 1, 0).getDate();
-                
+
                 let cal = `     ${monthNames[month]} ${year}\n`;
                 cal += "Su Mo Tu We Th Fr Sa\n";
-                
+
                 let dayCount = 1;
                 for (let week = 0; week < 6; week++) {
                     let weekLine = "";
                     for (let day = 0; day < 7; day++) {
-                        if ((week === 0 && day < firstDay) || dayCount > daysInMonth) {
+                        if (
+                            (week === 0 && day < firstDay) ||
+                            dayCount > daysInMonth
+                        ) {
                             weekLine += "   ";
                         } else {
-                            weekLine += dayCount.toString().padStart(2, " ") + " ";
+                            weekLine +=
+                                dayCount.toString().padStart(2, " ") + " ";
                             dayCount++;
                         }
                     }
                     cal += weekLine.trim() + "\n";
                     if (dayCount > daysInMonth) break;
                 }
-                
+
                 return cal;
             }
 
             function generateYearCalendar(year) {
-                const monthNames = ["January", "February", "March", "April", "May", "June",
-                                  "July", "August", "September", "October", "November", "December"];
-                
+                const monthNames = [
+                    "January",
+                    "February",
+                    "March",
+                    "April",
+                    "May",
+                    "June",
+                    "July",
+                    "August",
+                    "September",
+                    "October",
+                    "November",
+                    "December",
+                ];
+
                 let cal = `                            ${year}\n\n`;
-                
+
                 for (let i = 0; i < 12; i += 3) {
                     // Print 3 months side by side
                     let monthHeaders = "";
                     let weekHeaders = "";
                     let monthLines = [[], [], [], [], [], []];
-                    
+
                     for (let j = 0; j < 3; j++) {
                         const m = i + j;
                         if (m >= 12) break;
-                        
+
                         const header = monthNames[m].padEnd(20, " ");
                         monthHeaders += header + "  ";
                         weekHeaders += "Su Mo Tu We Th Fr Sa  ";
-                        
+
                         const firstDay = new Date(year, m, 1).getDay();
                         const daysInMonth = new Date(year, m + 1, 0).getDate();
-                        
+
                         let dayCount = 1;
                         for (let week = 0; week < 6; week++) {
                             let weekLine = "";
                             for (let day = 0; day < 7; day++) {
-                                if ((week === 0 && day < firstDay) || dayCount > daysInMonth) {
+                                if (
+                                    (week === 0 && day < firstDay) ||
+                                    dayCount > daysInMonth
+                                ) {
                                     weekLine += "   ";
                                 } else {
-                                    weekLine += dayCount.toString().padStart(2, " ") + " ";
+                                    weekLine +=
+                                        dayCount.toString().padStart(2, " ") +
+                                        " ";
                                     dayCount++;
                                 }
                             }
                             monthLines[week].push(weekLine);
                         }
                     }
-                    
+
                     cal += monthHeaders.trim() + "\n";
                     cal += weekHeaders.trim() + "\n";
-                    
+
                     for (let week = 0; week < 6; week++) {
                         const line = monthLines[week].join("  ").trim();
                         if (line) cal += line + "\n";
                     }
                     cal += "\n";
                 }
-                
+
                 return cal;
             }
 
             function startTimer(minutes) {
-                const endTime = Date.now() + (minutes * 60 * 1000);
+                const endTime = Date.now() + minutes * 60 * 1000;
                 const timerDiv = document.createElement("div");
                 timerDiv.style.color = "var(--accent)";
                 toolsOutput.appendChild(timerDiv);
-                
+
                 const timerId = setInterval(() => {
                     const remaining = endTime - Date.now();
-                    
+
                     if (remaining <= 0) {
                         clearInterval(timerId);
                         timerDiv.textContent = "⏰ Timer finished!";
                         // Play a beep or notification if desired
                         return;
                     }
-                    
+
                     const mins = Math.floor(remaining / 60000);
                     const secs = Math.floor((remaining % 60000) / 1000);
-                    timerDiv.textContent = `Timer: ${mins}:${secs.toString().padStart(2, '0')} remaining`;
+                    timerDiv.textContent = `Timer: ${mins}:${secs.toString().padStart(2, "0")} remaining`;
                 }, 1000);
-                
+
                 activeTimers.push(timerId);
+            }
+
+            /* ====================================================
+   BLACKJACK GAME
+==================================================== */
+            function initBlackjack() {
+                const suits = ["♠", "♥", "♦", "♣"];
+                const values = [
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                    "6",
+                    "7",
+                    "8",
+                    "9",
+                    "10",
+                    "J",
+                    "Q",
+                    "K",
+                    "A",
+                ];
+
+                function createDeck() {
+                    const deck = [];
+                    for (let suit of suits) {
+                        for (let value of values) {
+                            deck.push({ suit, value });
+                        }
+                    }
+                    return deck;
+                }
+
+                function shuffleDeck(deck) {
+                    for (let i = deck.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [deck[i], deck[j]] = [deck[j], deck[i]];
+                    }
+                    return deck;
+                }
+
+                function cardValue(card) {
+                    if (card.value === "A") return 11;
+                    if (["J", "Q", "K"].includes(card.value)) return 10;
+                    return parseInt(card.value);
+                }
+
+                function handValue(hand) {
+                    let value = 0;
+                    let aces = 0;
+
+                    for (let card of hand) {
+                        value += cardValue(card);
+                        if (card.value === "A") aces++;
+                    }
+
+                    // Adjust for aces
+                    while (value > 21 && aces > 0) {
+                        value -= 10;
+                        aces--;
+                    }
+
+                    return value;
+                }
+
+                function formatCard(card) {
+                    return `[${card.value}${card.suit}]`;
+                }
+
+                function formatHand(hand, hideFirst = false) {
+                    if (hideFirst) {
+                        return (
+                            "[??] " + hand.slice(1).map(formatCard).join(" ")
+                        );
+                    }
+                    return hand.map(formatCard).join(" ");
+                }
+
+                let deck = shuffleDeck(createDeck());
+                let playerHand = [];
+                let dealerHand = [];
+                let gameOver = false;
+
+                return {
+                    gameOver,
+
+                    start() {
+                        // Deal initial cards
+                        playerHand = [deck.pop(), deck.pop()];
+                        dealerHand = [deck.pop(), deck.pop()];
+
+                        const playerVal = handValue(playerHand);
+
+                        let output = "═══════════════════════════════\n";
+                        output += "         BLACKJACK\n";
+                        output += "═══════════════════════════════\n\n";
+                        output += `Dealer: ${formatHand(dealerHand, true)}\n\n`;
+                        output += `You:    ${formatHand(playerHand)} = ${playerVal}\n\n`;
+
+                        // Check for blackjack
+                        if (playerVal === 21) {
+                            gameOver = true;
+                            const dealerVal = handValue(dealerHand);
+                            output += `\n🎉 BLACKJACK! You win!\n\n`;
+                            output += `Dealer had: ${formatHand(dealerHand)} = ${dealerVal}\n`;
+                            output += `Type "newgame" to play again`;
+                            blackjackGame = null;
+                        } else {
+                            output += 'Type "hit" or "stand"';
+                        }
+
+                        return output;
+                    },
+
+                    hit() {
+                        if (gameOver)
+                            return 'Game is over. Type "newgame" to play again';
+
+                        playerHand.push(deck.pop());
+                        const playerVal = handValue(playerHand);
+
+                        let output = `You:    ${formatHand(playerHand)} = ${playerVal}\n\n`;
+
+                        if (playerVal > 21) {
+                            gameOver = true;
+                            const dealerVal = handValue(dealerHand);
+                            output += `💥 BUST! You lose.\n\n`;
+                            output += `Dealer had: ${formatHand(dealerHand)} = ${dealerVal}\n`;
+                            output += `Type "newgame" to play again`;
+                            blackjackGame = null;
+                        } else if (playerVal === 21) {
+                            output +=
+                                'You have 21! Type "stand" to end your turn';
+                        } else {
+                            output += 'Type "hit" or "stand"';
+                        }
+
+                        return output;
+                    },
+
+                    stand() {
+                        if (gameOver)
+                            return 'Game is over. Type "newgame" to play again';
+
+                        gameOver = true;
+                        const playerVal = handValue(playerHand);
+
+                        // Dealer draws until 17 or higher
+                        while (handValue(dealerHand) < 17) {
+                            dealerHand.push(deck.pop());
+                        }
+
+                        const dealerVal = handValue(dealerHand);
+
+                        let output = `Dealer: ${formatHand(dealerHand)} = ${dealerVal}\n`;
+                        output += `You:    ${formatHand(playerHand)} = ${playerVal}\n\n`;
+
+                        if (dealerVal > 21) {
+                            output += `💥 Dealer busts! You win!\n`;
+                        } else if (dealerVal > playerVal) {
+                            output += `😞 Dealer wins.\n`;
+                        } else if (playerVal > dealerVal) {
+                            output += `🎉 You win!\n`;
+                        } else {
+                            output += `🤝 Push (tie).\n`;
+                        }
+
+                        output += `\nType "newgame" to play again`;
+                        blackjackGame = null;
+
+                        return output;
+                    },
+                };
             }
 
             /* ====================================================
@@ -929,7 +1181,7 @@ Screen: ${screen.width}x${screen.height}`;
 
                 if (active >= 0 && files[active]) {
                     const file = files[active];
-                    
+
                     if (file.isTools) {
                         // Show tools container
                         editor.style.display = "none";
@@ -957,20 +1209,27 @@ Screen: ${screen.width}x${screen.height}`;
                 const container = document.querySelector(".tabs");
                 const canScrollLeft = container.scrollLeft > 0;
                 const canScrollRight =
-                    container.scrollLeft < container.scrollWidth - container.clientWidth;
+                    container.scrollLeft <
+                    container.scrollWidth - container.clientWidth;
 
                 scrollLeft.classList.toggle("visible", canScrollLeft);
                 scrollRight.classList.toggle("visible", canScrollRight);
             }
 
             scrollLeft.onclick = () => {
-                document.querySelector(".tabs").scrollBy({ left: -200, behavior: "smooth" });
+                document
+                    .querySelector(".tabs")
+                    .scrollBy({ left: -200, behavior: "smooth" });
             };
             scrollRight.onclick = () => {
-                document.querySelector(".tabs").scrollBy({ left: 200, behavior: "smooth" });
+                document
+                    .querySelector(".tabs")
+                    .scrollBy({ left: 200, behavior: "smooth" });
             };
 
-            document.querySelector(".tabs").addEventListener("scroll", updateScrollButtons);
+            document
+                .querySelector(".tabs")
+                .addEventListener("scroll", updateScrollButtons);
 
             editor.oninput = () => {
                 if (active >= 0) {
@@ -989,7 +1248,12 @@ Screen: ${screen.width}x${screen.height}`;
                 const name = prompt("New file name:", "Untitled.txt");
                 if (!name) return;
                 const fullName = name.endsWith(".txt") ? name : name + ".txt";
-                files.push({ name: fullName, content: "", handle: null, dirty: false });
+                files.push({
+                    name: fullName,
+                    content: "",
+                    handle: null,
+                    dirty: false,
+                });
                 active = files.length - 1;
                 render();
                 saveSession();
@@ -1000,7 +1264,12 @@ Screen: ${screen.width}x${screen.height}`;
                 if (window.showOpenFilePicker) {
                     try {
                         const [handle] = await window.showOpenFilePicker({
-                            types: [{ description: "Text", accept: { "text/plain": [".txt"] } }],
+                            types: [
+                                {
+                                    description: "Text",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
                         });
                         const file = await handle.getFile();
                         const content = await file.text();
@@ -1014,7 +1283,8 @@ Screen: ${screen.width}x${screen.height}`;
                         render();
                         saveSession();
                     } catch (err) {
-                        if (err.name !== "AbortError") alert("Failed to open file");
+                        if (err.name !== "AbortError")
+                            alert("Failed to open file");
                     }
                 } else {
                     // Fallback for Firefox and other browsers
@@ -1022,7 +1292,7 @@ Screen: ${screen.width}x${screen.height}`;
                     fileInput.onchange = async (e) => {
                         const file = e.target.files[0];
                         if (!file) return;
-                        
+
                         try {
                             const content = await file.text();
                             files.push({
@@ -1037,7 +1307,7 @@ Screen: ${screen.width}x${screen.height}`;
                         } catch (err) {
                             alert("Failed to open file");
                         }
-                        
+
                         // Reset the input
                         fileInput.value = "";
                     };
@@ -1048,7 +1318,7 @@ Screen: ${screen.width}x${screen.height}`;
             async function saveFile() {
                 if (active < 0) return;
                 const file = files[active];
-                
+
                 if (file.isTools) {
                     alert("Terminal tab cannot be saved");
                     return;
@@ -1074,7 +1344,7 @@ Screen: ${screen.width}x${screen.height}`;
             async function saveFileAs() {
                 if (active < 0) return;
                 const file = files[active];
-                
+
                 if (file.isTools) {
                     alert("Terminal tab cannot be saved");
                     return;
@@ -1085,7 +1355,12 @@ Screen: ${screen.width}x${screen.height}`;
                     try {
                         const handle = await window.showSaveFilePicker({
                             suggestedName: file.name,
-                            types: [{ description: "Text", accept: { "text/plain": [".txt"] } }],
+                            types: [
+                                {
+                                    description: "Text",
+                                    accept: { "text/plain": [".txt"] },
+                                },
+                            ],
                         });
                         const writable = await handle.createWritable();
                         await writable.write(file.content);
@@ -1095,12 +1370,15 @@ Screen: ${screen.width}x${screen.height}`;
                         file.dirty = false;
                         render();
                     } catch (err) {
-                        if (err.name !== "AbortError") alert("Failed to save file");
+                        if (err.name !== "AbortError")
+                            alert("Failed to save file");
                     }
                 } else {
                     // Fallback for Firefox - download the file
                     try {
-                        const blob = new Blob([file.content], { type: "text/plain" });
+                        const blob = new Blob([file.content], {
+                            type: "text/plain",
+                        });
                         const url = URL.createObjectURL(blob);
                         const a = document.createElement("a");
                         a.href = url;
@@ -1120,8 +1398,10 @@ Screen: ${screen.width}x${screen.height}`;
 ==================================================== */
             function openHelp() {
                 // Check if Help.txt already exists
-                const existingIndex = files.findIndex(f => f.name === "Help.txt");
-                
+                const existingIndex = files.findIndex(
+                    (f) => f.name === "Help.txt",
+                );
+
                 if (existingIndex !== -1) {
                     // Switch to existing help tab
                     switchFile(existingIndex);
@@ -1287,7 +1567,7 @@ Close this tab to return to editing.`;
                 const tab = nameEl.closest(".tab");
                 const index = +tab.dataset.index;
                 const file = files[index];
-                
+
                 if (file.isTools) return; // Can't rename terminal tab
 
                 const input = document.createElement("input");
@@ -1321,10 +1601,10 @@ Close this tab to return to editing.`;
             function closeFile(i) {
                 // Clear any active timers if closing terminal tab
                 if (files[i].isTools) {
-                    activeTimers.forEach(timerId => clearInterval(timerId));
+                    activeTimers.forEach((timerId) => clearInterval(timerId));
                     activeTimers = [];
                 }
-                
+
                 files.splice(i, 1);
                 active = Math.min(active, files.length - 1);
                 render();
@@ -1508,11 +1788,13 @@ Close this tab to return to editing.`;
                 dropOverlay.classList.remove("visible");
 
                 const files_dropped = Array.from(e.dataTransfer.files);
-                
+
                 for (const file of files_dropped) {
                     // Only accept .txt files
                     if (!file.name.endsWith(".txt")) {
-                        alert(`Skipping ${file.name} - only .txt files are supported`);
+                        alert(
+                            `Skipping ${file.name} - only .txt files are supported`,
+                        );
                         continue;
                     }
 
@@ -1547,17 +1829,20 @@ Close this tab to return to editing.`;
 
                 // Prepare data for storage (exclude file handles and isTools flag)
                 const sessionData = {
-                    files: files.map(f => ({
+                    files: files.map((f) => ({
                         name: f.name,
                         content: f.content,
                         dirty: f.dirty,
-                        isTools: f.isTools || false
+                        isTools: f.isTools || false,
                     })),
-                    active: active
+                    active: active,
                 };
 
                 try {
-                    localStorage.setItem("editr-session", JSON.stringify(sessionData));
+                    localStorage.setItem(
+                        "editr-session",
+                        JSON.stringify(sessionData),
+                    );
                 } catch (err) {
                     console.error("Failed to save session:", err);
                 }
@@ -1569,16 +1854,17 @@ Close this tab to return to editing.`;
                     if (!stored) return false;
 
                     const sessionData = JSON.parse(stored);
-                    
+
                     if (sessionData.files && sessionData.files.length > 0) {
-                        files = sessionData.files.map(f => ({
+                        files = sessionData.files.map((f) => ({
                             name: f.name,
                             content: f.content,
                             handle: null,
                             dirty: f.dirty || false,
-                            isTools: f.isTools || false
+                            isTools: f.isTools || false,
                         }));
-                        active = sessionData.active >= 0 ? sessionData.active : 0;
+                        active =
+                            sessionData.active >= 0 ? sessionData.active : 0;
                         render();
                         return true;
                     }
