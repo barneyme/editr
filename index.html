@@ -1232,9 +1232,20 @@ Screen: ${screen.width}x${screen.height}`;
                 .addEventListener("scroll", updateScrollButtons);
 
             editor.oninput = () => {
-                if (active >= 0) {
+                if (active >= 0 && files[active]) {
+                    files[active].content = editor.value;
                     files[active].dirty = true;
-                    render();
+                    // Update only the tab display without re-rendering entire editor
+                    const tabElements = tabs.querySelectorAll(".tab");
+                    if (tabElements[active]) {
+                        const tabName =
+                            tabElements[active].querySelector(".tab-name");
+                        if (tabName) {
+                            tabName.textContent =
+                                files[active].name +
+                                (files[active].dirty ? " •" : "");
+                        }
+                    }
                 }
             };
 
