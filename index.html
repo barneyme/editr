@@ -1794,7 +1794,14 @@ Close this tab to return to editing.`;
                 );
                 alert("Saved");
             };
-
+            // Add this inside your script tag, near the other secretEditor logic
+            secretEditor.addEventListener("keydown", (e) => {
+                if (e.key === "Enter") {
+                    // Stop the event from bubbling up to any global listeners
+                    // that might be trying to "save" or "close" on Enter
+                    e.stopPropagation();
+                }
+            });
             /* ====================================================
    DRAG AND DROP
 ==================================================== */
