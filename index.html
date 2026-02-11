@@ -998,7 +998,7 @@
             </div>
             <div class="menu-separator"></div>
             <div class="menu-item" id="menu-sno">
-                <span>Lock</span>
+                <span>Secure</span>
                 <span class="shortcut">Ctrl + =</span>
             </div>
             <div class="menu-separator menu-item-md hidden"></div>
@@ -1655,7 +1655,7 @@
                     editContainer.style.display = "block";
 
                     const notesText = sno_formatNotesToText(notes);
-                    createNewBuffer(notesText, "Locked-Notes.txt", null, {
+                    createNewBuffer(notesText, "secure.txt", null, {
                         isSno: true,
                     });
                 }
@@ -1709,9 +1709,15 @@
 
                 function sno_formatNotesToText(notesArray) {
                     if (!notesArray || notesArray.length === 0) {
-                        return `# My First Note\n---\nWelcome to your secure notes buffer.\n\n- Edit this note or create a new one below.\n- Separate notes with a line containing only three equal signs (===).\n- Closing this buffer will automatically encrypt and save your notes.\n===`;
+                        return "";
                     }
 
+                    // If there's only one note, return just its content
+                    if (notesArray.length === 1) {
+                        return sno_decrypt(notesArray[0].content);
+                    }
+
+                    // For multiple notes, join with separator
                     return notesArray
                         .map((note) => {
                             const title = sno_decrypt(note.title);
@@ -1722,6 +1728,26 @@
                 }
 
                 function sno_parseTextToNotes(text) {
+                    // If text doesn't contain separators, treat the entire content as one note
+                    if (
+                        !text.includes("\n===\n") &&
+                        !text.includes("\n---\n")
+                    ) {
+                        const now = new Date().toISOString();
+                        if (text.trim()) {
+                            return [
+                                {
+                                    id: Date.now().toString() + Math.random(),
+                                    title: sno_encrypt("Note"),
+                                    content: sno_encrypt(text.trim()),
+                                    created: now,
+                                    lastModified: now,
+                                },
+                            ];
+                        }
+                        return [];
+                    }
+
                     const newNotes = [];
                     const noteChunks = text
                         .split("\n===\n")
@@ -1741,7 +1767,7 @@
 
                         if (title) {
                             newNotes.push({
-                                id: Date.now().toString() + Math.random(), // Simple unique ID
+                                id: Date.now().toString() + Math.random(),
                                 title: sno_encrypt(title),
                                 content: sno_encrypt(content),
                                 created: now,
@@ -3312,7 +3338,7 @@
                     downloadAnchorNode.setAttribute("href", dataStr);
                     downloadAnchorNode.setAttribute(
                         "download",
-                        "edit-expansions.txt",
+                        "editr-expansions.txt",
                     );
                     document.body.appendChild(downloadAnchorNode);
                     downloadAnchorNode.click();
