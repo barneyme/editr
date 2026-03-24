@@ -1717,22 +1717,19 @@
                         return sno_decrypt(notesArray[0].content);
                     }
 
-                    // For multiple notes, join with separator
+                    // For multiple notes, join with unique sentinels that won't clash with note content
                     return notesArray
                         .map((note) => {
                             const title = sno_decrypt(note.title);
                             const content = sno_decrypt(note.content);
-                            return `# ${title}\n---\n${content}`;
+                            return `# ${title}\n<<SNO_TITLE_END>>\n${content}`;
                         })
-                        .join("\n===\n");
+                        .join("\n<<SNO_NOTE_SEP>>\n");
                 }
 
                 function sno_parseTextToNotes(text) {
-                    // If text doesn't contain separators, treat the entire content as one note
-                    if (
-                        !text.includes("\n===\n") &&
-                        !text.includes("\n---\n")
-                    ) {
+                    // If text doesn't contain the multi-note sentinel, treat the entire content as one note
+                    if (!text.includes("\n<<SNO_NOTE_SEP>>\n")) {
                         const now = new Date().toISOString();
                         if (text.trim()) {
                             return [
@@ -1750,19 +1747,33 @@
 
                     const newNotes = [];
                     const noteChunks = text
-                        .split("\n===\n")
+                        .split("\n<<SNO_NOTE_SEP>>\n")
                         .filter((chunk) => chunk.trim() !== "");
 
                     for (const chunk of noteChunks) {
-                        const parts = chunk.split("\n---\n");
-                        if (parts.length < 2) continue;
+                        // Split only on the unique title-end sentinel, not on user's --- lines
+                        const parts = chunk.split("\n<<SNO_TITLE_END>>\n");
+                        if (parts.length < 2) {
+                            // Fallback: no title sentinel found — save entire chunk as untitled note
+                            const now = new Date().toISOString();
+                            if (chunk.trim()) {
+                                newNotes.push({
+                                    id: Date.now().toString() + Math.random(),
+                                    title: sno_encrypt("Note"),
+                                    content: sno_encrypt(chunk.trim()),
+                                    created: now,
+                                    lastModified: now,
+                                });
+                            }
+                            continue;
+                        }
 
                         let title = parts[0].trim();
                         if (title.startsWith("# ")) {
                             title = title.substring(2).trim();
                         }
 
-                        const content = parts.slice(1).join("\n---\n").trim();
+                        const content = parts.slice(1).join("\n<<SNO_TITLE_END>>\n").trim();
                         const now = new Date().toISOString();
 
                         if (title) {
@@ -2833,6 +2844,7 @@
                 const saveFile = async () => {
                     hideMenu();
                     if (activeBufferIndex === -1) return;
+                    saveCurrentBufferState(); // Flush live editor text into buffer before saving
                     const activeBuffer = buffers[activeBufferIndex];
                     const fileHandle = fileHandles.get(activeBuffer.id);
 
@@ -2920,6 +2932,8 @@
                 const closeFile = () => {
                     hideMenu();
                     if (buffers.length <= 0 || activeBufferIndex < 0) return;
+
+                    saveCurrentBufferState(); // Flush live editor text before closing
 
                     const bufferToClose = buffers[activeBufferIndex];
                     if (bufferToClose.isSno) {
