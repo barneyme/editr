@@ -1712,12 +1712,8 @@
                         return "";
                     }
 
-                    // If there's only one note, return just its content
-                    if (notesArray.length === 1) {
-                        return sno_decrypt(notesArray[0].content);
-                    }
-
-                    // For multiple notes, join with unique sentinels that won't clash with note content
+                    // Always use the sentinel format (even for a single note) so that
+                    // note content containing "---" is never misread on the round-trip.
                     return notesArray
                         .map((note) => {
                             const title = sno_decrypt(note.title);
@@ -2844,6 +2840,7 @@
                 const saveFile = async () => {
                     hideMenu();
                     if (activeBufferIndex === -1) return;
+                    if (isCsvView) updateEditorFromCsv(); // Flush CSV grid edits back to editor first
                     saveCurrentBufferState(); // Flush live editor text into buffer before saving
                     const activeBuffer = buffers[activeBufferIndex];
                     const fileHandle = fileHandles.get(activeBuffer.id);
@@ -3807,12 +3804,20 @@
                     }
                 });
 
-                window.addEventListener("beforeunload", () => {
-                    saveCurrentBufferState();
+                // Synchronously flush all state on page close.
+                // Both beforeunload and pagehide are registered because beforeunload
+                // is unreliable on mobile (iOS Safari) and pagehide covers back/forward cache eviction.
+                const flushAllState = () => {
+                    if (isCsvView) updateEditorFromCsv(); // Flush CSV grid edits first
+                    saveCurrentBufferState();             // Then flush editor → buffer → localStorage
                     if (masterKey && currentPasswordHash) {
+                        // sno_saveSnoBuffer uses only synchronous localStorage — safe in unload handlers.
+                        // If it ever becomes async, replace with a synchronous serialization path here.
                         sno_saveSnoBuffer();
                     }
-                });
+                };
+                window.addEventListener("beforeunload", flushAllState);
+                window.addEventListener("pagehide", flushAllState);
 
                 // --- INITIALIZATION ---
                 loadState();
